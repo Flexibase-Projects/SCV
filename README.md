@@ -1,73 +1,164 @@
-# Welcome to your Lovable project
+<div align="center">
+  <img src="public/logo-flexibase.svg" alt="Flexibase Logo" width="200"/>
+  
+  # 🚛 Sistema de Controle de Veículos (SCV)
+  
+  **Plataforma completa para gestão de frotas, abastecimentos, manutenções e controle financeiro**
 
-## Project info
+  [![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  [![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+</div>
 
-**URL**: https://lovable.dev/projects/072f0091-971b-44bc-826c-30b526be7511
+---
 
-## How can I edit this code?
+## 📋 Sobre o Projeto
 
-There are several ways of editing your application.
+O **SCV (Sistema de Controle de Veículos)** é uma aplicação web desenvolvida para empresas que necessitam gerenciar sua frota de veículos de forma eficiente. O sistema permite o controle completo de abastecimentos, manutenções, entregas e acertos de viagem, proporcionando visibilidade financeira e operacional em tempo real.
 
-**Use Lovable**
+## ✨ Funcionalidades
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/072f0091-971b-44bc-826c-30b526be7511) and start prompting.
+### 🏠 Dashboard (Hub)
+- Visão geral consolidada de todas as operações
+- Cards de métricas financeiras (receitas, despesas, saldo)
+- Acesso rápido aos módulos principais
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📦 Entregas
+- Cadastro e acompanhamento de entregas
+- Registro de valores de frete
+- Histórico completo de operações
 
-**Use your preferred IDE**
+### ⛽ Abastecimento
+- Registro de abastecimentos com cálculo automático
+- Controle de consumo por veículo
+- Histórico de preços por litro
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 🔧 Manutenção
+- Gestão de manutenções preventivas e corretivas
+- Categorização por tipo de serviço
+- Controle de custos de manutenção
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 💰 Acerto de Viagem
+- Fechamento financeiro por viagem
+- Cálculo automático de despesas e receitas
+- Geração de relatórios para impressão com logo da empresa
 
-Follow these steps:
+### 📊 Resumo Geral
+- Relatórios consolidados por período
+- Filtros por mês/ano
+- Exportação e impressão de relatórios
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 📁 Cadastros
+- Gestão de veículos da frota
+- Cadastro de condutores
+- Configurações do sistema
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🛠️ Tecnologias Utilizadas
 
-# Step 3: Install the necessary dependencies.
-npm i
+| Tecnologia | Descrição |
+|------------|-----------|
+| **React 19** | Biblioteca para construção de interfaces |
+| **TypeScript** | Superset JavaScript com tipagem estática |
+| **Vite** | Build tool e dev server ultrarrápido |
+| **Tailwind CSS** | Framework CSS utility-first |
+| **shadcn/ui** | Componentes UI acessíveis e customizáveis |
+| **React Hook Form** | Gerenciamento de formulários |
+| **Zod** | Validação de schemas |
+| **TanStack Query** | Gerenciamento de estado do servidor |
+| **Supabase** | Backend as a Service (PostgreSQL + Auth) |
+| **Lucide React** | Biblioteca de ícones |
+| **date-fns** | Manipulação de datas |
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 🚀 Como Executar
+
+### Pré-requisitos
+
+- Node.js 18+ instalado
+- npm ou yarn
+
+### Instalação
+
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/lovable-logistics-hub.git
+
+# Acesse a pasta do projeto
+cd lovable-logistics-hub
+
+# Instale as dependências
+npm install
+
+# Execute o projeto em modo de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O projeto estará disponível em `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Scripts Disponíveis
 
-**Use GitHub Codespaces**
+```bash
+npm run dev      # Inicia o servidor de desenvolvimento
+npm run build    # Gera a build de produção
+npm run preview  # Visualiza a build de produção localmente
+npm run lint     # Executa o linter (ESLint)
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📁 Estrutura do Projeto
 
-## What technologies are used for this project?
+```
+src/
+├── components/          # Componentes React reutilizáveis
+│   ├── ui/             # Componentes base (shadcn/ui)
+│   ├── layout/         # Componentes de layout (Sidebar, Header)
+│   ├── shared/         # Componentes compartilhados
+│   ├── abastecimento/  # Componentes do módulo de abastecimento
+│   ├── acertoViagem/   # Componentes do módulo de acerto
+│   ├── dashboard/      # Componentes do dashboard
+│   └── manutencao/     # Componentes do módulo de manutenção
+├── hooks/              # Custom hooks
+├── lib/                # Utilitários e configurações
+├── pages/              # Páginas da aplicação
+├── types/              # Definições de tipos TypeScript
+└── integrations/       # Integrações externas (Supabase)
+```
 
-This project is built with:
+## 🔐 Variáveis de Ambiente
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Crie um arquivo `.env` na raiz do projeto:
 
-## How can I deploy this project?
+```env
+VITE_SUPABASE_URL=sua_url_do_supabase
+VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+```
 
-Simply open [Lovable](https://lovable.dev/projects/072f0091-971b-44bc-826c-30b526be7511) and click on Share -> Publish.
+## 📱 Screenshots
 
-## Can I connect a custom domain to my Lovable project?
+<div align="center">
+  <i>Em breve...</i>
+</div>
 
-Yes, you can!
+## 🤝 Contribuição
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. Faça um Fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+<div align="center">
+  Desenvolvido com ❤️ por <b>Flexibase</b>
+  
+  <br/><br/>
+  
+  ⭐ Se este projeto te ajudou, considere dar uma estrela!
+</div>
