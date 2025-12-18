@@ -38,23 +38,28 @@ export function normalizeNumber(value: any): number | null {
 
   let strValue = String(value).trim();
 
-  // Remover símbolos de moeda
-  strValue = strValue.replace(/R\$\s*/gi, '');
-  strValue = strValue.replace(/\$/g, '');
+  // Remover símbolos de moeda e espaços
+  strValue = strValue.replace(/R\$\s*/gi, '').replace(/\$/g, '').replace(/\s/g, '');
 
-  // Detectar formato brasileiro (1.234,56) vs americano (1,234.56)
-  const hasCommaDecimal = /\d,\d{1,2}$/.test(strValue);
-  const hasDotThousands = /\d\.\d{3}/.test(strValue);
+  if (!strValue) return null;
 
-  if (hasCommaDecimal || hasDotThousands) {
-    // Formato brasileiro: remover pontos de milhar e converter vírgula em ponto
+  // Detectar qual separador está mais à direita (provável decimal)
+  const lastCommaIndex = strValue.lastIndexOf(',');
+  const lastDotIndex = strValue.lastIndexOf('.');
+
+  if (lastCommaIndex > lastDotIndex) {
+    // Formato brasileiro (1.234,56): vírgula é decimal
     strValue = strValue.replace(/\./g, '').replace(',', '.');
-  } else {
-    // Formato americano ou sem separador de milhar
+  } else if (lastDotIndex > lastCommaIndex) {
+    // Formato americano (1,234.56): ponto é decimal
     strValue = strValue.replace(/,/g, '');
+  } else if (lastCommaIndex !== -1) {
+    // Só tem vírgula: assumir decimal
+    strValue = strValue.replace(',', '.');
   }
+  // Se só tem ponto ou nenhum, parseFloat resolve
 
-  // Remover caracteres não numéricos exceto ponto e sinal negativo
+  // Remover caracteres não numéricos remanescentes exceto ponto e sinal negativo
   strValue = strValue.replace(/[^0-9.\-]/g, '');
 
   const num = parseFloat(strValue);

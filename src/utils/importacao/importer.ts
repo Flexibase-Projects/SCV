@@ -29,7 +29,7 @@ export interface ImportResult {
   errors: string[];
 }
 
-const BATCH_SIZE = 500;
+const BATCH_SIZE = 100;
 
 /**
  * Tenta fazer match do valor da planilha com veículos cadastrados
@@ -622,49 +622,50 @@ export async function importEntregas(
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
 
-    const entregasToInsert = batch.map((row) => {
-      // Aplicar match de veículo no campo carro
-      const carroMatched = matchVeiculoFromPlanilha(row.carro, veiculosList);
+    try {
+      const entregasToInsert = batch.map((row) => {
+        // Aplicar match de veículo no campo carro
+        const carroMatched = matchVeiculoFromPlanilha(row.carro, veiculosList);
 
-      return {
-        pv_foco: row.pv_foco || null,
-        nf: row.nf || null,
-        valor: row.valor || null,
-        cliente: row.cliente || null,
-        uf: row.uf || null,
-        data_saida: (() => {
-          const value = row.data_saida || null;
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'importer.ts:importEntregas:data_saida', message: 'data_saida antes de salvar no banco', data: { value, pv_foco: row.pv_foco }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
-          // #endregion
-          return value;
-        })(),
-        motorista: row.motorista || null,
-        carro: carroMatched,
-        tipo_transporte: row.tipo_transporte || null,
-        status: row.status || 'PENDENTE',
-        precisa_montagem: row.precisa_montagem ?? false,
-        data_montagem: row.data_montagem || null,
-        montador_1: row.montador_1 || null,
-        montador_2: row.montador_2 || null,
-        gastos_entrega: row.gastos_entrega || null,
-        gastos_montagem: row.gastos_montagem || null,
-        produtividade: row.produtividade || null,
-        erros: row.erros || null,
-        percentual_gastos: row.percentual_gastos || null,
-        descricao_erros: row.descricao_erros || null,
-      };
-    });
+        return {
+          pv_foco: row.pv_foco || null,
+          nf: row.nf || null,
+          valor: row.valor || null,
+          cliente: row.cliente || null,
+          uf: row.uf || null,
+          data_saida: (() => {
+            const value = row.data_saida || null;
+            return value;
+          })(),
+          motorista: row.motorista || null,
+          carro: carroMatched,
+          tipo_transporte: row.tipo_transporte || null,
+          status: row.status || 'PENDENTE',
+          precisa_montagem: row.precisa_montagem ?? false,
+          data_montagem: row.data_montagem || null,
+          montador_1: row.montador_1 || null,
+          montador_2: row.montador_2 || null,
+          gastos_entrega: row.gastos_entrega || null,
+          gastos_montagem: row.gastos_montagem || null,
+          produtividade: row.produtividade || null,
+          erros: row.erros || null,
+          percentual_gastos: row.percentual_gastos || null,
+          descricao_erros: row.descricao_erros || null,
+        };
+      });
 
-    const { data, error } = await supabase
-      .from('controle_entregas')
-      .insert(entregasToInsert)
-      .select();
+      const { data, error } = await supabase
+        .from('controle_entregas')
+        .insert(entregasToInsert)
+        .select();
 
-    if (error) {
-      result.errors.push(`Erro no lote ${i / BATCH_SIZE + 1}: ${error.message}`);
-    } else {
-      result.success += data?.length || 0;
+      if (error) {
+        result.errors.push(`Erro no lote ${Math.floor(i / BATCH_SIZE) + 1}: ${error.details || error.message}`);
+      } else {
+        result.success += data?.length || 0;
+      }
+    } catch (err) {
+      result.errors.push(`Falha crítica no lote ${Math.floor(i / BATCH_SIZE) + 1}: ${(err as Error).message}`);
     }
 
     onProgress({
@@ -674,7 +675,7 @@ export async function importEntregas(
       updated: 0,
       autoCreated: 0,
       phase: 'importing',
-      message: `Importando entregas... (${Math.min(i + BATCH_SIZE, rows.length)}/${rows.length})`,
+      message: `Importando entregas... (${Math.min(i + BATCH_SIZE, rows.length)}/${rows.length}) | Sucesso: ${result.success}`,
     });
   }
 
@@ -821,64 +822,37 @@ export async function importAbastecimentos(
   }
 
   // ============================================================================
-  // STEP 5: PREPARAR E FILTRAR ABASTECIMENTOS VÁLIDOS
-  // ============================================================================
+  const abastecimentosParaImportar = rows.map((row) => {
+    const normalizedKey = normalizeForSearch(row.veiculo || '');
+    const veiculoId = existingVehicleMap.get(normalizedKey) || createdVehicleIds.get(normalizedKey);
+    const condutorId = cache.motoristas.get(row.condutor?.toLowerCase());
 
-  const abastecimentosValidos = rows
-    .filter((row) => {
-      // Skip and Warn: se veículo vazio/inválido, pular linha
-      if (!row.veiculo || !row.veiculo.trim()) {
-        result.errors.push(`Linha ignorada: veículo vazio ou inválido`);
-        return false;
-      }
+    const parsingErrors = row.parsingErrors || [];
+    const hasCriticalErrors = parsingErrors.length > 0;
 
-      // Resolver veiculo_id (existente ou recém-criado)
-      const normalizedKey = normalizeForSearch(row.veiculo);
-      const veiculoId = existingVehicleMap.get(normalizedKey) || createdVehicleIds.get(normalizedKey);
-
-      if (!veiculoId) {
-        // Não deveria acontecer, mas adicionar aviso
-        result.errors.push(`Veículo não encontrado após processamento: ${row.veiculo}`);
-        return false;
-      }
-
-      // Verificar condutor
-      const condutorId = cache.motoristas.get(row.condutor?.toLowerCase());
-      if (!condutorId) {
-        result.errors.push(`Condutor não encontrado: ${row.condutor}`);
-        return false;
-      }
-
-      return true;
-    })
-    .map((row) => {
-      // Resolver IDs (já validados no filter acima)
-      const normalizedKey = normalizeForSearch(row.veiculo);
-      const veiculoId = existingVehicleMap.get(normalizedKey) || createdVehicleIds.get(normalizedKey);
-      const condutorId = cache.motoristas.get(row.condutor?.toLowerCase());
-
-      return {
-        data: row.data || new Date().toISOString().split('T')[0],
-        veiculo_id: veiculoId!,
-        condutor_id: condutorId!,
-        posto: row.posto || '',
-        cidade: row.cidade || '',
-        estado: row.estado || '',
-        km_inicial: row.km_inicial || 0,
-        litros: row.litros || 0,
-        produto: row.produto || 'Diesel S-10',
-        valor_unitario: row.valor_unitario || 0,
-        // IMPORTANTE: Usar valor_total do Excel diretamente, NÃO recalcular
-        valor_total: row.valor_total || 0,
-      };
-    });
+    return {
+      data: row.data || new Date().toISOString().split('T')[0],
+      veiculo_id: veiculoId || null,
+      condutor_id: condutorId || null,
+      posto: row.posto || '',
+      cidade: row.cidade || '',
+      estado: row.estado || '',
+      km_inicial: row.km_inicial || 0,
+      litros: row.litros || 0,
+      produto: row.produto || 'Diesel S-10',
+      valor_unitario: row.valor_unitario || 0,
+      valor_total: row.valor_total || 0,
+      erros: hasCriticalErrors ? 'IMPORT_ERROR' : null,
+      descricao_erros: parsingErrors.join('; ') || null,
+    };
+  });
 
   // ============================================================================
   // STEP 6: ORDENAR POR VEÍCULO E DATA (PARA CÁLCULO CORRETO DE KM/L)
   // ============================================================================
 
-  abastecimentosValidos.sort((a, b) => {
-    if (a.veiculo_id !== b.veiculo_id) {
+  abastecimentosParaImportar.sort((a, b) => {
+    if (a.veiculo_id && b.veiculo_id && a.veiculo_id !== b.veiculo_id) {
       return a.veiculo_id.localeCompare(b.veiculo_id);
     }
     return a.data.localeCompare(b.data);
@@ -889,7 +863,7 @@ export async function importAbastecimentos(
   // ============================================================================
 
   onProgress({
-    total: abastecimentosValidos.length,
+    total: abastecimentosParaImportar.length,
     current: 0,
     created: 0,
     updated: 0,
@@ -900,11 +874,20 @@ export async function importAbastecimentos(
 
   const ultimoKmPorVeiculo = new Map<string, number | null>();
 
-  for (let i = 0; i < abastecimentosValidos.length; i += BATCH_SIZE) {
-    const batch = abastecimentosValidos.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < abastecimentosParaImportar.length; i += BATCH_SIZE) {
+    const batch = abastecimentosParaImportar.slice(i, i + BATCH_SIZE);
     const abastecimentosToInsert = [];
 
     for (const abastecimento of batch) {
+      // Se não tem veiculo_id (registro com erro), não calcula KM/L
+      if (!abastecimento.veiculo_id) {
+        abastecimentosToInsert.push({
+          ...abastecimento,
+          km_por_litro: null,
+        });
+        continue;
+      }
+
       if (!ultimoKmPorVeiculo.has(abastecimento.veiculo_id)) {
         const ultimoAbastecimento = await getUltimoAbastecimento(abastecimento.veiculo_id);
         ultimoKmPorVeiculo.set(
@@ -942,24 +925,26 @@ export async function importAbastecimentos(
       result.success += data?.length || 0;
 
       for (const abastecimento of abastecimentosToInsert) {
-        await atualizarKmAtualVeiculo(abastecimento.veiculo_id, abastecimento.km_inicial);
+        if (abastecimento.veiculo_id) {
+          await atualizarKmAtualVeiculo(abastecimento.veiculo_id, abastecimento.km_inicial);
+        }
       }
     }
 
     onProgress({
-      total: abastecimentosValidos.length,
-      current: Math.min(i + BATCH_SIZE, abastecimentosValidos.length),
+      total: abastecimentosParaImportar.length,
+      current: Math.min(i + BATCH_SIZE, abastecimentosParaImportar.length),
       created: result.success,
       updated: 0,
       autoCreated: result.autoCreated.veiculos.length + result.autoCreated.motoristas.length,
       phase: 'importing',
-      message: `Importando abastecimentos... (${Math.min(i + BATCH_SIZE, abastecimentosValidos.length)}/${abastecimentosValidos.length})`,
+      message: `Importando abastecimentos... (${Math.min(i + BATCH_SIZE, abastecimentosParaImportar.length)}/${abastecimentosParaImportar.length})`,
     });
   }
 
   onProgress({
-    total: abastecimentosValidos.length,
-    current: abastecimentosValidos.length,
+    total: abastecimentosParaImportar.length,
+    current: abastecimentosParaImportar.length,
     created: result.success,
     updated: 0,
     autoCreated: result.autoCreated.veiculos.length + result.autoCreated.motoristas.length,
@@ -1041,23 +1026,28 @@ export async function importManutencoes(
     const batch = rows.slice(i, i + BATCH_SIZE);
 
     const manutencoesToInsert = batch
-      .filter((row) => {
-        // Só importar se tiver veículo resolvido
+      .map((row) => {
+        // Obter ID do veículo se existir
         const veiculoId = cache.veiculos.get(row.placa);
-        return veiculoId;
-      })
-      .map((row) => ({
-        data: row.data || new Date().toISOString().split('T')[0],
-        veiculo_id: cache.veiculos.get(row.placa)!,
-        estabelecimento: row.estabelecimento || '',
-        tipo_servico: row.tipo_servico || '',
-        descricao_servico: row.descricao_servico || null,
-        custo_total: row.custo_total || 0,
-        km_manutencao: row.km_manutencao !== null && row.km_manutencao !== undefined ? row.km_manutencao : (null as any), // Preservar null para "S/KM"
-        nota_fiscal: row.nota_fiscal || null,
-        tipo_manutencao: (row.tipo_manutencao || 'corretiva') as 'preventiva' | 'corretiva',
-        status: 'resolvida' as const,
-      }));
+
+        const parsingErrors = row.parsingErrors || [];
+        const hasCriticalErrors = parsingErrors.length > 0;
+
+        return {
+          data: row.data || new Date().toISOString().split('T')[0],
+          veiculo_id: veiculoId || null,
+          estabelecimento: row.estabelecimento || '',
+          tipo_servico: row.tipo_servico || '',
+          descricao_servico: row.descricao_servico || null,
+          custo_total: row.custo_total || 0,
+          km_manutencao: row.km_manutencao !== null && row.km_manutencao !== undefined ? row.km_manutencao : (null as any),
+          nota_fiscal: row.nota_fiscal || null,
+          tipo_manutencao: (row.tipo_manutencao || 'corretiva') as 'preventiva' | 'corretiva',
+          status: 'resolvida' as const,
+          erros: hasCriticalErrors ? 'IMPORT_ERROR' : null,
+          descricao_erros: parsingErrors.join('; ') || null,
+        };
+      });
 
     if (manutencoesToInsert.length === 0) continue;
 

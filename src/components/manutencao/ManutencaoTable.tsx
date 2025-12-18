@@ -1,4 +1,3 @@
-import { Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +10,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Manutencao, STATUS_MANUTENCAO_LABELS, TIPO_MANUTENCAO_LABELS } from '@/types/manutencao';
+import { cn } from '@/lib/utils';
+import { AlertTriangle, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface ManutencaoTableProps {
   manutencoes: Manutencao[];
@@ -71,10 +78,11 @@ export function ManutencaoTable({ manutencoes, onEdit, onDelete, isLoading }: Ma
   }
 
   return (
-    <div className="rounded-md border border-border overflow-hidden">
+    <div className="rounded-md border border-border bg-card overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="w-[50px]"></TableHead>
             <TableHead className="text-muted-foreground font-semibold">Data</TableHead>
             <TableHead className="text-muted-foreground font-semibold">Veículo</TableHead>
             <TableHead className="text-muted-foreground font-semibold">Tipo</TableHead>
@@ -88,12 +96,49 @@ export function ManutencaoTable({ manutencoes, onEdit, onDelete, isLoading }: Ma
         </TableHeader>
         <TableBody>
           {manutencoes.map((manutencao) => (
-            <TableRow key={manutencao.id} className="border-border hover:bg-muted/50">
+            <TableRow
+              key={manutencao.id}
+              className={cn(
+                "border-border hover:bg-muted/50",
+                (manutencao.erros || manutencao.descricao_erros) && "bg-red-50 hover:bg-red-100"
+              )}
+            >
+              <TableCell>
+                <div className="flex justify-center">
+                  {manutencao.erros || manutencao.descricao_erros ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">{manutencao.descricao_erros || manutencao.erros}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Registro válido</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              </TableCell>
               <TableCell className="text-foreground">
                 {manutencao.data ? format(new Date(manutencao.data + 'T00:00:00'), 'dd/MM/yyyy') : '-'}
               </TableCell>
               <TableCell className="text-foreground font-medium">
-                {manutencao.veiculo_placa || '-'}
+                {manutencao.veiculo_placa ? (
+                  manutencao.veiculo_placa
+                ) : (
+                  <span className="text-muted-foreground italic">Não identificado</span>
+                )}
               </TableCell>
               <TableCell>
                 {getTipoBadge(manutencao.tipo_manutencao)}

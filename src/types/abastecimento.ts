@@ -14,6 +14,8 @@ export interface Abastecimento {
   valor_unitario: number;
   valor_total: number;
   km_por_litro?: number | null;
+  erros?: string | null;
+  descricao_erros?: string | null;
   created_at: string;
   updated_at: string;
 }

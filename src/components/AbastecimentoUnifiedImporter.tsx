@@ -162,25 +162,11 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
 
     // Confirmar importação
     const handleConfirmImport = useCallback(async () => {
-        if (!parseResult || parseResult.validRows === 0) return;
-
-        // Filtrar apenas linhas válidas (sem erros)
-        const validRows = parseResult.rows.filter((r) => r.parsingErrors.length === 0);
-
-        if (validRows.length === 0) {
-            toast({
-                title: 'Nenhum registro válido',
-                description: 'Corrija os erros antes de importar',
-                variant: 'destructive',
-            });
-            return;
-        }
-
         setIsImporting(true);
 
         try {
-            // Converter para formato esperado pelo importer
-            const rowsToImport = validRows.map((row) => ({
+            // Converter para formato esperado pelo importer (todas as linhas)
+            const rowsToImport = parseResult.rows.map((row) => ({
                 data: row.data || null,
                 veiculo: row.veiculo || null,
                 condutor: row.condutor || null,
@@ -192,6 +178,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
                 produto: row.produto || null,
                 valor_unitario: row.valor_unitario || null,
                 valor_total: row.valor_total || null,
+                parsingErrors: row.parsingErrors, // Passar erros originais para salvar no banco
             }));
 
             const onProgress = (progress: ImportProgress) => {
@@ -202,9 +189,11 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
 
             if (result.errors.length > 0) {
                 toast({
-                    title: 'Importação concluída com avisos',
-                    description: `${result.success} abastecimento(s) importado(s). ${result.errors.length} erro(s).`,
-                    variant: 'default',
+                    title: result.errors.length > 0 ? 'Importação concluída com erros' : 'Importação concluída com sucesso',
+                    description: result.errors.length > 0
+                        ? `Falha ao importar: ${result.errors.join('\n')}`
+                        : `${result.success} abastecimento(s) importado(s).`,
+                    variant: result.errors.length > 0 ? 'destructive' : 'default',
                 });
             } else {
                 toast({
@@ -238,7 +227,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
 
     const formatCurrency = (value: number | null): string => {
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AbastecimentoUnifiedImporter.tsx:formatCurrency:ENTRY',message:'formatCurrency entrada',data:{value,valueType:typeof value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'L'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:formatCurrency:ENTRY', message: 'formatCurrency entrada', data: { value, valueType: typeof value }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'L' }) }).catch(() => { });
         // #endregion
         if (value === null || value === undefined) return '—';
         const formatted = new Intl.NumberFormat('pt-BR', {
@@ -246,7 +235,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
             currency: 'BRL',
         }).format(value);
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AbastecimentoUnifiedImporter.tsx:formatCurrency:RETURN',message:'formatCurrency retorno',data:{value,formatted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'L'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:formatCurrency:RETURN', message: 'formatCurrency retorno', data: { value, formatted }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'L' }) }).catch(() => { });
         // #endregion
         return formatted;
     };
@@ -485,7 +474,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
                                                 <TableCell>
                                                     {(() => {
                                                         // #region agent log
-                                                        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AbastecimentoUnifiedImporter.tsx:TableCell:valorUnitario',message:'Valor unitário antes de formatar',data:{lineNumber:row.lineNumber,valorUnitario:row.valor_unitario,valorUnitarioType:typeof row.valor_unitario},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
+                                                        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:TableCell:valorUnitario', message: 'Valor unitário antes de formatar', data: { lineNumber: row.lineNumber, valorUnitario: row.valor_unitario, valorUnitarioType: typeof row.valor_unitario }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'M' }) }).catch(() => { });
                                                         // #endregion
                                                         return formatCurrency(row.valor_unitario);
                                                     })()}
@@ -493,7 +482,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
                                                 <TableCell>
                                                     {(() => {
                                                         // #region agent log
-                                                        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AbastecimentoUnifiedImporter.tsx:TableCell:valorTotal',message:'Valor total antes de formatar',data:{lineNumber:row.lineNumber,valorTotal:row.valor_total,valorTotalType:typeof row.valor_total},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
+                                                        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:TableCell:valorTotal', message: 'Valor total antes de formatar', data: { lineNumber: row.lineNumber, valorTotal: row.valor_total, valorTotalType: typeof row.valor_total }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'M' }) }).catch(() => { });
                                                         // #endregion
                                                         return formatCurrency(row.valor_total);
                                                     })()}
@@ -553,7 +542,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
                 </Button>
                 <Button
                     onClick={handleConfirmImport}
-                    disabled={isImporting || stats.valid === 0}
+                    disabled={isImporting || stats.total === 0}
                 >
                     {isImporting ? (
                         <>
@@ -561,7 +550,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
                             Importando...
                         </>
                     ) : (
-                        `Importar ${stats.valid} Registro(s)`
+                        `Importar ${stats.total} Registro(s)`
                     )}
                 </Button>
             </div>

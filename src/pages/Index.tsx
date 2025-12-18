@@ -7,7 +7,7 @@ import { EntregaFilters } from '@/components/dashboard/EntregaFilters';
 import { EntregaTable } from '@/components/dashboard/EntregaTable';
 import { EntregaFormModal } from '@/components/dashboard/EntregaFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
-import { useEntregas, useCreateEntrega, useUpdateEntrega, useDeleteEntrega } from '@/hooks/useEntregas';
+import { useEntregas, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useEntregasStats } from '@/hooks/useEntregas';
 import { Entrega, EntregaFormData } from '@/types/entrega';
 import { format } from 'date-fns';
 
@@ -20,6 +20,13 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [motoristaFilter, setMotoristaFilter] = useState('all');
+
+  // Get accurate stats using RPC function to bypass row limits
+  const { data: stats } = useEntregasStats({
+    searchTerm: searchTerm || undefined,
+    dateFrom: null,
+    dateTo: null
+  });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
@@ -153,7 +160,7 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        <KPICards entregas={filteredEntregas} />
+        <KPICards entregas={filteredEntregas} stats={stats} />
 
         <div className="space-y-4">
           <EntregaFilters

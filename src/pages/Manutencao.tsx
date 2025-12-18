@@ -7,7 +7,8 @@ import { ManutencaoFormModal } from '@/components/manutencao/ManutencaoFormModal
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { format } from 'date-fns';
+import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { SharedFilter } from '@/components/shared/SharedFilter';
 import {
   useManutencoes,
   useCreateManutencao,
@@ -27,7 +28,11 @@ const Manutencao = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [manutencaoToDelete, setManutencaoToDelete] = useState<ManutencaoType | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
+
   // Valores padrão para o formulário
   const [defaultFormValues, setDefaultFormValues] = useState<{
     tipo?: TipoManutencao;
@@ -75,21 +80,44 @@ const Manutencao = () => {
     }
   };
 
-  // Cálculos para os cards de resumo
-  const totalManutencoes = manutencoes.length;
-  const custoTotalGeral = manutencoes.reduce((acc, m) => acc + (m.custo_total || 0), 0);
-  
-  // Manutenções do mês atual
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  const manutencoesMes = manutencoes.filter((m) => {
-    const date = new Date(m.data);
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-  });
-  const custoMes = manutencoesMes.reduce((acc, m) => acc + (m.custo_total || 0), 0);
+  const filteredManutencoes = useMemo(() => {
+    return manutencoes.filter(m => {
+      const matchesSearch =
+        searchTerm === '' ||
+        m.veiculo_placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.tipo_servico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.estabelecimento?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      let matchesDate = true;
+      if (m.data) {
+        const date = parseISO(m.data);
+        if (dateFrom && dateTo) {
+          matchesDate = isWithinInterval(date, {
+            start: startOfDay(dateFrom),
+            end: endOfDay(dateTo)
+          });
+        } else if (dateFrom) {
+          matchesDate = date >= startOfDay(dateFrom);
+        } else if (dateTo) {
+          matchesDate = date <= endOfDay(dateTo);
+        }
+      } else if (dateFrom || dateTo) {
+        matchesDate = false;
+      }
+
+      return matchesSearch && matchesDate;
+    });
+  }, [manutencoes, searchTerm, dateFrom, dateTo]);
+
+  // Cálculos para os cards de resumo usando dados filtrados
+  const totalManutencoes = filteredManutencoes.length;
+  const custoTotalGeral = filteredManutencoes.reduce((acc, m) => acc + (m.custo_total || 0), 0);
+
+  // Manutenções do período filtrado (ou mês atual se sem filtro)
+  const custoPeriodo = filteredManutencoes.reduce((acc, m) => acc + (m.custo_total || 0), 0);
 
   // Veículos únicos com manutenção
-  const veiculosUnicos = new Set(manutencoes.map((m) => m.veiculo_id)).size;
+  const veiculosUnicos = new Set(filteredManutencoes.map((m) => m.veiculo_id)).size;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -100,19 +128,19 @@ const Manutencao = () => {
 
   // Configuração de colunas para impressão
   const printColumns: TableColumn<ManutencaoType>[] = useMemo(() => [
-    { 
-      key: 'data', 
+    {
+      key: 'data',
       label: 'Data',
       render: (value) => value ? format(new Date(value + 'T00:00:00'), 'dd/MM/yyyy') : '-'
     },
     { key: 'veiculo_placa', label: 'Veículo' },
-    { 
-      key: 'tipo_manutencao', 
+    {
+      key: 'tipo_manutencao',
       label: 'Tipo',
       render: (value) => value === 'preventiva' ? 'Preventiva' : 'Corretiva'
     },
-    { 
-      key: 'status', 
+    {
+      key: 'status',
       label: 'Status',
       render: (value) => {
         switch (value) {
@@ -125,19 +153,27 @@ const Manutencao = () => {
     },
     { key: 'tipo_servico', label: 'Serviço' },
     { key: 'estabelecimento', label: 'Estabelecimento' },
-    { 
-      key: 'custo_total', 
+    {
+      key: 'custo_total',
       label: 'Custo',
       render: (value) => formatCurrency(value || 0),
       className: 'text-right font-medium'
     },
-    { 
-      key: 'km_manutencao', 
+    {
+      key: 'km_manutencao',
       label: 'KM',
       render: (value) => value ? `${value.toLocaleString('pt-BR')} km` : '0 km',
       className: 'text-right'
     },
   ], []);
+
+  const filtersText = useMemo(() => {
+    const filters: string[] = [];
+    if (searchTerm) filters.push(`Busca: "${searchTerm}"`);
+    if (dateFrom) filters.push(`De: ${format(dateFrom, 'dd/MM/yyyy')}`);
+    if (dateTo) filters.push(`Até: ${format(dateTo, 'dd/MM/yyyy')}`);
+    return filters.length > 0 ? filters.join(' | ') : 'Todos os registros';
+  }, [searchTerm, dateFrom, dateTo]);
 
   return (
     <ModuleLayout>
@@ -147,6 +183,13 @@ const Manutencao = () => {
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Controle de Manutenção</h2>
             <p className="text-slate-500 mt-1">Gerenciamento de manutenções da frota</p>
           </div>
+          <Button
+            onClick={() => handleOpenForm()}
+            className="bg-green-600 hover:bg-green-700 gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Nova Manutenção
+          </Button>
         </div>
 
         <div className="space-y-6">
@@ -187,8 +230,8 @@ const Manutencao = () => {
                     <Calendar className="h-5 w-5 text-orange-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Custo do Mês</p>
-                    <p className="text-2xl font-bold text-foreground">{formatCurrency(custoMes)}</p>
+                    <p className="text-sm text-muted-foreground">Custo no Período</p>
+                    <p className="text-2xl font-bold text-foreground">{formatCurrency(custoPeriodo)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -210,40 +253,34 @@ const Manutencao = () => {
           </div>
 
           {/* Tabela de manutenções */}
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/50 mb-4">
-              <CardTitle className="text-lg font-semibold text-foreground">Registros</CardTitle>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleOpenForm()}
-                  className="gap-2 bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="h-4 w-4" />
-                  Nova Manutenção
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="px-6 pb-6">
-                <ManutencaoTable
-                  manutencoes={manutencoes}
-                  onEdit={handleOpenForm}
-                  onDelete={handleOpenDeleteDialog}
-                  isLoading={isLoading}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <SharedFilter
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                dateFrom={dateFrom}
+                onDateFromChange={setDateFrom}
+                dateTo={dateTo}
+                onDateToChange={setDateTo}
+                placeholder="Buscar por placa, serviço ou estabelecimento..."
+              />
+              <Button
+                variant="outline"
+                onClick={() => setIsPrintModalOpen(true)}
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Imprimir / PDF
+              </Button>
+            </div>
+
+            <ManutencaoTable
+              manutencoes={filteredManutencoes}
+              onEdit={handleOpenForm}
+              onDelete={handleOpenDeleteDialog}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
 
         {/* Modal de formulário */}
@@ -273,8 +310,9 @@ const Manutencao = () => {
           onClose={() => setIsPrintModalOpen(false)}
           title="Relatório de Manutenções"
           subtitle="Listagem completa de manutenções"
-          data={manutencoes}
+          data={filteredManutencoes}
           columns={printColumns}
+          filters={filtersText}
         />
       </div>
     </ModuleLayout>

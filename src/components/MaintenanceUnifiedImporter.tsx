@@ -176,17 +176,6 @@ export function MaintenanceUnifiedImporter({ onImportComplete }: MaintenanceUnif
     const handleConfirmImport = useCallback(async () => {
         if (!parseResult || parseResult.validRows === 0) return;
 
-        // Filtrar apenas linhas válidas (sem erros)
-        const validRows = parseResult.rows.filter((r) => r.parsingErrors.length === 0);
-
-        if (validRows.length === 0) {
-            toast({
-                title: 'Nenhum registro válido',
-                description: 'Corrija os erros antes de importar',
-                variant: 'destructive',
-            });
-            return;
-        }
 
         setIsImporting(true);
 
@@ -203,16 +192,17 @@ export function MaintenanceUnifiedImporter({ onImportComplete }: MaintenanceUnif
         try {
             // Converter para formato esperado pelo importer
             // O importer espera 'placa' normalizada (sem espaços, hífens, uppercase)
-            const rowsToImport = validRows.map((row) => ({
+            const rowsToImport = parseResult.rows.map((row) => ({
                 data: row.data || '',
-                placa: normalizePlaca(row.veiculo) || '', // Normalizar placa (remove espaços, hífens, uppercase)
+                placa: normalizePlaca(row.veiculo) || '',
                 estabelecimento: row.estabelecimento || '',
                 tipo_servico: row.tipo_servico || '',
                 descricao_servico: row.descricao_servico || null,
                 custo_total: row.custo_total || 0,
-                km_manutencao: row.km_manutencao !== null ? row.km_manutencao : (null as any), // null para "S/KM" (conforme requisito)
+                km_manutencao: row.km_manutencao !== null ? row.km_manutencao : (null as any),
                 nota_fiscal: row.nota_fiscal || null,
-                tipo_manutencao: row.tipo_manutencao || selectedTipoManutencao || 'corretiva', // Usar do Excel ou selecionado ou padrão
+                tipo_manutencao: row.tipo_manutencao || selectedTipoManutencao || 'corretiva',
+                parsingErrors: row.parsingErrors,
             }));
 
             const onProgress = (progress: ImportProgress) => {
@@ -223,9 +213,11 @@ export function MaintenanceUnifiedImporter({ onImportComplete }: MaintenanceUnif
 
             if (result.errors.length > 0) {
                 toast({
-                    title: 'Importação concluída com avisos',
-                    description: `${result.success} manutenção(ões) importada(s). ${result.errors.length} erro(s).`,
-                    variant: 'default',
+                    title: result.errors.length > 0 ? 'Importação concluída com erros' : 'Importação concluída com sucesso',
+                    description: result.errors.length > 0
+                        ? `Falha ao importar: ${result.errors.join('\n')}`
+                        : `${result.success} manutenção(ões) importada(s).`,
+                    variant: result.errors.length > 0 ? 'destructive' : 'default',
                 });
             } else {
                 toast({
@@ -590,7 +582,7 @@ export function MaintenanceUnifiedImporter({ onImportComplete }: MaintenanceUnif
                 </Button>
                 <Button
                     onClick={handleConfirmImport}
-                    disabled={isImporting || stats.valid === 0}
+                    disabled={isImporting || stats.total === 0}
                 >
                     {isImporting ? (
                         <>
@@ -598,7 +590,7 @@ export function MaintenanceUnifiedImporter({ onImportComplete }: MaintenanceUnif
                             Importando...
                         </>
                     ) : (
-                        `Importar ${stats.valid} Manutenção(ões)`
+                        `Importar ${stats.total} Manutenção(ões)`
                     )}
                 </Button>
             </div>

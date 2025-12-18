@@ -4,22 +4,37 @@ import { Entrega } from '@/types/entrega';
 
 interface KPICardsProps {
   entregas: Entrega[];
+  stats?: {
+    totalEntregas: number;
+    custoTotalEntregas: number;
+    custoTotalMontagem: number;
+    percentualMedioGastos: number;
+  };
 }
 
-export function KPICards({ entregas }: KPICardsProps) {
-  const totalEntregas = entregas.length;
+export function KPICards({ entregas, stats }: KPICardsProps) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'KPICards.tsx:15',message:'KPICards recebeu dados',data:{entregasLength:entregas.length,hasStats:!!stats,statsTotal:stats?.totalEntregas,statsObject:stats},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'FIX'})}).catch(()=>{});
+  // #endregion
+  const totalEntregas = stats ? stats.totalEntregas : entregas.length;
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'KPICards.tsx:20',message:'Total de entregas calculado',data:{totalEntregas,statsTotalEntregas:stats?.totalEntregas,usingStats:!!stats},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'FIX'})}).catch(()=>{});
+  // #endregion
 
-  const custoTotalEntregas = entregas.reduce((acc, e) =>
-    acc + (e.gastos_entrega || 0), 0
-  );
+  const custoTotalEntregas = stats
+    ? stats.custoTotalEntregas
+    : entregas.reduce((acc, e) => acc + (e.gastos_entrega || 0), 0);
 
-  const custoTotalMontagem = entregas.reduce((acc, e) =>
-    acc + (e.gastos_montagem || 0), 0
-  );
+  const custoTotalMontagem = stats
+    ? stats.custoTotalMontagem
+    : entregas.reduce((acc, e) => acc + (e.gastos_montagem || 0), 0);
 
-  const percentualMedioGastos = entregas.length > 0
-    ? entregas.reduce((acc, e) => acc + (e.percentual_gastos || 0), 0) / entregas.length
-    : 0;
+  const percentualMedioGastos = stats
+    ? stats.percentualMedioGastos
+    : (entregas.length > 0
+      ? entregas.reduce((acc, e) => acc + (e.percentual_gastos || 0), 0) / entregas.length
+      : 0);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {

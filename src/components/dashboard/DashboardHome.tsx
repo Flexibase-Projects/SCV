@@ -94,6 +94,10 @@ export function DashboardHome() {
 
     // Fetch Data
     const { data: entregas = [] } = useEntregas();
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DashboardHome.tsx:96',message:'Entregas recebidas no componente',data:{entregasLength:entregas.length,firstId:entregas[0]?.id,lastId:entregas[entregas.length-1]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     const { data: abastecimentos = [] } = useAbastecimentos();
     const { data: manutencoes = [] } = useManutencoes();
     const { data: motoristas = [] } = useMotoristas(true);

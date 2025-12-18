@@ -15,6 +15,8 @@ export interface Manutencao {
   tipo_manutencao: TipoManutencao;
   status: StatusManutencao;
   problema_detectado: string | null;
+  erros?: string | null;
+  descricao_erros?: string | null;
   created_at: string;
   updated_at: string;
 }

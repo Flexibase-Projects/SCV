@@ -260,95 +260,82 @@ function processRow(
       parsedRow.parsingErrors?.push(parsed.error);
     }
   } else {
-    // Se não for aglutinada, ler campos separados
-    parsedRow.pv_foco = normalizeText(row.pv_foco || row.pv || row.pvfoco);
-    parsedRow.nf = normalizeText(row.nf || row.nota_fiscal);
+    // Se não for aglutinada, ler campos separados com variações
+    parsedRow.pv_foco = normalizeText(findValueByVariations(row, ['pv_foco', 'pv', 'pvfoco']));
+    parsedRow.nf = normalizeText(findValueByVariations(row, ['nf', 'nota_fiscal', 'nota', 'notafiscal']));
   }
 
-  // 2. Processar campos básicos
-  parsedRow.valor = normalizeNumber(row.valor);
-  parsedRow.cliente = normalizeText(row.cliente);
-  
-  // UF: tentar múltiplas variações de headers normalizados
-  const ufValue = findValueByVariations(row, ['uf', 'estado']);
+  // 2. Processar campos básicos com variações robustas
+  parsedRow.valor = normalizeNumber(findValueByVariations(row, ['valor', 'valor_final', 'valor_total', 'total', 'vf', 'valorfinal']));
+  parsedRow.cliente = normalizeText(findValueByVariations(row, ['cliente', 'nome_cliente', 'nome']));
+
+  // UF: tentar múltiplas variações
+  const ufValue = findValueByVariations(row, ['uf', 'estado', 'est', 'uf_destino']);
   parsedRow.uf = normalizeText(ufValue, { uppercase: true });
-  
+
   // DATA SAÍDA: tentar múltiplas variações
   const dataSaidaValue = findValueByVariations(row, [
+    'data_saida',
     'data_de_saida',
-    'data_saida', 
     'datasaida',
-    'data_de_saida',
-    'data_saida'
+    'data_embarque',
+    'dt_saida'
   ]);
-  // Se não encontrou, tentar buscar por padrão parcial
+
   if (!dataSaidaValue) {
-    const dataSaidaKey = Object.keys(row).find(k => 
-      k.toLowerCase().includes('data') && 
+    const dataSaidaKey = Object.keys(row).find(k =>
+      k.toLowerCase().includes('data') &&
       (k.toLowerCase().includes('saida') || k.toLowerCase().includes('saída'))
     );
-    if (dataSaidaKey) {
-      parsedRow.data_saida = normalizeDate(row[dataSaidaKey]);
-    } else {
-      parsedRow.data_saida = null;
-    }
+    parsedRow.data_saida = normalizeDate(dataSaidaKey ? row[dataSaidaKey] : null);
   } else {
     parsedRow.data_saida = normalizeDate(dataSaidaValue);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'excelParser.ts:processRow:data_saida',message:'data_saida processada',data:{input:dataSaidaValue,inputType:typeof dataSaidaValue,output:parsedRow.data_saida,lineNumber},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
   }
-  
-  parsedRow.motorista = normalizeText(row.motorista, { titleCase: true });
-  
+
+  parsedRow.motorista = normalizeText(findValueByVariations(row, ['motorista', 'condutor', 'nome_motorista']), { titleCase: true });
+
   // CARRO: tentar múltiplas variações
-  // Usar normalizeText para preservar valor original (fabricante)
-  // O match com veículos será feito posteriormente na importação
-  const carroValue = findValueByVariations(row, ['carro', 'veiculo']);
+  const carroValue = findValueByVariations(row, ['carro', 'veiculo', 'placa', 'veiculo_placa']);
   parsedRow.carro = normalizeText(carroValue);
-  
-  // TIPO TRANSPORTE: tentar múltiplas variações (incluindo "tipo_de_transporte" que vem da normalização)
+
+  // TIPO TRANSPORTE: tentar múltiplas variações
   const tipoTransporteValue = findValueByVariations(row, [
-    'tipo_de_transporte',
     'tipo_transporte',
+    'tipo_de_transporte',
     'tipo',
-    'tipotransporte'
+    'meio_transporte'
   ]);
-  // Se não encontrou, tentar buscar por padrão parcial
+
   if (!tipoTransporteValue) {
-    const tipoTransporteKey = Object.keys(row).find(k => 
-      k.toLowerCase().includes('tipo') && 
-      (k.toLowerCase().includes('transporte') || k.toLowerCase().includes('transporte'))
+    const tipoTransporteKey = Object.keys(row).find(k =>
+      k.toLowerCase().includes('tipo') &&
+      k.toLowerCase().includes('transporte')
     );
-    if (tipoTransporteKey) {
-      parsedRow.tipo_transporte = normalizeText(row[tipoTransporteKey]);
-    } else {
-      parsedRow.tipo_transporte = null;
-    }
+    parsedRow.tipo_transporte = normalizeText(tipoTransporteKey ? row[tipoTransporteKey] : null);
   } else {
     parsedRow.tipo_transporte = normalizeText(tipoTransporteValue);
   }
-  
-  parsedRow.status = normalizeStatus(row.status) as StatusEntrega | null;
-  parsedRow.precisa_montagem = normalizeBoolean(row.precisa_de_montagem || row.precisa_montagem || row.precisamontagem);
-  
+
+  const statusValue = findValueByVariations(row, ['status', 'situacao', 'estado_entrega']);
+  parsedRow.status = normalizeStatus(statusValue) as StatusEntrega | null;
+
+  const precisaMontagemValue = findValueByVariations(row, ['precisa_montagem', 'precisa_de_montagem', 'montagem', 'requer_montagem']);
+  parsedRow.precisa_montagem = normalizeBoolean(precisaMontagemValue);
+
   // DATA MONTAGEM: tentar múltiplas variações
   const dataMontagemValue = findValueByVariations(row, [
+    'data_montagem',
     'data_da_montagem',
-    'data_montagem', 
-    'datamontagem'
+    'datamontagem',
+    'dt_montagem'
   ]);
-  // Se não encontrou, tentar buscar por padrão parcial
+
   if (!dataMontagemValue) {
-    const dataMontagemKey = Object.keys(row).find(k => 
-      k.toLowerCase().includes('data') && 
+    const dataMontagemKey = Object.keys(row).find(k =>
+      k.toLowerCase().includes('data') &&
       k.toLowerCase().includes('montagem')
     );
-    if (dataMontagemKey) {
-      parsedRow.data_montagem = normalizeDate(row[dataMontagemKey]);
-    } else {
-      parsedRow.data_montagem = null;
-    }
+    parsedRow.data_montagem = normalizeDate(dataMontagemKey ? row[dataMontagemKey] : null);
   } else {
     parsedRow.data_montagem = normalizeDate(dataMontagemValue);
   }
@@ -367,22 +354,35 @@ function processRow(
       : excessText;
   }
 
-  // 4. Processar gastos e produtividade
-  parsedRow.gastos_entrega = normalizeNumber(
-    row.gastos_com_entrega || row.gastos_entrega || row.gastosentrega
-  );
-  parsedRow.gastos_montagem = normalizeNumber(
-    row.gastos_com_montagem || row.gastos_montagem || row.gastosmontagem
-  );
-  parsedRow.produtividade = normalizeNumber(row.produtividade);
-  
+  // 4. Processar gastos e produtividade com variações
+  parsedRow.gastos_entrega = normalizeNumber(findValueByVariations(row, [
+    'gastos_entrega',
+    'gasto_entrega',
+    'gastos_com_entrega',
+    'valor_entrega'
+  ]));
+  parsedRow.gastos_montagem = normalizeNumber(findValueByVariations(row, [
+    'gastos_montagem',
+    'gasto_montagem',
+    'gastos_com_montagem',
+    'valor_montagem'
+  ]));
+  parsedRow.produtividade = normalizeNumber(findValueByVariations(row, ['produtividade', 'prod']));
+
   // ERROS: tentar múltiplas variações
-  const errosValue = findValueByVariations(row, ['erros']);
-  parsedRow.erros = normalizeText(errosValue);
+  parsedRow.erros = normalizeText(findValueByVariations(row, ['erros', 'erro', 'problema']));
 
   // 5. Calcular % GASTOS se não estiver preenchido
+  // Usar variações específicas de porcentagem, ignorando "gastos" genérico que pode ser monetário
+  const percentualGastosValue = findValueByVariations(row, [
+    'percentual_gastos',
+    'porcentagem_gastos',
+    '%_gastos',
+    'perc_gastos'
+  ]);
+
   parsedRow.percentual_gastos = calculatePercentualGastos(
-    normalizeNumber(row.percentual_gastos || row.gastos || row['%_gastos']),
+    normalizeNumber(percentualGastosValue),
     parsedRow.gastos_entrega,
     parsedRow.gastos_montagem,
     parsedRow.valor
@@ -423,151 +423,79 @@ export async function parseExcelEntregas(file: File): Promise<ParseResult> {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
+        // Desabilitar cellDates para evitar problemas de timezone automáticos do XLSX
+        const workbook = XLSX.read(data, { type: 'binary', cellDates: false });
 
         // Pegar primeira planilha
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
-        // Converter para JSON (array de arrays)
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' }) as any[][];
+        // Obter range para processamento linha a linha (mais controle sobre cell.w)
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
 
-        if (!jsonData || jsonData.length === 0) {
-          reject(new Error('Arquivo Excel vazio ou inválido'));
+        if (range.e.r === 0) {
+          reject(new Error('Arquivo Excel vazio ou sem dados'));
           return;
         }
 
-        // Processar headers
-        const rawHeaders = jsonData[0].map(String);
-        const normalizedHeaders = rawHeaders.map(normalizeHeader);
+        // 1. Extrair Headers
+        const rawHeaders: string[] = [];
+        const normalizedHeaders: string[] = [];
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cell = worksheet[XLSX.utils.encode_cell({ r: 0, c })];
+          const val = cell?.w || cell?.v || '';
+          rawHeaders.push(String(val));
+          normalizedHeaders.push(normalizeHeader(String(val)));
+        }
 
-        // Detectar se primeira coluna é aglutinada
-        const firstColumnIsAglutinated = detectAglutinatedColumn(rawHeaders);
-
-        // Criar mapeamento de headers normalizados para índices e também mapeamento reverso
-        const headerMap: Record<string, number> = {};
-        const headerVariations: Record<string, string[]> = {};
-        
-        normalizedHeaders.forEach((header, idx) => {
-          // Mapear variações de montadores
-          if (header.includes('montador')) {
-            const match = header.match(/montador[_\s]*(\d+)/);
-            if (match) {
-              headerMap[`montador_${match[1]}`] = idx;
-            }
-          }
-          headerMap[header] = idx;
-          
-          // Criar variações comuns para busca flexível
-          // UF
-          if (header === 'uf' || header.includes('uf') && !header.includes('foco')) {
-            if (!headerVariations['uf']) headerVariations['uf'] = [];
-            headerVariations['uf'].push(header);
-          }
-          if (header === 'estado') {
-            if (!headerVariations['uf']) headerVariations['uf'] = [];
-            headerVariations['uf'].push(header);
-          }
-          
-          // DATA DE SAÍDA
-          if (header.includes('data') && (header.includes('saida') || header.includes('saída'))) {
-            if (!headerVariations['data_saida']) headerVariations['data_saida'] = [];
-            headerVariations['data_saida'].push(header);
-          }
-          
-          // DATA DA MONTAGEM
-          if (header.includes('data') && header.includes('montagem')) {
-            if (!headerVariations['data_montagem']) headerVariations['data_montagem'] = [];
-            headerVariations['data_montagem'].push(header);
-          }
-        });
-
-        // Processar linhas
+        // 2. Processar Linhas
+        const rowsCount = range.e.r;
         const rows: ParsedEntregaRow[] = [];
         const allErrors: ParsingError[] = [];
+        const firstColumnIsAglutinated = detectAglutinatedColumn(rawHeaders);
 
-        for (let i = 1; i < jsonData.length; i++) {
-          const rowData = jsonData[i];
-
-          // Pular linhas completamente vazias
-          if (rowData.every((cell) => cell === '' || cell === null || cell === undefined)) {
-            continue;
-          }
-
-          // Criar objeto row com valores mapeados
+        for (let r = 1; r <= rowsCount; r++) {
           const row: Record<string, any> = {};
-          normalizedHeaders.forEach((header, idx) => {
-            let value = rowData[idx];
+          let hasAnyValue = false;
 
-            // Se for uma data do Excel, converter para string ISO usando métodos locais
-            if (value instanceof Date) {
-              value = formatDateLocal(value);
+          normalizedHeaders.forEach((header, c) => {
+            const cell = worksheet[XLSX.utils.encode_cell({ r, c })];
+            // Priorizar 'w' (valor formatado) para strings/números formatados
+            // Usar 'v' se 'w' não existir
+            let value = cell?.w || cell?.v || null;
+
+            if (value !== null && value !== '') {
+              hasAnyValue = true;
             }
-            
-            // Se for número de data serial do Excel (formato numérico)
-            // Excel armazena datas como número de dias desde 01/01/1900
-            if (typeof value === 'number' && value > 1 && value < 100000) {
-              try {
-                // Excel epoch: 01/01/1900, mas Excel conta 01/01/1900 como dia 1
-                const excelEpoch = new Date(1899, 11, 30); // 30/12/1899
-                const date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
-                if (!isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100) {
-                  value = formatDateLocal(date);
-                }
-              } catch (e) {
-                // Manter valor original se conversão falhar
+
+            // Normalização de Datas Seriais do Excel se não vieram como 'w'
+            if (typeof value === 'number' && value > 10000 && value < 100000) {
+              const excelEpoch = new Date(1899, 11, 30);
+              const date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+              if (!isNaN(date.getTime())) {
+                value = formatDateLocal(date);
               }
             }
 
-            // Mapear montadores
+            // Aliases para Montadores
             if (header.includes('montador')) {
               const match = header.match(/montador[_\s]*(\d+)/);
               if (match) {
-                row[`montador_${match[1]}`] = value ?? null;
+                row[`montador_${match[1]}`] = value;
               }
             }
 
-            row[header] = value ?? null;
-            
-            // Adicionar também variações conhecidas para facilitar busca
-            if (headerVariations['uf']?.includes(header)) {
-              row['uf'] = value ?? null;
-              row['estado'] = value ?? null;
-            }
-            if (headerVariations['data_saida']?.includes(header)) {
-              row['data_saida'] = value ?? null;
-              row['data_de_saida'] = value ?? null;
-            }
-            if (headerVariations['data_montagem']?.includes(header)) {
-              row['data_montagem'] = value ?? null;
-              row['data_da_montagem'] = value ?? null;
-            }
-            
-            // Adicionar aliases para CARRO
-            if (header === 'carro' || header === 'veiculo') {
-              row['carro'] = value ?? null;
-              row['veiculo'] = value ?? null;
-            }
-            
-            // Adicionar aliases para TIPO TRANSPORTE
-            if (header.includes('tipo') && header.includes('transporte')) {
-              row['tipo_transporte'] = value ?? null;
-              row['tipo_de_transporte'] = value ?? null;
-              row['tipo'] = value ?? null;
-            }
-            
-            // Adicionar aliases para ERROS
-            if (header === 'erros') {
-              row['erros'] = value ?? null;
-            }
+            row[header] = value;
           });
 
-          // Processar linha
+          if (!hasAnyValue) continue;
+
+          // Processar linha com as novas regras flexíveis
           const { row: parsedRow, errors } = processRow(
             row,
             rawHeaders,
             normalizedHeaders,
-            i + 1,
+            r + 1,
             firstColumnIsAglutinated
           );
 
