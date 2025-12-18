@@ -136,10 +136,10 @@ O **SCV (Sistema de Controle de Veículos)** é uma aplicação web completa des
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/lovable-logistics-hub.git
+git clone https://github.com/gustavorochaC/Controle-Frotas
 
 # Acesse a pasta do projeto
-cd lovable-logistics-hub
+cd Controle-Frotas
 
 # Instale as dependências
 npm install
