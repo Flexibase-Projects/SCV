@@ -194,62 +194,54 @@ const Manutencao = () => {
 
         <div className="space-y-6">
           {/* Cards de resumo */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                    <Wrench className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Manutenções</p>
-                    <p className="text-2xl font-bold text-foreground">{totalManutencoes}</p>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Manutenções</span>
+                <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
+                  <Wrench className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalManutencoes}</p>
+              <p className="text-xs text-gray-400 mt-1">registros encontrados</p>
+            </div>
 
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                    <DollarSign className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Custo Total</p>
-                    <p className="text-2xl font-bold text-foreground">{formatCurrency(custoTotalGeral)}</p>
-                  </div>
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custo Total</span>
+                <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {formatCurrency(custoTotalGeral)}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">custo acumulado</p>
+            </div>
 
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
-                    <Calendar className="h-5 w-5 text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Custo no Período</p>
-                    <p className="text-2xl font-bold text-foreground">{formatCurrency(custoPeriodo)}</p>
-                  </div>
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custo no Período</span>
+                <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {formatCurrency(custoPeriodo)}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">custo filtrado</p>
+            </div>
 
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
-                    <Car className="h-5 w-5 text-purple-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Veículos Atendidos</p>
-                    <p className="text-2xl font-bold text-foreground">{veiculosUnicos}</p>
-                  </div>
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Veículos Atendidos</span>
+                <div className="h-10 w-10 bg-purple-50 dark:bg-purple-500/10 rounded-xl flex items-center justify-center">
+                  <Car className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{veiculosUnicos}</p>
+              <p className="text-xs text-gray-400 mt-1">veículos distintos</p>
+            </div>
           </div>
 
           {/* Tabela de manutenções */}

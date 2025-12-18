@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Gauge, Printer } from 'lucide-react';
+import { Plus, Gauge, Printer, FileText, Droplet, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AbastecimentoTable } from '@/components/abastecimento/AbastecimentoTable';
@@ -183,61 +183,62 @@ const AbastecimentoPage = () => {
 
         <div className="space-y-6">
           {/* Cards de resumo */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-card border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total de Registros
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-foreground">{filteredAbastecimentos.length}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total de Litros
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-foreground">
-                  {totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Gauge className="h-4 w-4" />
-                  Média de Consumo
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-blue-500">
-                  {mediaConsumo > 0
-                    ? `${mediaConsumo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/l`
-                    : 'N/A'}
-                </p>
-                {abastecimentosComKmPorLitro.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Baseado em {abastecimentosComKmPorLitro.length} registro(s)
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-            <Card className="bg-card border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Valor Total
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-green-500">
-                  R$ {totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Registros</span>
+                <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{filteredAbastecimentos.length}</p>
+              <p className="text-xs text-gray-400 mt-1">abastecimentos listados</p>
+            </div>
+
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Litros</span>
+                <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
+                  <Droplet className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L
+              </p>
+              <p className="text-xs text-gray-400 mt-1">combustível consumido</p>
+            </div>
+
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Média de Consumo</span>
+                <div className="h-10 w-10 bg-purple-50 dark:bg-purple-500/10 rounded-xl flex items-center justify-center">
+                  <Gauge className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {mediaConsumo > 0
+                  ? `${mediaConsumo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/l`
+                  : 'N/A'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {abastecimentosComKmPorLitro.length > 0
+                  ? `baseado em ${abastecimentosComKmPorLitro.length} registros`
+                  : 'sem dados suficientes'}
+              </p>
+            </div>
+
+            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Valor Total</span>
+                <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                R$ {totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">custo total no período</p>
+            </div>
           </div>
 
 

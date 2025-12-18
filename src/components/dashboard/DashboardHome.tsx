@@ -94,9 +94,9 @@ export function DashboardHome() {
 
     // Fetch Data
     const { data: entregas = [] } = useEntregas();
-    
+
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DashboardHome.tsx:96',message:'Entregas recebidas no componente',data:{entregasLength:entregas.length,firstId:entregas[0]?.id,lastId:entregas[entregas.length-1]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DashboardHome.tsx:96', message: 'Entregas recebidas no componente', data: { entregasLength: entregas.length, firstId: entregas[0]?.id, lastId: entregas[entregas.length - 1]?.id }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
     // #endregion
     const { data: abastecimentos = [] } = useAbastecimentos();
     const { data: manutencoes = [] } = useManutencoes();
@@ -284,7 +284,7 @@ export function DashboardHome() {
 
                 {/* KPIs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Frota Ativa</span>
                             <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -297,7 +297,7 @@ export function DashboardHome() {
                         <p className="text-xs text-gray-400 mt-1">veículos operando</p>
                     </div>
 
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Manutenções</span>
                             <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
@@ -310,7 +310,7 @@ export function DashboardHome() {
                         <p className="text-xs text-gray-400 mt-1">ordens pendentes</p>
                     </div>
 
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custos Mês</span>
                             <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
@@ -323,7 +323,7 @@ export function DashboardHome() {
                         <p className="text-xs text-gray-400 mt-1">mês atual</p>
                     </div>
 
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Conclusão ({selectedYear})</span>
                             <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -426,8 +426,8 @@ export function DashboardHome() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                             {/* Gráfico de Abastecimento - Barras */}
-                            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
-                                <div className="flex items-center justify-between mb-4">
+                            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
+                                <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                             <Fuel className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -437,38 +437,40 @@ export function DashboardHome() {
                                     </div>
                                 </div>
 
-                                <ResponsiveContainer width="100%" height={220}>
-                                    <BarChart data={fuelData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:opacity-10" />
-                                        <XAxis
-                                            dataKey="mes"
-                                            stroke="#9ca3af"
-                                            style={{ fontSize: '11px' }}
-                                        />
-                                        <YAxis
-                                            stroke="#9ca3af"
-                                            style={{ fontSize: '11px' }}
-                                        />
-                                        <Tooltip content={<CustomTooltip />} />
-                                        <Bar
-                                            dataKey="litros"
-                                            fill="#3b82f6"
-                                            radius={[8, 8, 0, 0]}
-                                            name="Litros"
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                                <div className="flex-1">
+                                    <ResponsiveContainer width="100%" height={240}>
+                                        <BarChart data={fuelData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:opacity-10" />
+                                            <XAxis
+                                                dataKey="mes"
+                                                stroke="#9ca3af"
+                                                style={{ fontSize: '11px' }}
+                                            />
+                                            <YAxis
+                                                stroke="#9ca3af"
+                                                style={{ fontSize: '11px' }}
+                                            />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar
+                                                dataKey="litros"
+                                                fill="#3b82f6"
+                                                radius={[8, 8, 0, 0]}
+                                                name="Litros"
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
 
                                 <Link to="/abastecimento" className="mt-4 block">
-                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400">
+                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400 h-9">
                                         Ver histórico completo <ArrowRight className="h-3 w-3 ml-1" />
                                     </Button>
                                 </Link>
                             </div>
 
                             {/* Gráfico de Manutenção - Donut */}
-                            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
-                                <div className="flex items-center justify-between mb-4">
+                            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
+                                <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                             <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -478,32 +480,34 @@ export function DashboardHome() {
                                     </div>
                                 </div>
 
-                                <ResponsiveContainer width="100%" height={220}>
-                                    <PieChart>
-                                        <Pie
-                                            data={maintenanceDistribution}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={60}
-                                            outerRadius={80}
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                        >
-                                            {maintenanceDistribution.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip content={<CustomTooltip />} />
-                                        <Legend
-                                            verticalAlign="bottom"
-                                            height={36}
-                                            wrapperStyle={{ fontSize: '11px' }}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                <div className="flex-1">
+                                    <ResponsiveContainer width="100%" height={240}>
+                                        <PieChart>
+                                            <Pie
+                                                data={maintenanceDistribution}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {maintenanceDistribution.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Legend
+                                                verticalAlign="bottom"
+                                                height={36}
+                                                wrapperStyle={{ fontSize: '11px' }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
 
                                 <Link to="/manutencao" className="mt-4 block">
-                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400">
+                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400 h-9">
                                         Ver todas O.S. <ArrowRight className="h-3 w-3 ml-1" />
                                     </Button>
                                 </Link>
