@@ -217,7 +217,8 @@ VITE_ENABLE_IMPORT=true
 
 ## 📱 Screenshots
 
-<img width="1909" height="916" alt="image" src="https://github.com/user-attachments/assets/3e730425-2660-4fdf-a5ff-e177ff4bfb15" />
+<img width="1904" height="918" alt="front" src="https://github.com/user-attachments/assets/06befa8c-6e65-4b93-9833-92037b50320f" />
+
 
 
 ## 🤝 Contribuição
