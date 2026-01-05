@@ -148,7 +148,7 @@ const AcertoViagemPage = () => {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Acerto de Viagem</h1>
             <p className="text-slate-500 mt-1">Gerencie os acertos de viagem e despesas</p>
           </div>
-          <Button onClick={() => setIsFormModalOpen(true)} className="gap-2">
+          <Button onClick={() => setIsFormModalOpen(true)} className="bg-green-600 hover:bg-green-700 gap-2">
             <Plus className="h-4 w-4" />
             Novo Acerto
           </Button>

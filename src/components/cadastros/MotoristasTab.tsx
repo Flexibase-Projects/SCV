@@ -162,7 +162,7 @@ export function MotoristasTab() {
       <CardHeader className="flex flex-col gap-4">
         <div className="flex flex-row items-center justify-between">
           <CardTitle className="text-foreground">Motoristas e Condutores</CardTitle>
-          <Button onClick={() => handleOpenForm()} className="gap-2">
+          <Button onClick={() => handleOpenForm()} className="bg-green-600 hover:bg-green-700 gap-2">
             <Plus className="h-4 w-4" />
             Novo Cadastro
           </Button>

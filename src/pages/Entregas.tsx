@@ -350,7 +350,7 @@ const Entregas = () => {
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Controle de Entregas</h2>
             <p className="text-slate-500 mt-1">Gerenciamento de rotas e entregas</p>
           </div>
-          <Button onClick={() => handleOpenForm()} className="gap-2">
+          <Button onClick={() => handleOpenForm()} className="bg-green-600 hover:bg-green-700 gap-2">
             <Plus className="h-4 w-4" />
             Nova Entrega
           </Button>

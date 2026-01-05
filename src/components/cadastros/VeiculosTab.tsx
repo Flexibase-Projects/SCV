@@ -66,7 +66,7 @@ export function VeiculosTab() {
               Mostrar inativos
             </label>
           </div>
-          <Button onClick={() => handleOpenForm()} className="gap-2">
+          <Button onClick={() => handleOpenForm()} className="bg-green-600 hover:bg-green-700 gap-2">
             <Plus className="h-4 w-4" />
             Novo Veículo
           </Button>

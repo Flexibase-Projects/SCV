@@ -175,7 +175,7 @@ const AbastecimentoPage = () => {
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Controle de Abastecimento</h2>
             <p className="text-slate-500 mt-1">Controle de abastecimentos e consumo</p>
           </div>
-          <Button onClick={() => handleOpenForm()} className="gap-2">
+          <Button onClick={() => handleOpenForm()} className="bg-green-600 hover:bg-green-700 gap-2">
             <Plus className="h-4 w-4" />
             Novo Abastecimento
           </Button>
