@@ -1,31 +1,31 @@
 import { Link } from 'react-router-dom';
-import { 
-  ArrowBack as ArrowLeft, 
-  MenuBook as BookOpen, 
-  LocalShipping as Truck, 
-  LocalGasStation as Fuel, 
-  Build as Wrench, 
-  Description as FileText, 
-  Settings, 
-  TrendingUp, 
-  CheckCircle as CheckCircle2, 
-  ErrorOutline as AlertCircle, 
-  Lightbulb, 
-  HelpOutline as HelpCircle, 
-  People as Users, 
-  DirectionsCar as Car, 
-  AccessTime as Clock, 
-  WarningAmber as AlertTriangle, 
-  ToggleOff as ToggleLeft, 
-  Search, 
-  Print as Printer, 
-  Edit, 
-  Delete as Trash2, 
-  Calculate as Calculator, 
-  FactCheck as FileCheck, 
-  Route, 
-  ManageAccounts as UserCog, 
-  Shield, 
+import {
+  ArrowBack as ArrowLeft,
+  MenuBook as BookOpen,
+  LocalShipping as Truck,
+  LocalGasStation as Fuel,
+  Build as Wrench,
+  Description as FileText,
+  Settings,
+  TrendingUp,
+  CheckCircle as CheckCircle2,
+  ErrorOutline as AlertCircle,
+  Lightbulb,
+  HelpOutline as HelpCircle,
+  People as Users,
+  DirectionsCar as Car,
+  AccessTime as Clock,
+  WarningAmber as AlertTriangle,
+  ToggleOff as ToggleLeft,
+  Search,
+  Print as Printer,
+  Edit,
+  Delete as Trash2,
+  Calculate as Calculator,
+  FactCheck as FileCheck,
+  Route,
+  ManageAccounts as UserCog,
+  Shield,
   CloudUpload as Upload
 } from '@mui/icons-material';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -42,9 +42,9 @@ import { isImportEnabled } from '@/utils/featureFlags';
 
 export default function Ajuda() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115]">
       {/* Header */}
-      <header className="border-b border-border/60 bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-border/60 bg-brand-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -82,7 +82,7 @@ export default function Ajuda() {
               <div>
                 <h2 className="text-xl font-semibold mb-2">Bem-vindo ao SCV!</h2>
                 <p className="text-muted-foreground mb-3">
-                  Este guia completo vai te ajudar a utilizar todas as funcionalidades do sistema. 
+                  Este guia completo vai te ajudar a utilizar todas as funcionalidades do sistema.
                   Navegue pelas abas abaixo para aprender sobre cada módulo.
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -114,7 +114,7 @@ export default function Ajuda() {
 
         {/* Tabs de Conteúdo */}
         <Tabs defaultValue="inicio" className="space-y-6">
-          <TabsList className={`grid w-full grid-cols-2 md:grid-cols-4 ${isImportEnabled() ? 'lg:grid-cols-8' : 'lg:grid-cols-7'} h-auto gap-1 bg-muted/50 p-1`}>
+          <TabsList className={`grid w-full grid-cols-2 md:grid-cols-4 ${isImportEnabled() ? 'lg:grid-cols-8' : 'lg:grid-cols-7'} h-auto gap-1 bg-brand-white/50 p-1`}>
             <TabsTrigger value="inicio" className="gap-1 text-xs sm:text-sm">
               <HelpCircle className="h-4 w-4" />
               <span className="hidden sm:inline">Início</span>
@@ -263,7 +263,7 @@ export default function Ajuda() {
                     <div>
                       <p className="font-medium text-amber-800 dark:text-amber-200">Importante: Motorista vs Condutor</p>
                       <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                        <strong>Motorista:</strong> Faz entregas - aparece no módulo de Entregas e Acerto de Viagem<br/>
+                        <strong>Motorista:</strong> Faz entregas - aparece no módulo de Entregas e Acerto de Viagem<br />
                         <strong>Condutor:</strong> Abastece veículos - aparece no módulo de Abastecimento
                       </p>
                     </div>
@@ -469,7 +469,7 @@ export default function Ajuda() {
                       <div>
                         <p className="font-medium text-emerald-800 dark:text-emerald-200">Cálculo Automático de Litros</p>
                         <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
-                          O sistema calcula automaticamente:<br/>
+                          O sistema calcula automaticamente:<br />
                           <code className="bg-emerald-100 dark:bg-emerald-800 px-1 rounded">Litros = Valor Total ÷ Valor/Litro</code>
                         </p>
                       </div>
@@ -558,7 +558,7 @@ export default function Ajuda() {
                     <div>
                       <p className="font-medium text-emerald-800 dark:text-emerald-200">Manutenção Preventiva Programada</p>
                       <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
-                        Configure alertas por <strong>Km</strong> ou <strong>tempo</strong> para cada veículo. 
+                        Configure alertas por <strong>Km</strong> ou <strong>tempo</strong> para cada veículo.
                         O sistema avisa quando estiver próximo da próxima manutenção.
                       </p>
                     </div>
@@ -634,7 +634,7 @@ export default function Ajuda() {
                     <div>
                       <p className="font-medium text-emerald-800 dark:text-emerald-200">Cálculo Automático</p>
                       <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
-                        O sistema calcula automaticamente:<br/>
+                        O sistema calcula automaticamente:<br />
                         <code className="bg-emerald-100 dark:bg-emerald-800 px-1 rounded">Saldo = Adiantamento - Total de Despesas</code>
                       </p>
                     </div>
@@ -646,182 +646,182 @@ export default function Ajuda() {
 
           {/* Tab: Importação */}
           {isImportEnabled() && (
-          <TabsContent value="importacao" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-indigo-600" />
-                  Importação de Dados
-                </CardTitle>
-                <CardDescription>
-                  Importe dados em massa através de planilhas Excel para agilizar o cadastro
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <div className="flex items-start gap-2">
-                    <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-blue-800 dark:text-blue-200">Dois Modos de Importação</p>
-                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                        O sistema oferece <strong>importação padrão</strong> para veículos, motoristas, abastecimentos e manutenções, 
-                        e <strong>importação avançada</strong> para entregas com parser inteligente que trata colunas aglutinadas e faz match automático de veículos.
-                      </p>
+            <TabsContent value="importacao" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5 text-indigo-600" />
+                    Importação de Dados
+                  </CardTitle>
+                  <CardDescription>
+                    Importe dados em massa através de planilhas Excel para agilizar o cadastro
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-blue-800 dark:text-blue-200">Dois Modos de Importação</p>
+                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                          O sistema oferece <strong>importação padrão</strong> para veículos, motoristas, abastecimentos e manutenções,
+                          e <strong>importação avançada</strong> para entregas com parser inteligente que trata colunas aglutinadas e faz match automático de veículos.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <Accordion type="single" collapsible className="space-y-2">
-                  <AccordionItem value="padrao" className="border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <FileCheck className="h-5 w-5 text-green-600" />
-                        <span className="font-medium">Importação Padrão</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold mb-2 text-sm">Tipos de dados suportados:</h4>
-                          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                            <li><strong>Veículos</strong> - Placa, modelo, fabricante, tipo, ano</li>
-                            <li><strong>Motoristas</strong> - Nome, CNH, categoria, validades</li>
-                            <li><strong>Abastecimentos</strong> - Data, veículo, condutor, valores, km</li>
-                            <li><strong>Manutenções</strong> - Tipo, veículo, serviço, custo, km</li>
-                            <li><strong>Montadores</strong> - Nome e telefone</li>
-                          </ul>
+                  <Accordion type="single" collapsible className="space-y-2">
+                    <AccordionItem value="padrao" className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          <FileCheck className="h-5 w-5 text-green-600" />
+                          <span className="font-medium">Importação Padrão</span>
                         </div>
-                        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
-                          <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                            <strong>Dica:</strong> Baixe os templates de exemplo na página de Importação para ver o formato correto de cada tipo de dado.
-                          </p>
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="avancada" className="border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <FileCheck className="h-5 w-5 text-indigo-600" />
-                        <span className="font-medium">Importação Avançada de Entregas</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold mb-3 text-sm">Formato da Planilha Excel</h4>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            A planilha deve conter as seguintes colunas (algumas são opcionais):
-                          </p>
-                          <div className="bg-muted/50 rounded-lg p-3 text-xs font-mono space-y-1">
-                            <div><strong>Obrigatórias:</strong> PV FOCO | NF | VALOR | CLIENTE | UF | DATA DE SAÍDA | MOTORISTA</div>
-                            <div><strong>Opcionais:</strong> CARRO | TIPO TRANSPORTE | STATUS | PRECISA DE MONTAGEM? | DATA DA MONTAGEM</div>
-                            <div><strong>Montadores:</strong> MONTADOR 1 até MONTADOR 7</div>
-                            <div><strong>Financeiro:</strong> GASTOS COM ENTREGA | GASTOS COM MONTAGEM | PRODUTIVIDADE | % GASTOS</div>
-                            <div><strong>Observações:</strong> ERROS | DESCRIÇÃO DOS ERROS</div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold mb-2 text-sm">Coluna Aglutinada (PV FOCO + NF)</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Se a primeira coluna contiver "PV FOCO" e "NF" juntos, o sistema separa automaticamente:
-                          </p>
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                            <p className="text-sm text-blue-700 dark:text-blue-300">
-                              <strong>Exemplo:</strong> Se a coluna contiver <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">"5134 DECLARAÇÃO"</code>, 
-                              o sistema extrai automaticamente:
-                            </p>
-                            <ul className="list-disc list-inside mt-2 text-sm text-blue-600 dark:text-blue-400 ml-2">
-                              <li>PV FOCO: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">5134</code></li>
-                              <li>NF: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">DECLARAÇÃO</code></li>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-4">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm">Tipos de dados suportados:</h4>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                              <li><strong>Veículos</strong> - Placa, modelo, fabricante, tipo, ano</li>
+                              <li><strong>Motoristas</strong> - Nome, CNH, categoria, validades</li>
+                              <li><strong>Abastecimentos</strong> - Data, veículo, condutor, valores, km</li>
+                              <li><strong>Manutenções</strong> - Tipo, veículo, serviço, custo, km</li>
+                              <li><strong>Montadores</strong> - Nome e telefone</li>
                             </ul>
                           </div>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold mb-2 text-sm">Processamento de Montadores</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            O sistema suporta até 7 montadores na planilha:
-                          </p>
-                          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                            <li>Os <strong>primeiros 2 montadores</strong> são salvos nos campos específicos (Montador 1 e Montador 2)</li>
-                            <li>Os <strong>montadores excedentes</strong> (3, 4, 5, 6, 7) são concatenados e adicionados ao campo "Descrição de Erros"</li>
-                            <li>Exemplo: Se houver 4 montadores, os 2 primeiros vão para os campos específicos e os outros 2 aparecem como "Montadores adicionais: Nome3, Nome4"</li>
-                          </ul>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold mb-2 text-sm">Match Automático de Veículos</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            O sistema faz match inteligente de veículos durante a importação:
-                          </p>
-                          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-3">
-                            <ol className="list-decimal list-inside space-y-1 text-sm text-indigo-700 dark:text-indigo-300 ml-2">
-                              <li>A planilha pode conter apenas o <strong>fabricante</strong> do veículo (ex: "FORD", "FIAT")</li>
-                              <li>O sistema busca veículos cadastrados pelo fabricante</li>
-                              <li>Se encontrar exatamente 1 veículo, converte para formato <code className="bg-indigo-100 dark:bg-indigo-800 px-1 rounded">"Modelo - Placa"</code></li>
-                              <li>Se encontrar múltiplos, usa o primeiro encontrado</li>
-                              <li>Se não encontrar, mantém o valor original da planilha (para não perder informação)</li>
-                            </ol>
-                            <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2">
-                              <strong>Importante:</strong> Certifique-se de que os veículos estão cadastrados antes de importar para garantir o match correto.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold mb-2 text-sm">Preview e Validação</h4>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Antes de confirmar a importação, o sistema mostra um preview completo:
-                          </p>
-                          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
-                            <li>Visualize todos os dados que serão importados</li>
-                            <li>Erros de parsing são destacados em <span className="text-rose-600 font-medium">vermelho</span></li>
-                            <li>Corrija problemas na planilha antes de prosseguir</li>
-                            <li>Confirme apenas quando todos os dados estiverem corretos</li>
-                          </ul>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold mb-2 text-sm">Cálculos Automáticos</h4>
                           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
                             <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                              <strong>% Gastos:</strong> Se a coluna "% GASTOS" estiver vazia, o sistema calcula automaticamente:
+                              <strong>Dica:</strong> Baixe os templates de exemplo na página de Importação para ver o formato correto de cada tipo de dado.
                             </p>
-                            <code className="block bg-emerald-100 dark:bg-emerald-800 px-2 py-1 rounded mt-2 text-xs">
-                              % Gastos = ((Gastos Entrega + Gastos Montagem) / Valor) × 100
-                            </code>
                           </div>
                         </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                      </AccordionContent>
+                    </AccordionItem>
 
-                  <AccordionItem value="dicas" className="border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <Lightbulb className="h-5 w-5 text-amber-500" />
-                        <span className="font-medium">Dicas e Boas Práticas</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground ml-2">
-                        <li><strong>Sempre revise o preview</strong> antes de confirmar a importação</li>
-                        <li><strong>Verifique se veículos estão cadastrados</strong> antes de importar entregas (para garantir match correto)</li>
-                        <li><strong>Formato de datas:</strong> O sistema aceita DD/MM/YYYY, DD-MM-YYYY, DD.MM.YY ou datas do Excel</li>
-                        <li><strong>Valores monetários:</strong> Use números ou formato "R$ 1.234,56" - o sistema converte automaticamente</li>
-                        <li><strong>UF:</strong> Use sigla de 2 letras (ex: SP, RJ, MG)</li>
-                        <li><strong>Status:</strong> Use PENDENTE, EM ROTA, CONCLUIDO ou CANCELADO</li>
-                        <li><strong>Precisa de Montagem:</strong> Use "Sim", "Não", "S", "N", "true", "false" ou 1/0</li>
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    <AccordionItem value="avancada" className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          <FileCheck className="h-5 w-5 text-indigo-600" />
+                          <span className="font-medium">Importação Avançada de Entregas</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-4">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="font-semibold mb-3 text-sm">Formato da Planilha Excel</h4>
+                            <p className="text-sm text-muted-foreground mb-3">
+                              A planilha deve conter as seguintes colunas (algumas são opcionais):
+                            </p>
+                            <div className="bg-muted/50 rounded-lg p-3 text-xs font-mono space-y-1">
+                              <div><strong>Obrigatórias:</strong> PV FOCO | NF | VALOR | CLIENTE | UF | DATA DE SAÍDA | MOTORISTA</div>
+                              <div><strong>Opcionais:</strong> CARRO | TIPO TRANSPORTE | STATUS | PRECISA DE MONTAGEM? | DATA DA MONTAGEM</div>
+                              <div><strong>Montadores:</strong> MONTADOR 1 até MONTADOR 7</div>
+                              <div><strong>Financeiro:</strong> GASTOS COM ENTREGA | GASTOS COM MONTAGEM | PRODUTIVIDADE | % GASTOS</div>
+                              <div><strong>Observações:</strong> ERROS | DESCRIÇÃO DOS ERROS</div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm">Coluna Aglutinada (PV FOCO + NF)</h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Se a primeira coluna contiver "PV FOCO" e "NF" juntos, o sistema separa automaticamente:
+                            </p>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                              <p className="text-sm text-blue-700 dark:text-blue-300">
+                                <strong>Exemplo:</strong> Se a coluna contiver <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">"5134 DECLARAÇÃO"</code>,
+                                o sistema extrai automaticamente:
+                              </p>
+                              <ul className="list-disc list-inside mt-2 text-sm text-blue-600 dark:text-blue-400 ml-2">
+                                <li>PV FOCO: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">5134</code></li>
+                                <li>NF: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded">DECLARAÇÃO</code></li>
+                              </ul>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm">Processamento de Montadores</h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              O sistema suporta até 7 montadores na planilha:
+                            </p>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                              <li>Os <strong>primeiros 2 montadores</strong> são salvos nos campos específicos (Montador 1 e Montador 2)</li>
+                              <li>Os <strong>montadores excedentes</strong> (3, 4, 5, 6, 7) são concatenados e adicionados ao campo "Descrição de Erros"</li>
+                              <li>Exemplo: Se houver 4 montadores, os 2 primeiros vão para os campos específicos e os outros 2 aparecem como "Montadores adicionais: Nome3, Nome4"</li>
+                            </ul>
+                          </div>
+
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm">Match Automático de Veículos</h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              O sistema faz match inteligente de veículos durante a importação:
+                            </p>
+                            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-3">
+                              <ol className="list-decimal list-inside space-y-1 text-sm text-indigo-700 dark:text-indigo-300 ml-2">
+                                <li>A planilha pode conter apenas o <strong>fabricante</strong> do veículo (ex: "FORD", "FIAT")</li>
+                                <li>O sistema busca veículos cadastrados pelo fabricante</li>
+                                <li>Se encontrar exatamente 1 veículo, converte para formato <code className="bg-indigo-100 dark:bg-indigo-800 px-1 rounded">"Modelo - Placa"</code></li>
+                                <li>Se encontrar múltiplos, usa o primeiro encontrado</li>
+                                <li>Se não encontrar, mantém o valor original da planilha (para não perder informação)</li>
+                              </ol>
+                              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2">
+                                <strong>Importante:</strong> Certifique-se de que os veículos estão cadastrados antes de importar para garantir o match correto.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm">Preview e Validação</h4>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Antes de confirmar a importação, o sistema mostra um preview completo:
+                            </p>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-2">
+                              <li>Visualize todos os dados que serão importados</li>
+                              <li>Erros de parsing são destacados em <span className="text-rose-600 font-medium">vermelho</span></li>
+                              <li>Corrija problemas na planilha antes de prosseguir</li>
+                              <li>Confirme apenas quando todos os dados estiverem corretos</li>
+                            </ul>
+                          </div>
+
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm">Cálculos Automáticos</h4>
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                              <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                                <strong>% Gastos:</strong> Se a coluna "% GASTOS" estiver vazia, o sistema calcula automaticamente:
+                              </p>
+                              <code className="block bg-emerald-100 dark:bg-emerald-800 px-2 py-1 rounded mt-2 text-xs">
+                                % Gastos = ((Gastos Entrega + Gastos Montagem) / Valor) × 100
+                              </code>
+                            </div>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="dicas" className="border rounded-lg px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3">
+                          <Lightbulb className="h-5 w-5 text-amber-500" />
+                          <span className="font-medium">Dicas e Boas Práticas</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-4">
+                        <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground ml-2">
+                          <li><strong>Sempre revise o preview</strong> antes de confirmar a importação</li>
+                          <li><strong>Verifique se veículos estão cadastrados</strong> antes de importar entregas (para garantir match correto)</li>
+                          <li><strong>Formato de datas:</strong> O sistema aceita DD/MM/YYYY, DD-MM-YYYY, DD.MM.YY ou datas do Excel</li>
+                          <li><strong>Valores monetários:</strong> Use números ou formato "R$ 1.234,56" - o sistema converte automaticamente</li>
+                          <li><strong>UF:</strong> Use sigla de 2 letras (ex: SP, RJ, MG)</li>
+                          <li><strong>Status:</strong> Use PENDENTE, EM ROTA, CONCLUIDO ou CANCELADO</li>
+                          <li><strong>Precisa de Montagem:</strong> Use "Sim", "Não", "S", "N", "true", "false" ou 1/0</li>
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            </TabsContent>
           )}
 
           {/* Tab: FAQ */}

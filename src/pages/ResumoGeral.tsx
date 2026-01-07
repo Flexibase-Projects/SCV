@@ -177,20 +177,22 @@ const ResumoGeral = () => {
         />
 
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-          <TabsList className="bg-muted p-1 rounded-xl w-full sm:w-auto flex">
-            <TabsTrigger value="overview" className="flex-1 sm:flex-none gap-2 px-6 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-              <LayoutDashboard className="h-4 w-4" />
-              Visão Financeira
-            </TabsTrigger>
-            <TabsTrigger value="operational" className="flex-1 sm:flex-none gap-2 px-6 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-              <Truck className="h-4 w-4" />
-              Operacional
-            </TabsTrigger>
-            <TabsTrigger value="fleet" className="flex-1 sm:flex-none gap-2 px-6 py-2.5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all">
-              <Wrench className="h-4 w-4" />
-              Frota
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center">
+            <TabsList className="bg-brand-white border border-slate-200 p-1 shadow-sm">
+              <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">
+                <LayoutDashboard className="h-4 w-4" />
+                Visão Financeira
+              </TabsTrigger>
+              <TabsTrigger value="operational" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">
+                <Truck className="h-4 w-4" />
+                Operacional
+              </TabsTrigger>
+              <TabsTrigger value="fleet" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">
+                <Wrench className="h-4 w-4" />
+                Frota
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="mt-0">
             <FinancialOverview

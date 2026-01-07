@@ -287,7 +287,7 @@ export default function Importacao() {
                 )}
 
                 {/* Instruções */}
-                <div className="rounded-lg bg-slate-50 p-4 text-sm text-gray-600">
+                <div className="rounded-lg bg-brand-blue/5 p-4 text-sm text-gray-600">
                   <p className="font-medium">💡 Dicas:</p>
                   <ul className="mt-2 list-disc space-y-1 pl-5">
                     <li>Baixe o template para ver o formato esperado</li>

@@ -77,8 +77,8 @@ export function AppSidebar() {
           transition-all duration-200 group
           ${isCollapsed ? 'justify-center' : ''}
           ${isActive
-            ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 shadow-sm'
-            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
+            ? 'bg-brand-blue text-brand-green dark:bg-brand-green/10 dark:text-brand-green shadow-sm'
+            : 'text-gray-600 dark:text-gray-400 hover:text-brand-green dark:hover:text-brand-green hover:bg-brand-blue dark:hover:bg-brand-white/5'
           }
         `}
       >
@@ -96,7 +96,7 @@ export function AppSidebar() {
 
         {/* Active dot indicator */}
         {isActive && !isCollapsed && (
-          <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />
+          <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-green dark:bg-brand-green" />
         )}
       </Link>
     );
@@ -140,7 +140,7 @@ export function AppSidebar() {
       <aside
         className={`
           ${isCollapsed ? 'w-[72px]' : 'w-64'} 
-          bg-white dark:bg-[#181b21]
+          bg-brand-white dark:bg-[#181b21]
           flex-shrink-0 flex flex-col 
           border-r border-gray-200 dark:border-white/5
           h-screen transition-all duration-300 ease-in-out
@@ -150,19 +150,19 @@ export function AppSidebar() {
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-white/5">
           <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
             {/* Logo Clean */}
-            <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
-              <Truck className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 bg-gradient-to-br from-brand-green to-emerald-600 dark:from-brand-green dark:to-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
+              <Truck className="h-5 w-5 text-brand-white" />
             </div>
             <div>
               <h1 className="text-base font-bold tracking-tight text-gray-900 dark:text-gray-100">SCV</h1>
-              <p className="text-[10px] text-gray-500 font-medium">Fleet Control</p>
+              <p className="text-[10px] text-gray-500 font-medium">Controle de Frota</p>
             </div>
           </div>
 
           {/* Mini logo when collapsed */}
           {isCollapsed && (
-            <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-2xl flex items-center justify-center shadow-sm mx-auto">
-              <Truck className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 bg-gradient-to-br from-brand-green to-emerald-600 dark:from-brand-green dark:to-emerald-600 rounded-2xl flex items-center justify-center shadow-sm mx-auto">
+              <Truck className="h-5 w-5 text-brand-white" />
             </div>
           )}
 
@@ -247,33 +247,6 @@ export function AppSidebar() {
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               <span className="font-medium text-sm">{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
             </Button>
-          )}
-
-          <Divider />
-
-          {/* Ajuda */}
-          {isCollapsed ? (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Link
-                  to="/ajuda"
-                  className="flex items-center justify-center h-10 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200"
-                >
-                  <LifeBuoy className="h-5 w-5" />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700 font-medium">
-                Ajuda
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <Link
-              to="/ajuda"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-200"
-            >
-              <LifeBuoy className="h-5 w-5" />
-              <span className="font-medium text-sm">Ajuda</span>
-            </Link>
           )}
 
           {/* Sair */}

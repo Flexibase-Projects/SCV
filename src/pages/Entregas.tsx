@@ -25,7 +25,7 @@ const Entregas = () => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms debounce
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
-  
+
   // Flag to track if auto-filter has been applied
   const autoFilterApplied = useRef(false);
 
@@ -47,7 +47,7 @@ const Entregas = () => {
 
   // #region agent log
   useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:44',message:'Estado dos dados paginados',data:{entregasLength:entregas.length,totalRecords,page,totalPages,dateFrom:dateFrom?.toISOString(),dateTo:dateTo?.toISOString(),searchTerm:debouncedSearchTerm},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:44', message: 'Estado dos dados paginados', data: { entregasLength: entregas.length, totalRecords, page, totalPages, dateFrom: dateFrom?.toISOString(), dateTo: dateTo?.toISOString(), searchTerm: debouncedSearchTerm }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
   }, [entregas.length, totalRecords, page, totalPages, dateFrom, dateTo, debouncedSearchTerm]);
   // #endregion
 
@@ -73,15 +73,15 @@ const Entregas = () => {
 
   // #region agent log
   useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:53',message:'Estatísticas recebidas',data:{statsTotalEntregas:stats?.totalEntregas,stats},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:53', message: 'Estatísticas recebidas', data: { statsTotalEntregas: stats?.totalEntregas, stats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
   }, [stats]);
-  
+
   useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:62',message:'Estatísticas totais (sem filtros de data)',data:{totalStatsTotalEntregas:totalStats?.totalEntregas,totalStats},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'FIX'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:62', message: 'Estatísticas totais (sem filtros de data)', data: { totalStatsTotalEntregas: totalStats?.totalEntregas, totalStats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'FIX' }) }).catch(() => { });
   }, [totalStats]);
-  
+
   useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:72',message:'Stats sendo passado para KPICards',data:{kpiStatsTotalEntregas:kpiStats?.totalEntregas,usingTotalStats:!!totalStats,hasTotalStats:!!totalStats,hasStats:!!stats},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'FIX'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:72', message: 'Stats sendo passado para KPICards', data: { kpiStatsTotalEntregas: kpiStats?.totalEntregas, usingTotalStats: !!totalStats, hasTotalStats: !!totalStats, hasStats: !!stats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'FIX' }) }).catch(() => { });
   }, [kpiStats, totalStats, stats]);
   // #endregion
 
@@ -114,7 +114,7 @@ const Entregas = () => {
     const fetchMostRecentYear = async () => {
       try {
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:81',message:'Iniciando busca do ano mais recente',data:{autoFilterApplied:autoFilterApplied.current,dateFrom:dateFrom?.toISOString(),dateTo:dateTo?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:81', message: 'Iniciando busca do ano mais recente', data: { autoFilterApplied: autoFilterApplied.current, dateFrom: dateFrom?.toISOString(), dateTo: dateTo?.toISOString() }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
         // #endregion
         // Get the maximum data_saida to find the most recent year
         const { data, error } = await supabase
@@ -126,7 +126,7 @@ const Entregas = () => {
           .maybeSingle();
 
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:90',message:'Resultado da busca do ano mais recente',data:{hasError:!!error,errorMessage:error?.message,dataSaida:data?.data_saida},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:90', message: 'Resultado da busca do ano mais recente', data: { hasError: !!error, errorMessage: error?.message, dataSaida: data?.data_saida }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
         // #endregion
 
         if (error || !data?.data_saida) {
@@ -135,7 +135,7 @@ const Entregas = () => {
           const yearStart = startOfYear(new Date(currentYear, 0, 1));
           const yearEnd = endOfYear(new Date(currentYear, 11, 31));
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:97',message:'Aplicando fallback para ano atual',data:{currentYear,yearStart:yearStart.toISOString(),yearEnd:yearEnd.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:97', message: 'Aplicando fallback para ano atual', data: { currentYear, yearStart: yearStart.toISOString(), yearEnd: yearEnd.toISOString() }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
           // #endregion
           setDateFrom(yearStart);
           setDateTo(yearEnd);
@@ -146,13 +146,13 @@ const Entregas = () => {
         // Extract year from the most recent data_saida
         const mostRecentDate = new Date(data.data_saida);
         const year = mostRecentDate.getFullYear();
-        
+
         // Set dateFrom to January 1st and dateTo to December 31st of that year
         const yearStart = startOfYear(new Date(year, 0, 1));
         const yearEnd = endOfYear(new Date(year, 11, 31));
-        
+
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:110',message:'Aplicando filtro automático por ano',data:{year,mostRecentDate:mostRecentDate.toISOString(),yearStart:yearStart.toISOString(),yearEnd:yearEnd.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:110', message: 'Aplicando filtro automático por ano', data: { year, mostRecentDate: mostRecentDate.toISOString(), yearStart: yearStart.toISOString(), yearEnd: yearEnd.toISOString() }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
         // #endregion
         setDateFrom(yearStart);
         setDateTo(yearEnd);
@@ -160,7 +160,7 @@ const Entregas = () => {
       } catch (err) {
         console.error('Error fetching most recent year:', err);
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Entregas.tsx:115',message:'Erro ao buscar ano mais recente',data:{error:String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:115', message: 'Erro ao buscar ano mais recente', data: { error: String(err) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
         // #endregion
         // Fallback to current year on error
         const currentYear = new Date().getFullYear();
@@ -350,7 +350,7 @@ const Entregas = () => {
             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Controle de Entregas</h2>
             <p className="text-slate-500 mt-1">Gerenciamento de rotas e entregas</p>
           </div>
-          <Button onClick={() => handleOpenForm()} className="bg-green-600 hover:bg-green-700 gap-2">
+          <Button onClick={() => handleOpenForm()} className="bg-brand-green hover:bg-emerald-600 gap-2">
             <Plus className="h-4 w-4" />
             Nova Entrega
           </Button>

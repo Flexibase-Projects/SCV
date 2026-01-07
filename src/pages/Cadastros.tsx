@@ -25,7 +25,7 @@ const Cadastros = () => {
         </div>
 
         <Tabs defaultValue="motoristas" className="space-y-6">
-          <TabsList className="bg-white border border-slate-200 p-1 shadow-sm">
+          <TabsList className="bg-brand-white border border-slate-200 p-1 shadow-sm">
             <TabsTrigger value="motoristas" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">
               <Users className="h-4 w-4" />
               Motoristas / Condutores
@@ -49,7 +49,7 @@ const Cadastros = () => {
           </TabsContent>
 
           <TabsContent value="montadores" className="mt-6">
-            <Card className="bg-card border-border">
+            <Card className="bg-brand-white border-border">
               <CardContent className="p-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">

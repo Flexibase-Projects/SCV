@@ -120,8 +120,8 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card shadow-sm">
+    <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115]">
+      <header className="border-b border-border bg-brand-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -150,7 +150,7 @@ const Index = () => {
                   Cadastros
                 </Button>
               </Link>
-              <Button onClick={() => handleOpenForm()} className="gap-2">
+              <Button onClick={() => handleOpenForm()} className="gap-2 bg-brand-green hover:bg-emerald-600">
                 <Plus className="h-4 w-4" />
                 Nova Entrega
               </Button>

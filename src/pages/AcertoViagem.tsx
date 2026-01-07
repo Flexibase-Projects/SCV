@@ -24,7 +24,7 @@ const AcertoViagemPage = () => {
 
   // #region agent log
   useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AcertoViagem.tsx:23',message:'Estado da query',data:{isLoading,isError,errorMessage:error?.message,acertosLength:acertos.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AcertoViagem.tsx:23', message: 'Estado da query', data: { isLoading, isError, errorMessage: error?.message, acertosLength: acertos.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
   }, [isLoading, isError, error, acertos.length]);
   // #endregion
 
@@ -48,8 +48,8 @@ const AcertoViagemPage = () => {
   // Configuração de colunas para impressão
   const printColumns: TableColumn<AcertoViagem>[] = useMemo(() => [
     { key: 'destino', label: 'Destino' },
-    { 
-      key: 'motorista_nome', 
+    {
+      key: 'motorista_nome',
       label: 'Responsável',
       render: (value, row) => {
         if (row.motorista_nome && row.montador_nome) {
@@ -58,13 +58,13 @@ const AcertoViagemPage = () => {
         return row.motorista_nome || row.montador_nome || '-';
       }
     },
-    { 
-      key: 'veiculo_placa', 
+    {
+      key: 'veiculo_placa',
       label: 'Veículo',
       render: (value, row) => row.veiculo_placa ? `${row.veiculo_placa}${row.veiculo_modelo ? ` - ${row.veiculo_modelo}` : ''}` : '-'
     },
-    { 
-      key: 'data_saida', 
+    {
+      key: 'data_saida',
       label: 'Período',
       render: (value, row) => {
         const saida = value ? format(new Date(value), 'dd/MM/yyyy') : '-';
@@ -72,22 +72,22 @@ const AcertoViagemPage = () => {
         return `${saida} a ${chegada}`;
       }
     },
-    { 
-      key: 'data_saida', 
+    {
+      key: 'data_saida',
       label: 'Dias',
       render: (value, row) => {
         const dias = calcularDiasViagem(value, row.data_chegada);
         return dias > 0 ? `${dias} dias` : '-';
       }
     },
-    { 
-      key: 'valor_adiantamento', 
+    {
+      key: 'valor_adiantamento',
       label: 'Adiantamento',
       render: (value) => `R$ ${(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       className: 'text-right'
     },
-    { 
-      key: 'id', 
+    {
+      key: 'id',
       label: 'Despesas',
       render: (value, row) => {
         const total = calcularTotalDespesas(row);
@@ -95,8 +95,8 @@ const AcertoViagemPage = () => {
       },
       className: 'text-right font-medium'
     },
-    { 
-      key: 'id', 
+    {
+      key: 'id',
       label: 'Saldo',
       render: (value, row) => {
         const saldo = calcularSaldo(row);
@@ -104,8 +104,8 @@ const AcertoViagemPage = () => {
       },
       className: 'text-right'
     },
-    { 
-      key: 'status', 
+    {
+      key: 'status',
       label: 'Status',
       render: (value) => value === 'PENDENTE' ? 'Pendente' : 'Acertado'
     },
@@ -148,7 +148,7 @@ const AcertoViagemPage = () => {
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Acerto de Viagem</h1>
             <p className="text-slate-500 mt-1">Gerencie os acertos de viagem e despesas</p>
           </div>
-          <Button onClick={() => setIsFormModalOpen(true)} className="bg-green-600 hover:bg-green-700 gap-2">
+          <Button onClick={() => setIsFormModalOpen(true)} className="bg-brand-green hover:bg-emerald-600 gap-2">
             <Plus className="h-4 w-4" />
             Novo Acerto
           </Button>
@@ -156,48 +156,48 @@ const AcertoViagemPage = () => {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="shadow-sm border-slate-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-4 w-4 text-blue-500" />
-                <span className="text-sm text-muted-foreground">Total de Acertos</span>
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
+                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <p className="text-2xl font-bold text-foreground">{totalAcertos}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-4 w-4 text-yellow-500" />
-                <span className="text-sm text-muted-foreground">Pendentes</span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Acertos</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalAcertos}</p>
+          </div>
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-10 w-10 bg-yellow-50 dark:bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                <FileText className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
               </div>
-              <p className="text-2xl font-bold text-yellow-500">{acertosPendentes}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-4 w-4 text-green-500" />
-                <span className="text-sm text-muted-foreground">Acertados</span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Pendentes</span>
+            </div>
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{acertosPendentes}</p>
+          </div>
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-10 w-10 bg-green-50 dark:bg-green-500/10 rounded-xl flex items-center justify-center">
+                <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <p className="text-2xl font-bold text-green-500">{acertosFinalizados}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-4 w-4 text-orange-500" />
-                <span className="text-sm text-muted-foreground">Total Despesas</span>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Acertados</span>
+            </div>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{acertosFinalizados}</p>
+          </div>
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-10 w-10 bg-orange-50 dark:bg-orange-500/10 rounded-xl flex items-center justify-center">
+                <FileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
-              <p className="text-2xl font-bold text-orange-500">
-                R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </p>
-            </CardContent>
-          </Card>
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Despesas</span>
+            </div>
+            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
+          </div>
         </div>
 
         {/* Table + Search */}
-        <Card className="shadow-sm border-slate-200">
+        <Card className="shadow-sm border-slate-200 bg-brand-white dark:bg-[#181b21]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/50 mb-4">
             <CardTitle>Lista de Acertos</CardTitle>
             <div className="flex items-center gap-3">
@@ -210,8 +210,8 @@ const AcertoViagemPage = () => {
                   className="pl-9"
                 />
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setIsTablePrintModalOpen(true)}
                 className="gap-2"
               >

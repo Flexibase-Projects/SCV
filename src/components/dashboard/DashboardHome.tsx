@@ -251,7 +251,7 @@ export function DashboardHome() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50/90 dark:bg-[#0f1115] transition-colors duration-300">
+        <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115] transition-colors duration-300">
             <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
 
                 {/* Header */}
@@ -269,7 +269,7 @@ export function DashboardHome() {
 
                         <div className="flex items-center gap-3">
                             <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger className="w-[140px] bg-white dark:bg-[#181b21] border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100">
+                                <SelectTrigger className="w-[140px] bg-brand-white dark:bg-[#181b21] border-brand-white dark:border-white/10 text-gray-900 dark:text-gray-100">
                                     <SelectValue placeholder="Selecione o Ano" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -284,7 +284,7 @@ export function DashboardHome() {
 
                 {/* KPIs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Frota Ativa</span>
                             <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -294,23 +294,23 @@ export function DashboardHome() {
                         <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             {kpis.fleet.active}<span className="text-base text-gray-400 dark:text-gray-500 font-normal ml-1">/ {kpis.fleet.total}</span>
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">veículos operando</p>
+                        <p className="text-xs text-gray-500 mt-1">veículos operando</p>
                     </div>
 
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Manutenções</span>
                             <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
                                 <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                             </div>
                         </div>
-                        <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        <p className="text-2xl font-bold text-gray-900 dark:text-amber-400">
                             {kpis.maintenance.pending}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">ordens pendentes</p>
+                        <p className="text-xs text-gray-500 mt-1">ordens pendentes</p>
                     </div>
 
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custos Mês</span>
                             <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
@@ -320,10 +320,10 @@ export function DashboardHome() {
                         <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             {formatCurrency(kpis.costs.month)}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">mês atual</p>
+                        <p className="text-xs text-gray-500 mt-1">mês atual</p>
                     </div>
 
-                    <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Conclusão ({selectedYear})</span>
                             <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -333,7 +333,7 @@ export function DashboardHome() {
                         <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                             {kpis.deliveryRate}%
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">{kpis.deliveryCompleted} de {kpis.deliveryTotal} entregas</p>
+                        <p className="text-xs text-gray-500 mt-1">{kpis.deliveryCompleted} de {kpis.deliveryTotal} entregas</p>
                     </div>
                 </div>
 
@@ -344,7 +344,7 @@ export function DashboardHome() {
                     <div className="lg:col-span-8 space-y-6">
 
                         {/* Gráfico de Entregas - Área */}
-                        <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
+                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -426,7 +426,7 @@ export function DashboardHome() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                             {/* Gráfico de Abastecimento - Barras */}
-                            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
+                            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -469,7 +469,7 @@ export function DashboardHome() {
                             </div>
 
                             {/* Gráfico de Manutenção - Donut */}
-                            <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
+                            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -515,7 +515,7 @@ export function DashboardHome() {
                         </div>
 
                         {/* Card Cadastros */}
-                        <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
+                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -563,7 +563,7 @@ export function DashboardHome() {
                     <div className="lg:col-span-4 space-y-6">
 
                         {/* Financeiro CTA */}
-                        <div className="bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-600 dark:to-blue-700 border border-blue-500/20 rounded-2xl p-6 shadow-lg text-white">
+                        <div className="bg-gradient-to-br from-brand-green to-emerald-600 dark:from-brand-green dark:to-emerald-700 border border-brand-green/20 rounded-2xl p-6 shadow-lg text-white">
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
                                     <DollarSign className="h-5 w-5" />
@@ -580,7 +580,7 @@ export function DashboardHome() {
                             </div>
 
                             <Link to="/acerto-viagem">
-                                <Button className="w-full bg-white hover:bg-gray-100 text-blue-700 font-medium transition-colors shadow-sm">
+                                <Button className="w-full bg-brand-white hover:bg-gray-100 text-brand-green font-medium transition-colors shadow-sm">
                                     Revisar Pendências
                                     <ArrowRight className="h-4 w-4 ml-2" />
                                 </Button>
@@ -588,7 +588,7 @@ export function DashboardHome() {
                         </div>
 
                         {/* Ações Rápidas */}
-                        <div className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
+                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ações Rápidas</h3>
 
                             <div className="space-y-3">
@@ -623,6 +623,6 @@ export function DashboardHome() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
