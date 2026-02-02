@@ -1,13 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Add as Plus, Speed as Gauge, Print as Printer, Description as FileText, WaterDrop as Droplet, AttachMoney as DollarSign } from '@mui/icons-material';
+import { Add as Plus, Speed as Gauge, Print as Printer, Description as FileText, WaterDrop as Droplet, AttachMoney as DollarSign, Person as User } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AbastecimentoTable } from '@/components/abastecimento/AbastecimentoTable';
 import { AbastecimentoFormModal } from '@/components/abastecimento/AbastecimentoFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { format, isWithinInterval, parseISO, startOfDay, endOfDay, isSameDay } from 'date-fns';
 import { SharedFilter } from '@/components/shared/SharedFilter';
 import { cn } from '@/lib/utils';
 import {
@@ -16,20 +20,28 @@ import {
   useUpdateAbastecimento,
   useDeleteAbastecimento
 } from '@/hooks/useAbastecimentos';
+import { useMotoristas } from '@/hooks/useMotoristas';
 import type { Abastecimento as AbastecimentoType, AbastecimentoFormData } from '@/types/abastecimento';
+import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 
 
 const AbastecimentoPage = () => {
   const { data: abastecimentos = [], isLoading } = useAbastecimentos();
+  const { data: motoristas = [] } = useMotoristas(false); // Apenas ativos
   const createAbastecimento = useCreateAbastecimento();
   const updateAbastecimento = useUpdateAbastecimento();
   const deleteAbastecimento = useDeleteAbastecimento();
 
+  const [activeTab, setActiveTab] = useState('todos');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedAbastecimento, setSelectedAbastecimento] = useState<AbastecimentoType | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
+
+  // Estados específicos da aba "Por Motorista"
+  const [selectedMotoristaId, setSelectedMotoristaId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [abastecimentoToDelete, setAbastecimentoToDelete] = useState<AbastecimentoType | null>(null);
@@ -74,33 +86,90 @@ const AbastecimentoPage = () => {
 
 
   const filteredAbastecimentos = useMemo(() => {
-    return abastecimentos.filter(a => {
-      const matchesSearch =
-        searchTerm === '' ||
-        a.veiculo_placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        a.condutor_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        a.posto?.toLowerCase().includes(searchTerm.toLowerCase());
+    let filtered = abastecimentos;
 
-      let matchesDate = true;
-      if (a.data) {
-        const date = parseISO(a.data);
-        if (dateFrom && dateTo) {
-          matchesDate = isWithinInterval(date, {
-            start: startOfDay(dateFrom),
-            end: endOfDay(dateTo)
-          });
-        } else if (dateFrom) {
-          matchesDate = date >= startOfDay(dateFrom);
-        } else if (dateTo) {
-          matchesDate = date <= endOfDay(dateTo);
-        }
-      } else if (dateFrom || dateTo) {
-        matchesDate = false;
+    // Filtros da aba "Por Motorista"
+    if (activeTab === 'por-motorista') {
+      // Filtrar por motorista selecionado
+      if (selectedMotoristaId) {
+        filtered = filtered.filter(a => a.condutor_id === selectedMotoristaId);
       }
 
-      return matchesSearch && matchesDate;
-    });
-  }, [abastecimentos, searchTerm, dateFrom, dateTo]);
+      // Filtrar por data específica (se selecionada)
+      if (selectedDate) {
+        filtered = filtered.filter(a => {
+          if (!a.data) return false;
+          const date = parseISO(a.data);
+          return isSameDay(date, selectedDate);
+        });
+      }
+
+      // ORDENAÇÃO: Por km_inicial do maior para o menor (DESC)
+      filtered = filtered.sort((a, b) => {
+        const kmA = a.km_inicial || 0;
+        const kmB = b.km_inicial || 0;
+        return kmB - kmA; // DESC: maior primeiro
+      });
+    }
+
+    // Filtros da aba "Todos" (busca e período)
+    if (activeTab === 'todos') {
+      // Busca textual
+      filtered = filtered.filter(a => {
+        const matchesSearch =
+          searchTerm === '' ||
+          a.veiculo_placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          a.condutor_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          a.posto?.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
+      });
+
+      // Filtro de período
+      filtered = filtered.filter(a => {
+        let matchesDate = true;
+        if (a.data) {
+          const date = parseISO(a.data);
+          if (dateFrom && dateTo) {
+            matchesDate = isWithinInterval(date, {
+              start: startOfDay(dateFrom),
+              end: endOfDay(dateTo)
+            });
+          } else if (dateFrom) {
+            matchesDate = date >= startOfDay(dateFrom);
+          } else if (dateTo) {
+            matchesDate = date <= endOfDay(dateTo);
+          }
+        } else if (dateFrom || dateTo) {
+          matchesDate = false;
+        }
+        return matchesDate;
+      });
+
+      // ORDENAÇÃO: Por data DESC (mais recente primeiro), depois created_at DESC
+      filtered = filtered.sort((a, b) => {
+        // Comparar por data primeiro
+        if (a.data && b.data) {
+          const dateA = parseISO(a.data);
+          const dateB = parseISO(b.data);
+          const dateDiff = dateB.getTime() - dateA.getTime();
+          if (dateDiff !== 0) {
+            return dateDiff; // DESC: mais recente primeiro
+          }
+        }
+        // Se uma data é null e outra não, a com data vem primeiro
+        if (a.data && !b.data) return -1;
+        if (!a.data && b.data) return 1;
+        
+        // Se datas são iguais ou ambas null, ordenar por created_at
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [abastecimentos, activeTab, selectedMotoristaId, selectedDate, searchTerm, dateFrom, dateTo]);
 
   // Calcular totais (usando dados filtrados)
   const totalLitros = filteredAbastecimentos.reduce((acc, a) => acc + (a.litros || 0), 0);
@@ -242,35 +311,129 @@ const AbastecimentoPage = () => {
           </div>
 
 
-          {/* Tabela */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <SharedFilter
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                dateFrom={dateFrom}
-                onDateFromChange={setDateFrom}
-                dateTo={dateTo}
-                onDateToChange={setDateTo}
-                placeholder="Buscar por placa, condutor ou posto..."
-              />
-              <Button
-                variant="outline"
-                onClick={() => setIsPrintModalOpen(true)}
-                className="gap-2"
-              >
-                <Printer className="h-4 w-4" />
-                Imprimir / PDF
-              </Button>
-            </div>
+          {/* Abas e Tabela */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="todos">
+                <FileText className="h-4 w-4 mr-2" />
+                Todos
+              </TabsTrigger>
+              <TabsTrigger value="por-motorista">
+                <User className="h-4 w-4 mr-2" />
+                Por Motorista
+              </TabsTrigger>
+            </TabsList>
 
-            <AbastecimentoTable
-              abastecimentos={filteredAbastecimentos}
-              onEdit={handleOpenForm}
-              onDelete={handleOpenDeleteDialog}
-              isLoading={isLoading}
-            />
-          </div>
+            <TabsContent value="todos" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <SharedFilter
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  dateFrom={dateFrom}
+                  onDateFromChange={setDateFrom}
+                  dateTo={dateTo}
+                  onDateToChange={setDateTo}
+                  placeholder="Buscar por placa, condutor ou posto..."
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir / PDF
+                </Button>
+              </div>
+
+              <AbastecimentoTable
+                abastecimentos={filteredAbastecimentos}
+                onEdit={handleOpenForm}
+                onDelete={handleOpenDeleteDialog}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="por-motorista" className="space-y-4">
+              {/* Filtros específicos da aba Por Motorista */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 max-w-md">
+                  <Select value={selectedMotoristaId || ''} onValueChange={(value) => setSelectedMotoristaId(value || null)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um motorista..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {motoristas.map((motorista) => (
+                        <SelectItem key={motorista.id} value={motorista.id}>
+                          {motorista.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[240px] justify-start text-left font-normal",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate || undefined}
+                        onSelect={(date) => setSelectedDate(date || null)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {(selectedMotoristaId || selectedDate) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedMotoristaId(null);
+                      setSelectedDate(null);
+                    }}
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="gap-2 ml-auto"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir / PDF
+                </Button>
+              </div>
+
+              {!selectedMotoristaId ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Selecione um motorista para visualizar os abastecimentos</p>
+                  <p className="text-sm mt-2">Use o filtro acima para escolher um motorista</p>
+                </div>
+              ) : (
+                <AbastecimentoTable
+                  abastecimentos={filteredAbastecimentos}
+                  onEdit={handleOpenForm}
+                  onDelete={handleOpenDeleteDialog}
+                  isLoading={isLoading}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
 
         <AbastecimentoFormModal

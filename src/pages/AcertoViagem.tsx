@@ -68,7 +68,7 @@ const AcertoViagemPage = () => {
       label: 'Período',
       render: (value, row) => {
         const saida = value ? format(new Date(value), 'dd/MM/yyyy') : '-';
-        const chegada = row.data_chegada ? format(new Date(row.data_chegada), 'dd/MM/yyyy') : '-';
+        const chegada = row.data_chegada ? format(new Date(row.data_chegada + 'T12:00:00'), 'dd/MM/yyyy') : '-';
         return `${saida} a ${chegada}`;
       }
     },

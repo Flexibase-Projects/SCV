@@ -10,6 +10,7 @@ import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog'
 import { useEntregas, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useEntregasStats } from '@/hooks/useEntregas';
 import { Entrega, EntregaFormData } from '@/types/entrega';
 import { format } from 'date-fns';
+import { formatDateLocal } from '@/utils/dateUtils';
 
 const Index = () => {
   const { data: entregas = [], isLoading } = useEntregas();
@@ -75,8 +76,8 @@ const Index = () => {
   const handleSubmit = (data: Partial<EntregaFormData> & { montador_1?: string; montador_2?: string; data_saida?: Date; data_montagem?: Date }) => {
     const formattedData = {
       ...data,
-      data_saida: data.data_saida ? format(data.data_saida, 'yyyy-MM-dd') : null,
-      data_montagem: data.data_montagem ? format(data.data_montagem, 'yyyy-MM-dd') : null,
+      data_saida: data.data_saida ? formatDateLocal(data.data_saida) : null,
+      data_montagem: data.data_montagem ? formatDateLocal(data.data_montagem) : null,
       percentual_gastos: data.valor && data.gastos_entrega
         ? ((data.gastos_entrega / data.valor) * 100)
         : 0,

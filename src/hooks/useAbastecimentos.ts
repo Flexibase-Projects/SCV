@@ -32,6 +32,7 @@ export async function getUltimoAbastecimento(veiculoId: string, excludeId?: stri
     .select('km_inicial')
     .eq('veiculo_id', veiculoId)
     .order('data', { ascending: false })
+    .order('km_inicial', { ascending: false })  // Ordenar por KM decrescente para pegar o maior KM primeiro
     .order('created_at', { ascending: false })
     .limit(1);
 
@@ -68,6 +69,17 @@ export function calcularKmPorLitro(
       });
     }
     return null;
+  }
+
+  // NOVO: Detectar KM igual
+  if (kmAtual === kmAnterior) {
+    if (showToast) {
+      sonnerToast.warning('Atenção: KM Inválido', {
+        description: `O KM informado (${kmAtual.toLocaleString('pt-BR')}) é igual ao último registro. Verifique se está correto ou se há múltiplos abastecimentos no mesmo dia.`,
+        duration: 6000,
+      });
+    }
+    return null; // Não calcular quando KM é igual
   }
 
   if (litros <= 0) {

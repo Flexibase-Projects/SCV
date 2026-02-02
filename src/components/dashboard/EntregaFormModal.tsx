@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { parseDateLocal } from '@/utils/dateUtils';
 import { CalendarMonth as CalendarIcon, Close as X, Add as Plus } from '@mui/icons-material';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -113,13 +114,13 @@ export function EntregaFormModal({
         valor: entrega.valor || 0,
         cliente: entrega.cliente || '',
         uf: entrega.uf || '',
-        data_saida: entrega.data_saida ? new Date(entrega.data_saida) : undefined,
+        data_saida: entrega.data_saida ? parseDateLocal(entrega.data_saida) || undefined : undefined,
         motorista: entrega.motorista || '',
         carro: entrega.carro || '',
         tipo_transporte: entrega.tipo_transporte || '',
         status: entrega.status || 'PENDENTE',
         precisa_montagem: entrega.precisa_montagem || false,
-        data_montagem: entrega.data_montagem ? new Date(entrega.data_montagem) : undefined,
+        data_montagem: entrega.data_montagem ? parseDateLocal(entrega.data_montagem) || undefined : undefined,
         montadores: existingMontadores.join(', '),
         gastos_entrega: entrega.gastos_entrega || 0,
         gastos_montagem: entrega.gastos_montagem || 0,

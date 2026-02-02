@@ -10,6 +10,7 @@ import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega } from '@/hooks/useEntregas';
 import { Entrega, EntregaFormData, StatusEntrega } from '@/types/entrega';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
+import { formatDateLocal } from '@/utils/dateUtils';
 import { SharedFilter } from '@/components/shared/SharedFilter';
 import { useDebounce } from '@/hooks/use-debounce';
 import { PaginationControl } from '@/components/shared/PaginationControl';
@@ -295,8 +296,8 @@ const Entregas = () => {
 
     const formattedData = {
       ...restData,
-      data_saida: data.data_saida ? format(data.data_saida, 'yyyy-MM-dd') : null,
-      data_montagem: data.data_montagem ? format(data.data_montagem, 'yyyy-MM-dd') : null,
+      data_saida: data.data_saida ? formatDateLocal(data.data_saida) : null,
+      data_montagem: data.data_montagem ? formatDateLocal(data.data_montagem) : null,
       percentual_gastos: data.valor && data.gastos_entrega
         ? ((data.gastos_entrega / data.valor) * 100)
         : 0,

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { formatDateLocal, parseDateLocal } from '@/utils/dateUtils';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import {
   Dialog,
@@ -82,7 +83,7 @@ export function AbastecimentoFormModal({
   useEffect(() => {
     if (abastecimento) {
       form.reset({
-        data: abastecimento.data ? new Date(abastecimento.data) : undefined,
+        data: abastecimento.data ? (parseDateLocal(abastecimento.data) || undefined) : undefined,
         veiculo_id: abastecimento.veiculo_id || '',
         condutor_id: abastecimento.condutor_id || '',
         posto: abastecimento.posto || '',
@@ -138,7 +139,7 @@ export function AbastecimentoFormModal({
 
   const handleSubmit = (data: FormData) => {
     const formattedData = {
-      data: format(data.data, 'yyyy-MM-dd'),
+      data: formatDateLocal(data.data),
       veiculo_id: data.veiculo_id,
       condutor_id: data.condutor_id,
       posto: data.posto,

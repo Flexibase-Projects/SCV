@@ -102,7 +102,7 @@ export function AbastecimentoTable({
                   )}
                 </TableCell>
                 <TableCell className="text-foreground">
-                  {abastecimento.data ? format(new Date(abastecimento.data), 'dd/MM/yyyy') : '-'}
+                  {abastecimento.data ? format(new Date(abastecimento.data + 'T12:00:00'), 'dd/MM/yyyy') : '-'}
                 </TableCell>
                 <TableCell className="text-foreground font-medium">
                   {abastecimento.veiculo_placa || <span className="text-muted-foreground italic">Não identificado</span>}
@@ -136,7 +136,25 @@ export function AbastecimentoTable({
                       </span>
                     </Badge>
                   ) : (
-                    <span className="text-muted-foreground text-sm">N/A</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant="outline" className="border-amber-500 text-amber-600 gap-1 cursor-help">
+                            <AlertTriangle className="h-3 w-3" />
+                            N/A
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-semibold mb-1">KM/L não pode ser calculado</p>
+                          <p className="text-xs">Possíveis motivos:</p>
+                          <ul className="list-disc list-inside text-xs mt-1 space-y-0.5">
+                            <li>Primeiro abastecimento do veículo</li>
+                            <li>KM é igual ou menor que o anterior</li>
+                            <li>Há múltiplos abastecimentos no mesmo dia com mesmo KM</li>
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </TableCell>
                 <TableCell className="text-foreground">

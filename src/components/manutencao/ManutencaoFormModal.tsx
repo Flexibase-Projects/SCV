@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { formatDateLocal, parseDateLocal } from '@/utils/dateUtils';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import {
   Dialog,
@@ -101,7 +102,7 @@ export function ManutencaoFormModal({
   useEffect(() => {
     if (manutencao) {
       form.reset({
-        data: manutencao.data ? new Date(manutencao.data + 'T00:00:00') : new Date(),
+        data: manutencao.data ? (parseDateLocal(manutencao.data) || new Date()) : new Date(),
         veiculo_id: manutencao.veiculo_id || '',
         tipo_manutencao: manutencao.tipo_manutencao || 'corretiva',
         status: manutencao.status || 'pendente',
@@ -144,7 +145,7 @@ export function ManutencaoFormModal({
 
   const handleSubmit = (data: FormData) => {
     const formattedData = {
-      data: format(data.data, 'yyyy-MM-dd'),
+      data: formatDateLocal(data.data),
       veiculo_id: data.veiculo_id,
       tipo_manutencao: data.tipo_manutencao,
       status: data.status,
