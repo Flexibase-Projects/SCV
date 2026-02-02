@@ -13,6 +13,12 @@ lerna-debug.log*
 .env.*.local
 .env.production
 
+# Agent configuration (não commitar)
+.agent/
+
+# Cursor plans (não commitar)
+.cursor/plans/
+
 # Supabase config (contém project_id)
 supabase/config.toml
 

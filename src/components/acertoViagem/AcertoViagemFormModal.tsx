@@ -32,14 +32,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Search } from '@mui/icons-material';
+import { Search, LocalGasStation as Fuel, Link, Warning as AlertTriangle } from '@mui/icons-material';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import { useMotoristas } from '@/hooks/useMotoristas';
 import { 
   useCreateAcertoViagem, 
   useUpdateAcertoViagem,
   useEntregasDisponiveis,
-  useAcertoViagem 
+  useAcertoViagem,
+  useAbastecimentosDisponiveis
 } from '@/hooks/useAcertosViagem';
 import { 
   AcertoViagem, 
@@ -50,7 +51,11 @@ import {
   calcularSaldo,
   calcularDiasViagem,
   calcularKmRodado,
+  AbastecimentoVinculado
 } from '@/types/acertoViagem';
+import { AbastecimentoSelectionModal } from './AbastecimentoSelectionModal';
+import { formatDateLocal } from '@/utils/dateUtils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Tipo para entrega disponível (retorno simplificado do hook)
 type EntregaDisponivel = {
@@ -94,6 +99,7 @@ const formSchema = z.object({
   observacoes: z.string(),
   status: z.enum(['PENDENTE', 'ACERTADO']),
   entregas_ids: z.array(z.string()),
+  abastecimentos_ids: z.array(z.string()),
 });
 
 interface AcertoViagemFormModalProps {
@@ -108,6 +114,7 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
   const { data: entregasDisponiveis = [] } = useEntregasDisponiveis();
   const { data: acertoCompleto } = useAcertoViagem(acerto?.id || null);
   const [buscaEntrega, setBuscaEntrega] = useState('');
+  const [isAbastecimentoModalOpen, setIsAbastecimentoModalOpen] = useState(false);
   
   const createAcerto = useCreateAcertoViagem();
   const updateAcerto = useUpdateAcertoViagem();
@@ -140,13 +147,24 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
       observacoes: '',
       status: 'PENDENTE',
       entregas_ids: [],
+      abastecimentos_ids: [],
     },
   });
+
+  const selectedVeiculoId = form.watch('veiculo_id');
+  const selectedMotoristaId = form.watch('motorista_id');
+
+  // Buscar abastecimentos disponíveis com base nos filtros
+  const { data: abastecimentosDisponiveis = [] } = useAbastecimentosDisponiveis(
+    selectedVeiculoId || null, 
+    selectedMotoristaId || null
+  );
 
   // Resetar busca quando modal abrir/fechar
   useEffect(() => {
     if (!isOpen) {
       setBuscaEntrega('');
+      setIsAbastecimentoModalOpen(false);
     }
   }, [isOpen]);
 
@@ -179,6 +197,7 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
         observacoes: acertoCompleto.observacoes || '',
         status: acertoCompleto.status,
         entregas_ids: acertoCompleto.entregas?.map(e => e.entrega_id) || [],
+        abastecimentos_ids: acertoCompleto.abastecimentos?.map(a => a.id) || [],
       });
     } else if (!acerto) {
       form.reset();
@@ -192,7 +211,7 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
   const dias = calcularDiasViagem(formValues.data_saida, formValues.data_chegada);
   const kmRodado = calcularKmRodado(formValues.km_saida, formValues.km_chegada);
 
-  // Veículo selecionado
+  // Veículo selecionado (objeto)
   const veiculoSelecionado = useMemo(() => {
     return veiculos.find(v => v.id === formValues.veiculo_id);
   }, [veiculos, formValues.veiculo_id]);
@@ -224,17 +243,55 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
     });
   }, [entregasParaExibir, buscaEntrega]);
 
+  // Abastecimentos para seleção (disponíveis + já vinculados)
+  const abastecimentosParaSelecao = useMemo(() => {
+    const vinculadosAtual = acertoCompleto?.abastecimentos || [];
+    const idsVinculadosAtual = vinculadosAtual.map(a => a.id);
+    
+    // Mapear disponíveis para o formato correto se necessário, 
+    // mas aqui assumimos que useAbastecimentosDisponiveis retorna o formato compatível (parcialmente)
+    // Precisamos garantir tipagem correta.
+    // O hook retorna dados da tabela 'abastecimentos'.
+    const disponiveis = abastecimentosDisponiveis.filter(a => !idsVinculadosAtual.includes(a.id));
+    
+    // Converter para AbastecimentoVinculado
+    const disponiveisFormatados: AbastecimentoVinculado[] = disponiveis.map(a => ({
+        id: a.id,
+        data: a.data,
+        valor_total: a.valor_total,
+        posto: a.posto || 'Não informado',
+        litros: a.litros
+    }));
+
+    return [...vinculadosAtual, ...disponiveisFormatados];
+  }, [abastecimentosDisponiveis, acertoCompleto]);
+
+  const handleAbastecimentosConfirm = (ids: string[]) => {
+    form.setValue('abastecimentos_ids', ids);
+    
+    const selecionados = abastecimentosParaSelecao.filter(a => ids.includes(a.id));
+    const total = selecionados.reduce((acc, curr) => acc + (curr.valor_total || 0), 0);
+    
+    if (ids.length > 0) {
+        form.setValue('despesa_combustivel', total);
+    }
+  };
+
+  const abastecimentosIds = form.watch('abastecimentos_ids');
+  const temAbastecimentoVinculado = abastecimentosIds && abastecimentosIds.length > 0;
+  
+  // Nomes dos postos vinculados para tooltip
+  const nomesPostosVinculados = useMemo(() => {
+      return abastecimentosParaSelecao
+        .filter(a => abastecimentosIds.includes(a.id))
+        .map(a => `${a.posto} (${a.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`)
+        .join('\n');
+  }, [abastecimentosParaSelecao, abastecimentosIds]);
 
   const onSubmit = (data: AcertoViagemFormData) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AcertoViagemFormModal.tsx:221',message:'onSubmit chamado',data:{isEdit:!!acerto,entregasIdsCount:data.entregas_ids.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (acerto) {
       updateAcerto.mutate({ id: acerto.id, formData: data }, {
         onSuccess: () => {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AcertoViagemFormModal.tsx:225',message:'Update sucesso, fechando modal',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
           setBuscaEntrega('');
           onClose();
         },
@@ -242,9 +299,6 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
     } else {
       createAcerto.mutate(data, {
         onSuccess: () => {
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AcertoViagemFormModal.tsx:232',message:'Create sucesso, fechando modal',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
           setBuscaEntrega('');
           onClose();
         },
@@ -313,7 +367,7 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
                         <FormLabel>Motorista/Montador *</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
-                          value={field.value}
+                          value={field.value || ''}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -477,7 +531,57 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {CATEGORIAS_DESPESAS.map((categoria) => (
+                    {/* Renderiza Combustível separadamente com botão de vínculo */}
+                     <FormField
+                        key="despesa_combustivel"
+                        control={form.control}
+                        name="despesa_combustivel"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center justify-between">
+                                <FormLabel className="text-xs">Combustível</FormLabel>
+                                <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700"
+                                    onClick={() => setIsAbastecimentoModalOpen(true)}
+                                >
+                                    <Link className="h-3 w-3 mr-1" />
+                                    Vincular
+                                </Button>
+                            </div>
+                            <FormControl>
+                              <div className="relative">
+                                  <CurrencyInput
+                                    value={field.value as number}
+                                    onValueChange={(value) => field.onChange(value || 0)}
+                                    placeholder="0,00"
+                                    disabled={temAbastecimentoVinculado}
+                                    className={temAbastecimentoVinculado ? 'bg-muted pr-8' : ''}
+                                  />
+                                  {temAbastecimentoVinculado && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 cursor-help">
+                                                    <Fuel className="h-4 w-4" />
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p className="font-semibold mb-1">Valor calculado automaticamente</p>
+                                                <pre className="text-xs whitespace-pre-wrap">{nomesPostosVinculados}</pre>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                              </div>
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+
+                    {CATEGORIAS_DESPESAS.filter(c => c.key !== 'despesa_combustivel').map((categoria) => (
                       <FormField
                         key={categoria.key}
                         control={form.control}
@@ -701,6 +805,14 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
           </Form>
         </div>
       </DialogContent>
+
+      <AbastecimentoSelectionModal 
+        isOpen={isAbastecimentoModalOpen}
+        onClose={() => setIsAbastecimentoModalOpen(false)}
+        abastecimentos={abastecimentosParaSelecao}
+        selectedIds={abastecimentosIds}
+        onConfirm={handleAbastecimentosConfirm}
+      />
     </Dialog>
   );
 }

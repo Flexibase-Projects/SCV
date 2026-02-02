@@ -1,5 +1,13 @@
 // Tipos para o módulo de Acerto de Viagem
 
+export interface AbastecimentoVinculado {
+  id: string;
+  data: string;
+  valor_total: number;
+  posto: string;
+  litros: number;
+}
+
 export interface AcertoViagem {
   id: string;
   
@@ -49,6 +57,7 @@ export interface AcertoViagem {
   motorista_nome?: string;
   montador_nome?: string;
   entregas?: AcertoViagemEntrega[];
+  abastecimentos?: AbastecimentoVinculado[];
 }
 
 export interface AcertoViagemEntrega {
@@ -99,6 +108,8 @@ export interface AcertoViagemFormData {
   
   // IDs das entregas vinculadas
   entregas_ids: string[];
+  // IDs dos abastecimentos vinculados
+  abastecimentos_ids: string[];
 }
 
 // Categorias de despesas para o formulário
