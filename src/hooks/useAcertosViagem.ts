@@ -243,9 +243,9 @@ export function useAbastecimentosDisponiveis(veiculoId?: string | null, motorist
        // Filtrar os que já estão vinculados
        return (abastecimentos || []).filter(a => !idsVinculadosSet.has(a.id));
     },
-    // Habilitar apenas se houver pelo menos um dos filtros, ou se a intenção for listar tudo (cuidado com performance)
-    // Para UX, pode ser útil mostrar, mas idealmente filtramos pelo veículo da viagem
-    enabled: true 
+    // Obrigatório ter motorista selecionado para filtrar abastecimentos
+    // Isso evita mostrar todos os abastecimentos e melhora a UX
+    enabled: !!motoristaId 
   });
 }
 

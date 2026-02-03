@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Add as Plus, Speed as Gauge, Print as Printer, Description as FileText, WaterDrop as Droplet, AttachMoney as DollarSign, Person as User } from '@mui/icons-material';
+import { useState, useMemo, useEffect } from 'react';
+import { Add as Plus, Speed as Gauge, Print as Printer, Description as FileText, WaterDrop as Droplet, AttachMoney as DollarSign, Person as User, DirectionsCar } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,6 +21,7 @@ import {
   useDeleteAbastecimento
 } from '@/hooks/useAbastecimentos';
 import { useMotoristas } from '@/hooks/useMotoristas';
+import { useVeiculos } from '@/hooks/useVeiculos';
 import type { Abastecimento as AbastecimentoType, AbastecimentoFormData } from '@/types/abastecimento';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 
@@ -28,6 +29,7 @@ import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 const AbastecimentoPage = () => {
   const { data: abastecimentos = [], isLoading } = useAbastecimentos();
   const { data: motoristas = [] } = useMotoristas(false); // Apenas ativos
+  const { data: veiculos = [] } = useVeiculos(false); // Apenas veículos ativos
   const createAbastecimento = useCreateAbastecimento();
   const updateAbastecimento = useUpdateAbastecimento();
   const deleteAbastecimento = useDeleteAbastecimento();
@@ -42,6 +44,22 @@ const AbastecimentoPage = () => {
   // Estados específicos da aba "Por Motorista"
   const [selectedMotoristaId, setSelectedMotoristaId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Estados específicos da aba "Por Veículos"
+  const [selectedVeiculoId, setSelectedVeiculoId] = useState<string | null>(null);
+  const [selectedDateVeiculo, setSelectedDateVeiculo] = useState<Date | null>(null);
+
+  // Limpar filtros ao mudar de aba para melhorar UX
+  useEffect(() => {
+    if (activeTab !== 'por-motorista') {
+      setSelectedMotoristaId(null);
+      setSelectedDate(null);
+    }
+    if (activeTab !== 'por-veiculo') {
+      setSelectedVeiculoId(null);
+      setSelectedDateVeiculo(null);
+    }
+  }, [activeTab]);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [abastecimentoToDelete, setAbastecimentoToDelete] = useState<AbastecimentoType | null>(null);
@@ -112,6 +130,45 @@ const AbastecimentoPage = () => {
       });
     }
 
+    // Filtros da aba "Por Veículos"
+    if (activeTab === 'por-veiculo') {
+      // Filtrar por veículo selecionado
+      if (selectedVeiculoId) {
+        filtered = filtered.filter(a => a.veiculo_id === selectedVeiculoId);
+      }
+
+      // Filtrar por data específica (se selecionada)
+      if (selectedDateVeiculo) {
+        filtered = filtered.filter(a => {
+          if (!a.data) return false;
+          const date = parseISO(a.data);
+          return isSameDay(date, selectedDateVeiculo);
+        });
+      }
+
+      // ORDENAÇÃO: Por data DESC (mais recente primeiro), depois created_at DESC
+      filtered = filtered.sort((a, b) => {
+        // Tratar nulls para data: nulls vão para o final
+        if (!a.data && !b.data) return 0;
+        if (!a.data) return 1; // a é null, vai para o final
+        if (!b.data) return -1; // b é null, vai para o final
+
+        const dateA = parseISO(a.data);
+        const dateB = parseISO(b.data);
+        const dateDiff = dateB.getTime() - dateA.getTime(); // DESC: mais recente primeiro
+
+        if (dateDiff !== 0) {
+          return dateDiff;
+        }
+
+        // Se datas são iguais, ordenar por created_at (mais recente primeiro)
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return 0;
+      });
+    }
+
     // Filtros da aba "Todos" (busca e período)
     if (activeTab === 'todos') {
       // Busca textual
@@ -169,7 +226,7 @@ const AbastecimentoPage = () => {
     }
 
     return filtered;
-  }, [abastecimentos, activeTab, selectedMotoristaId, selectedDate, searchTerm, dateFrom, dateTo]);
+  }, [abastecimentos, activeTab, selectedMotoristaId, selectedDate, selectedVeiculoId, selectedDateVeiculo, searchTerm, dateFrom, dateTo]);
 
   // Calcular totais (usando dados filtrados)
   const totalLitros = filteredAbastecimentos.reduce((acc, a) => acc + (a.litros || 0), 0);
@@ -313,7 +370,7 @@ const AbastecimentoPage = () => {
 
           {/* Abas e Tabela */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3">
               <TabsTrigger value="todos">
                 <FileText className="h-4 w-4 mr-2" />
                 Todos
@@ -321,6 +378,10 @@ const AbastecimentoPage = () => {
               <TabsTrigger value="por-motorista">
                 <User className="h-4 w-4 mr-2" />
                 Por Motorista
+              </TabsTrigger>
+              <TabsTrigger value="por-veiculo">
+                <DirectionsCar className="h-4 w-4 mr-2" />
+                Por Veículo
               </TabsTrigger>
             </TabsList>
 
@@ -423,6 +484,95 @@ const AbastecimentoPage = () => {
                   <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="text-lg font-medium">Selecione um motorista para visualizar os abastecimentos</p>
                   <p className="text-sm mt-2">Use o filtro acima para escolher um motorista</p>
+                </div>
+              ) : (
+                <AbastecimentoTable
+                  abastecimentos={filteredAbastecimentos}
+                  onEdit={handleOpenForm}
+                  onDelete={handleOpenDeleteDialog}
+                  isLoading={isLoading}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="por-veiculo" className="space-y-4">
+              {/* Filtros específicos da aba Por Veículos */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 max-w-md">
+                  <Select value={selectedVeiculoId || ''} onValueChange={(value) => setSelectedVeiculoId(value || null)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um veículo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {veiculos.map((veiculo) => {
+                        // Formatação: Placa - Modelo (ou Fabricante se não houver modelo)
+                        const displayText = veiculo.modelo 
+                          ? `${veiculo.placa} - ${veiculo.modelo}`
+                          : veiculo.fabricante
+                          ? `${veiculo.placa} - ${veiculo.fabricante}`
+                          : veiculo.placa;
+                        return (
+                          <SelectItem key={veiculo.id} value={veiculo.id}>
+                            {displayText}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[240px] justify-start text-left font-normal",
+                          !selectedDateVeiculo && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDateVeiculo ? format(selectedDateVeiculo, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDateVeiculo || undefined}
+                        onSelect={(date) => setSelectedDateVeiculo(date || null)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {(selectedVeiculoId || selectedDateVeiculo) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedVeiculoId(null);
+                      setSelectedDateVeiculo(null);
+                    }}
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="gap-2 ml-auto"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir / PDF
+                </Button>
+              </div>
+
+              {!selectedVeiculoId ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <DirectionsCar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Selecione um veículo para visualizar os abastecimentos</p>
+                  <p className="text-sm mt-2">Use o filtro acima para escolher um veículo</p>
                 </div>
               ) : (
                 <AbastecimentoTable

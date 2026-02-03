@@ -35,6 +35,7 @@ interface AbastecimentoSelectionModalProps {
   abastecimentos: Abastecimento[];
   selectedIds: string[];
   onConfirm: (ids: string[]) => void;
+  motoristaNome?: string | null;
 }
 
 export function AbastecimentoSelectionModal({
@@ -43,6 +44,7 @@ export function AbastecimentoSelectionModal({
   abastecimentos,
   selectedIds,
   onConfirm,
+  motoristaNome,
 }: AbastecimentoSelectionModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedIds);
@@ -106,6 +108,11 @@ export function AbastecimentoSelectionModal({
           <DialogTitle className="flex items-center gap-2">
             <Fuel className="h-5 w-5" />
             Selecionar Abastecimentos
+            {motoristaNome && (
+              <span className="text-sm font-normal text-muted-foreground">
+                - {motoristaNome}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -139,7 +146,11 @@ export function AbastecimentoSelectionModal({
               {filteredAbastecimentos.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                    Nenhum abastecimento encontrado.
+                    {searchTerm.trim() 
+                      ? 'Nenhum abastecimento encontrado com o termo buscado.'
+                      : motoristaNome
+                        ? `Nenhum abastecimento encontrado para ${motoristaNome}.`
+                        : 'Nenhum abastecimento disponível.'}
                   </TableCell>
                 </TableRow>
               ) : (

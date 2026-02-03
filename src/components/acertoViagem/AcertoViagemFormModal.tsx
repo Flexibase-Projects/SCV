@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -56,6 +56,7 @@ import {
 import { AbastecimentoSelectionModal } from './AbastecimentoSelectionModal';
 import { formatDateLocal } from '@/utils/dateUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 
 // Tipo para entrega disponível (retorno simplificado do hook)
 type EntregaDisponivel = {
@@ -115,6 +116,7 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
   const { data: acertoCompleto } = useAcertoViagem(acerto?.id || null);
   const [buscaEntrega, setBuscaEntrega] = useState('');
   const [isAbastecimentoModalOpen, setIsAbastecimentoModalOpen] = useState(false);
+  const { toast } = useToast();
   
   const createAcerto = useCreateAcertoViagem();
   const updateAcerto = useUpdateAcertoViagem();
@@ -287,6 +289,45 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
         .map(a => `${a.posto} (${a.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`)
         .join('\n');
   }, [abastecimentosParaSelecao, abastecimentosIds]);
+
+  // Nome do motorista selecionado para exibir no modal
+  const nomeMotoristaSelecionado = useMemo(() => {
+    if (!selectedMotoristaId) return null;
+    return motoristas.find(m => m.id === selectedMotoristaId)?.nome || null;
+  }, [motoristas, selectedMotoristaId]);
+
+  // Handler para abrir modal de abastecimentos com validação
+  const handleOpenAbastecimentoModal = () => {
+    if (!selectedMotoristaId) {
+      toast({
+        title: 'Motorista não selecionado',
+        description: 'Por favor, selecione um motorista antes de vincular abastecimentos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsAbastecimentoModalOpen(true);
+  };
+
+  // Limpar abastecimentos vinculados quando motorista mudar (para evitar incompatibilidade)
+  const previousMotoristaId = useRef<string | null>(null);
+  useEffect(() => {
+    // Se motorista mudou E havia abastecimentos vinculados, limpar
+    if (
+      previousMotoristaId.current !== null && 
+      previousMotoristaId.current !== selectedMotoristaId &&
+      abastecimentosIds.length > 0
+    ) {
+      toast({
+        title: 'Atenção: Motorista alterado',
+        description: 'Os abastecimentos vinculados foram removidos. Por favor, vincule novamente os abastecimentos do novo motorista.',
+        variant: 'destructive',
+      });
+      form.setValue('abastecimentos_ids', []);
+      form.setValue('despesa_combustivel', 0);
+    }
+    previousMotoristaId.current = selectedMotoristaId || null;
+  }, [selectedMotoristaId, abastecimentosIds.length, form, toast]);
 
   const onSubmit = (data: AcertoViagemFormData) => {
     if (acerto) {
@@ -540,16 +581,30 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
                           <FormItem>
                             <div className="flex items-center justify-between">
                                 <FormLabel className="text-xs">Combustível</FormLabel>
-                                <Button 
-                                    type="button" 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700"
-                                    onClick={() => setIsAbastecimentoModalOpen(true)}
-                                >
-                                    <Link className="h-3 w-3 mr-1" />
-                                    Vincular
-                                </Button>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span>
+                                        <Button 
+                                            type="button" 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            onClick={handleOpenAbastecimentoModal}
+                                            disabled={!selectedMotoristaId}
+                                        >
+                                            <Link className="h-3 w-3 mr-1" />
+                                            Vincular
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    {!selectedMotoristaId && (
+                                      <TooltipContent>
+                                        <p>Selecione um motorista primeiro para vincular abastecimentos</p>
+                                      </TooltipContent>
+                                    )}
+                                  </Tooltip>
+                                </TooltipProvider>
                             </div>
                             <FormControl>
                               <div className="relative">
@@ -812,6 +867,7 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
         abastecimentos={abastecimentosParaSelecao}
         selectedIds={abastecimentosIds}
         onConfirm={handleAbastecimentosConfirm}
+        motoristaNome={nomeMotoristaSelecionado}
       />
     </Dialog>
   );
