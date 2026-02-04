@@ -642,6 +642,9 @@ export async function importEntregas(
           tipo_transporte: row.tipo_transporte || null,
           status: row.status || 'PENDENTE',
           precisa_montagem: row.precisa_montagem ?? false,
+          status_montagem: row.status_montagem || 
+                          (row.precisa_montagem && row.data_montagem ? 'CONCLUIDO' : 
+                           row.precisa_montagem ? 'PENDENTE' : null),
           data_montagem: row.data_montagem || null,
           montador_1: row.montador_1 || null,
           montador_2: row.montador_2 || null,

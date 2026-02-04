@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Entrega, EntregaFormData } from '@/types/entrega';
+import { Entrega, EntregaFormData, StatusMontagem } from '@/types/entrega';
 import { toast } from '@/hooks/use-toast';
 
 export function useEntregas() {
@@ -38,6 +38,10 @@ interface UseEntregasPaginatedProps {
   searchTerm?: string;
   dateFrom?: Date | null;
   dateTo?: Date | null;
+  motorista?: string | null;
+  veiculo?: string | null;
+  dataEspecifica?: Date | null;
+  statusMontagem?: StatusMontagem | null;
 }
 
 export function useEntregasPaginated({
@@ -45,10 +49,14 @@ export function useEntregasPaginated({
   pageSize,
   searchTerm,
   dateFrom,
-  dateTo
+  dateTo,
+  motorista,
+  veiculo,
+  dataEspecifica,
+  statusMontagem
 }: UseEntregasPaginatedProps) {
   return useQuery({
-    queryKey: ['entregas-paginated', page, pageSize, searchTerm, dateFrom, dateTo],
+    queryKey: ['entregas-paginated', page, pageSize, searchTerm, dateFrom, dateTo, motorista, veiculo, dataEspecifica, statusMontagem],
     queryFn: async () => {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:52',message:'Iniciando query paginada',data:{page,pageSize,searchTerm,dateFrom:dateFrom?.toISOString(),dateTo:dateTo?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
@@ -78,6 +86,30 @@ export function useEntregasPaginated({
         query = query.lte('data_saida', dateToStr);
       }
 
+      // NOVOS FILTROS
+      if (motorista) {
+        query = query.eq('motorista', motorista);
+      }
+
+      if (veiculo) {
+        query = query.eq('carro', veiculo);
+      }
+
+      // Filtro de data específica (para as abas Por Motorista/Por Veículo/Por Montagem)
+      if (dataEspecifica) {
+        const dataStr = dataEspecifica.toISOString().split('T')[0];
+        query = query.eq('data_saida', dataStr);
+      }
+
+      // NOVO FILTRO: Status de Montagem
+      if (statusMontagem) {
+        query = query.eq('status_montagem', statusMontagem);
+      }
+
+      // ORDENAÇÃO PADRÃO: Sempre por data_saida DESC (mais recente primeiro)
+      // Aplicado para todas as abas: Todos, Por Motorista, Por Veículo e Por Montagem
+      query = query.order('data_saida', { ascending: false });
+
       // Pagination
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -86,9 +118,7 @@ export function useEntregasPaginated({
       fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:75',message:'Executando query com paginação',data:{from,to},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
       // #endregion
 
-      const { data, count, error } = await query
-        .order('data_saida', { ascending: false }) // Order by date usually better for pagination
-        .range(from, to);
+      const { data, count, error } = await query.range(from, to);
 
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:78',message:'Resultado da query paginada',data:{dataLength:data?.length||0,count,hasError:!!error,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
@@ -108,10 +138,11 @@ export function useEntregasPaginated({
 export function useEntregasStats({
   searchTerm,
   dateFrom,
-  dateTo
+  dateTo,
+  statusMontagem
 }: Omit<UseEntregasPaginatedProps, 'page' | 'pageSize'>) {
   return useQuery({
-    queryKey: ['entregas-stats', searchTerm, dateFrom, dateTo],
+    queryKey: ['entregas-stats', searchTerm, dateFrom, dateTo, statusMontagem],
     queryFn: async () => {
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:96',message:'Chamando RPC get_delivery_stats',data:{searchTerm,dateFrom:dateFrom?.toISOString(),dateTo:dateTo?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
@@ -211,6 +242,54 @@ export function useUpdateEntrega() {
         description: 'Falha ao atualizar entrega.',
         variant: 'destructive',
       });
+    }
+  });
+}
+
+// Hook para buscar motoristas únicos
+export function useMotoristasEntregas() {
+  return useQuery({
+    queryKey: ['motoristas-entregas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('controle_entregas')
+        .select('motorista')
+        .not('motorista', 'is', null)
+        .neq('motorista', '');
+
+      if (error) throw error;
+
+      const uniqueMotoristas = new Set(
+        (data || [])
+          .map((e: { motorista: string }) => e.motorista)
+          .filter((m): m is string => m !== null && m !== '')
+      );
+
+      return Array.from(uniqueMotoristas).sort();
+    }
+  });
+}
+
+// Hook para buscar veículos únicos
+export function useVeiculosEntregas() {
+  return useQuery({
+    queryKey: ['veiculos-entregas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('controle_entregas')
+        .select('carro')
+        .not('carro', 'is', null)
+        .neq('carro', '');
+
+      if (error) throw error;
+
+      const uniqueVeiculos = new Set(
+        (data || [])
+          .map((e: { carro: string }) => e.carro)
+          .filter((v): v is string => v !== null && v !== '')
+      );
+
+      return Array.from(uniqueVeiculos).sort();
     }
   });
 }

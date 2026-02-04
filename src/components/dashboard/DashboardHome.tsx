@@ -18,6 +18,10 @@ import {
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { KPICard } from './KPICard';
+import { useStaggerAnimation } from '@/hooks/useStaggerAnimation';
+import { AnimatedChart } from '@/components/shared/AnimatedChart';
+import { cn } from '@/lib/utils';
 import {
     AreaChart,
     Area,
@@ -76,10 +80,10 @@ const greeting = () => {
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{label}</p>
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-lg">
+                <p className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">{label}</p>
                 {payload.map((entry: any, index: number) => (
-                    <p key={index} className="text-xs text-gray-600 dark:text-gray-400">
+                    <p key={index} className="text-xs text-slate-600 dark:text-slate-400">
                         <span className="font-medium" style={{ color: entry.color }}>{entry.name}:</span> {entry.value}
                     </p>
                 ))}
@@ -250,18 +254,21 @@ export function DashboardHome() {
     }, [acertosViagem]);
 
 
+    // Staggered animation para KPIs
+    const { isVisible } = useStaggerAnimation(4, 100, 200);
+
     return (
-        <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115] transition-colors duration-300">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
             <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
 
-                {/* Header */}
+                {/* Header - Asymmetric */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+                            <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                                 {greeting()} 👋
                             </h1>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize flex items-center gap-2">
+                            <p className="text-sm text-slate-600 dark:text-slate-400 capitalize flex items-center gap-2">
                                 <Calendar className="h-4 w-4" />
                                 {formattedDate}
                             </p>
@@ -269,7 +276,7 @@ export function DashboardHome() {
 
                         <div className="flex items-center gap-3">
                             <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger className="w-[140px] bg-brand-white dark:bg-[#181b21] border-brand-white dark:border-white/10 text-gray-900 dark:text-gray-100">
+                                <SelectTrigger className="w-[140px] bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-lg">
                                     <SelectValue placeholder="Selecione o Ano" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -282,79 +289,75 @@ export function DashboardHome() {
                     </div>
                 </div>
 
-                {/* KPIs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Frota Ativa</span>
-                            <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
-                                <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            {kpis.fleet.active}<span className="text-base text-gray-400 dark:text-gray-500 font-normal ml-1">/ {kpis.fleet.total}</span>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">veículos operando</p>
-                    </div>
-
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Manutenções</span>
-                            <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
-                                <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                            </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-amber-400">
-                            {kpis.maintenance.pending}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">ordens pendentes</p>
-                    </div>
-
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custos Mês</span>
-                            <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            {formatCurrency(kpis.costs.month)}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">mês atual</p>
-                    </div>
-
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Conclusão ({selectedYear})</span>
-                            <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
-                                <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            {kpis.deliveryRate}%
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{kpis.deliveryCompleted} de {kpis.deliveryTotal} entregas</p>
-                    </div>
+                {/* KPIs - Staggered Grid (Não Uniforme) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <KPICard
+                        title="Frota Ativa"
+                        value={<>{kpis.fleet.active}<span className="text-base text-slate-400 dark:text-slate-500 font-normal ml-1">/ {kpis.fleet.total}</span></>}
+                        description="veículos operando"
+                        icon={Truck}
+                        iconColor="text-emerald-600 dark:text-emerald-400"
+                        iconBgColor="bg-emerald-50 dark:bg-emerald-500/10"
+                        delay={0}
+                        isVisible={isVisible(0)}
+                        variant="sharp"
+                    />
+                    <KPICard
+                        title="Manutenções"
+                        value={kpis.maintenance.pending.toString()}
+                        description="ordens pendentes"
+                        icon={Wrench}
+                        iconColor="text-amber-600 dark:text-amber-400"
+                        iconBgColor="bg-amber-50 dark:bg-amber-500/10"
+                        delay={100}
+                        isVisible={isVisible(1)}
+                        variant="sharp"
+                        showPulse={kpis.maintenance.pending > 0}
+                    />
+                    <KPICard
+                        title="Custos Mês"
+                        value={formatCurrency(kpis.costs.month)}
+                        description="mês atual"
+                        icon={DollarSign}
+                        iconColor="text-lime-600 dark:text-lime-400"
+                        iconBgColor="bg-lime-50 dark:bg-lime-500/10"
+                        delay={200}
+                        isVisible={isVisible(2)}
+                        variant="sharp"
+                    />
+                    <KPICard
+                        title={`Conclusão (${selectedYear})`}
+                        value={`${kpis.deliveryRate}%`}
+                        description={`${kpis.deliveryCompleted} de ${kpis.deliveryTotal} entregas`}
+                        icon={TrendingUp}
+                        iconColor="text-emerald-600 dark:text-emerald-400"
+                        iconBgColor="bg-emerald-50 dark:bg-emerald-500/10"
+                        delay={300}
+                        isVisible={isVisible(3)}
+                        variant="sharp"
+                        showPulse={kpis.deliveryRate >= 90}
+                    />
                 </div>
 
-                {/* Bento Grid com Gráficos */}
+                {/* Main Content - 90/10 Split */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                    {/* LEFT SECTION - Col 1-8 */}
-                    <div className="lg:col-span-8 space-y-6">
+                    {/* LEFT SECTION - Col 1-10 (90%) */}
+                    <div className="lg:col-span-10 space-y-6">
 
                         {/* Gráfico de Entregas - Área */}
-                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
+                        <AnimatedChart delay={0}>
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                        <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    <h3 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                        <Truck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                                         Entregas - {selectedYear}
                                     </h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Evolução mensal</p>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Evolução mensal</p>
                                 </div>
                                 <Link to="/entregas">
-                                    <Button variant="outline" size="sm" className="border-gray-200 dark:border-white/10">
+                                    <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
                                         Ver detalhes
                                     </Button>
                                 </Link>
@@ -368,22 +371,22 @@ export function DashboardHome() {
                                             <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorEmRota" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#a3e635" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#a3e635" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="colorPendentes" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
                                             <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:opacity-10" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:opacity-20" />
                                     <XAxis
                                         dataKey="mes"
-                                        stroke="#9ca3af"
+                                        stroke="#64748b"
                                         style={{ fontSize: '12px' }}
                                     />
                                     <YAxis
-                                        stroke="#9ca3af"
+                                        stroke="#64748b"
                                         style={{ fontSize: '12px' }}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
@@ -403,7 +406,7 @@ export function DashboardHome() {
                                     <Area
                                         type="monotone"
                                         dataKey="em_rota"
-                                        stroke="#3b82f6"
+                                        stroke="#a3e635"
                                         fillOpacity={1}
                                         fill="url(#colorEmRota)"
                                         strokeWidth={2}
@@ -420,40 +423,42 @@ export function DashboardHome() {
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
-                        </div>
+                            </div>
+                        </AnimatedChart>
 
                         {/* Grid 2 colunas - Abastecimento e Manutenção */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                             {/* Gráfico de Abastecimento - Barras */}
-                            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
+                            <AnimatedChart delay={100}>
+                                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
-                                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                            <Fuel className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                            <Fuel className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                             Abastecimento
                                         </h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Litros por mês ({selectedYear})</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Litros por mês ({selectedYear})</p>
                                     </div>
                                 </div>
 
                                 <div className="flex-1">
                                     <ResponsiveContainer width="100%" height={240}>
                                         <BarChart data={fuelData}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:opacity-10" />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:opacity-20" />
                                             <XAxis
                                                 dataKey="mes"
-                                                stroke="#9ca3af"
+                                                stroke="#64748b"
                                                 style={{ fontSize: '11px' }}
                                             />
                                             <YAxis
-                                                stroke="#9ca3af"
+                                                stroke="#64748b"
                                                 style={{ fontSize: '11px' }}
                                             />
                                             <Tooltip content={<CustomTooltip />} />
                                             <Bar
                                                 dataKey="litros"
-                                                fill="#3b82f6"
+                                                fill="#10b981"
                                                 radius={[8, 8, 0, 0]}
                                                 name="Litros"
                                             />
@@ -462,21 +467,23 @@ export function DashboardHome() {
                                 </div>
 
                                 <Link to="/abastecimento" className="mt-4 block">
-                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400 h-9">
+                                    <Button variant="ghost" size="sm" className="w-full text-slate-600 dark:text-slate-400 h-9 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors">
                                         Ver histórico completo <ArrowRight className="h-3 w-3 ml-1" />
                                     </Button>
                                 </Link>
-                            </div>
+                                </div>
+                            </AnimatedChart>
 
                             {/* Gráfico de Manutenção - Donut */}
-                            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm flex flex-col">
+                            <AnimatedChart delay={200}>
+                                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col">
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
-                                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                                             <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                                             Manutenção
                                         </h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Distribuição ({selectedYear})</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Distribuição ({selectedYear})</p>
                                     </div>
                                 </div>
 
@@ -507,63 +514,66 @@ export function DashboardHome() {
                                 </div>
 
                                 <Link to="/manutencao" className="mt-4 block">
-                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400 h-9">
+                                    <Button variant="ghost" size="sm" className="w-full text-slate-600 dark:text-slate-400 h-9 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors">
                                         Ver todas O.S. <ArrowRight className="h-3 w-3 ml-1" />
                                     </Button>
                                 </Link>
-                            </div>
+                                </div>
+                            </AnimatedChart>
                         </div>
 
                         {/* Card Cadastros */}
-                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
+                        <AnimatedChart delay={300}>
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                        <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                    <h3 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                        <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                                         Cadastros Ativos
                                     </h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Base de dados atual</p>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Base de dados atual</p>
                                 </div>
                                 <Link to="/cadastros">
-                                    <Button variant="outline" size="sm" className="border-gray-200 dark:border-white/10">
+                                    <Button variant="outline" size="sm" className="border-slate-200 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
                                         Gerenciar
                                     </Button>
                                 </Link>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
-                                <div className="text-center p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20">
-                                    <div className="h-12 w-12 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                        <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                    </div>
-                                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{cadastrosCounts.motoristas}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Motoristas</p>
-                                </div>
-
-                                <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+                                <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors cursor-pointer">
                                     <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                        <Truck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                                        <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                                     </div>
-                                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{cadastrosCounts.veiculos}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Veículos</p>
+                                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{cadastrosCounts.motoristas}</p>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Motoristas</p>
                                 </div>
 
-                                <div className="text-center p-4 bg-purple-50 dark:bg-purple-500/10 rounded-xl border border-purple-100 dark:border-purple-500/20">
-                                    <div className="h-12 w-12 bg-purple-100 dark:bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                        <Activity className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                                <div className="text-center p-4 bg-lime-50 dark:bg-lime-500/10 rounded-xl border border-lime-100 dark:border-lime-500/20 hover:bg-lime-100 dark:hover:bg-lime-500/20 transition-colors cursor-pointer">
+                                    <div className="h-12 w-12 bg-lime-100 dark:bg-lime-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <Truck className="h-6 w-6 text-lime-600 dark:text-lime-400" />
                                     </div>
-                                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{cadastrosCounts.montadores}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Montadores</p>
+                                    <p className="text-2xl font-bold text-lime-600 dark:text-lime-400">{cadastrosCounts.veiculos}</p>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Veículos</p>
+                                </div>
+
+                                <div className="text-center p-4 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                                    <div className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <Activity className="h-6 w-6 text-slate-600 dark:text-slate-400" />
+                                    </div>
+                                    <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{cadastrosCounts.montadores}</p>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Montadores</p>
                                 </div>
                             </div>
-                        </div>
+                            </div>
+                        </AnimatedChart>
                     </div>
 
-                    {/* RIGHT SIDEBAR - Col 9-12 */}
-                    <div className="lg:col-span-4 space-y-6">
+                    {/* RIGHT SIDEBAR - Col 11-12 (10%) */}
+                    <div className="lg:col-span-2 space-y-6">
 
                         {/* Financeiro CTA */}
-                        <div className="bg-gradient-to-br from-brand-green to-emerald-600 dark:from-brand-green dark:to-emerald-700 border border-brand-green/20 rounded-2xl p-6 shadow-lg text-white">
+                        <div className="bg-gradient-to-br from-emerald-500 to-lime-400 dark:from-emerald-600 dark:to-lime-500 border border-emerald-300 dark:border-emerald-700 rounded-3xl p-6 shadow-xl text-white hover:shadow-2xl transition-shadow duration-300 cursor-pointer">
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
                                     <DollarSign className="h-5 w-5" />
@@ -580,7 +590,7 @@ export function DashboardHome() {
                             </div>
 
                             <Link to="/acerto-viagem">
-                                <Button className="w-full bg-brand-white hover:bg-gray-100 text-brand-green font-medium transition-colors shadow-sm">
+                                <Button className="w-full bg-white hover:bg-slate-50 text-emerald-600 font-medium transition-colors shadow-lg hover:shadow-xl">
                                     Revisar Pendências
                                     <ArrowRight className="h-4 w-4 ml-2" />
                                 </Button>
@@ -588,34 +598,34 @@ export function DashboardHome() {
                         </div>
 
                         {/* Ações Rápidas */}
-                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-6 shadow-sm">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ações Rápidas</h3>
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Ações Rápidas</h3>
 
                             <div className="space-y-3">
                                 <Link to="/cadastros?tab=motoristas">
-                                    <Button variant="outline" className="w-full justify-start gap-3 h-12 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                        <div className="h-9 w-9 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
-                                            <UserPlus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                    <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200 hover:scale-[1.02]">
+                                        <div className="h-9 w-9 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                            <UserPlus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                         </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cadastrar Motorista</span>
+                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Cadastrar Motorista</span>
                                     </Button>
                                 </Link>
 
                                 <Link to="/cadastros?tab=veiculos">
-                                    <Button variant="outline" className="w-full justify-start gap-3 h-12 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                        <div className="h-9 w-9 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg flex items-center justify-center">
-                                            <CarFront className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 dark:border-slate-800 hover:bg-lime-50 dark:hover:bg-lime-500/10 hover:border-lime-300 dark:hover:border-lime-700 transition-all duration-200 hover:scale-[1.02]">
+                                        <div className="h-9 w-9 bg-lime-50 dark:bg-lime-500/10 rounded-lg flex items-center justify-center">
+                                            <CarFront className="h-4 w-4 text-lime-600 dark:text-lime-400" />
                                         </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cadastrar Veículo</span>
+                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Cadastrar Veículo</span>
                                     </Button>
                                 </Link>
 
                                 <Link to="/entregas">
-                                    <Button variant="outline" className="w-full justify-start gap-3 h-12 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                        <div className="h-9 w-9 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
-                                            <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                    <Button variant="outline" className="w-full justify-start gap-3 h-12 border-slate-200 dark:border-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200 hover:scale-[1.02]">
+                                        <div className="h-9 w-9 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                                            <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                         </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Nova Entrega</span>
+                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Nova Entrega</span>
                                     </Button>
                                 </Link>
                             </div>

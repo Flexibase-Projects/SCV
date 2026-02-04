@@ -50,7 +50,7 @@ const HEADER_MAPPINGS: Record<string, string> = {
   'motorista': 'motorista',
   'carro': 'carro',
   'veiculo': 'carro',
-  'tipo': 'tipo_transporte',
+  // 'tipo': 'tipo_transporte',
   'tipo_transporte': 'tipo_transporte',
   'tipotransporte': 'tipo_transporte',
   'status': 'status',
@@ -80,13 +80,13 @@ const HEADER_MAPPINGS: Record<string, string> = {
   
   // Abastecimento
   'data': 'data',
-  'veiculo': 'veiculo',
+  // 'veiculo': 'veiculo',
   'condutor': 'condutor',
   'posto': 'posto',
   'posto_manutencao': 'posto',
   'posto/manutencao': 'posto',
   'cidade': 'cidade',
-  'uf': 'estado',
+  // 'uf': 'estado',
   'km_inicial': 'km_inicial',
   'kminicial': 'km_inicial',
   'km_rodado': 'km_rodado',
@@ -116,7 +116,7 @@ const HEADER_MAPPINGS: Record<string, string> = {
   'custototal': 'custo_total',
   'km_manutencao': 'km_manutencao',
   'kmmanutencao': 'km_manutencao',
-  'nota_fiscal': 'nota_fiscal',
+  // 'nota_fiscal': 'nota_fiscal',
   'notafiscal': 'nota_fiscal',
   
   // Motoristas

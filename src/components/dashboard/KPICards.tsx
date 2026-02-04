@@ -73,27 +73,27 @@ export function KPICards({ entregas, stats }: KPICardsProps) {
       value: `${percentualMedioGastos.toFixed(1)}%`,
       icon: TrendingUp,
       description: 'Percentual médio de gastos',
-      color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-50 dark:bg-purple-500/10"
+      color: "text-lime-600 dark:text-lime-400",
+      bgColor: "bg-lime-50 dark:bg-lime-500/10"
     }
   ];
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {kpis.map((kpi) => (
-        <div key={kpi.title} className="bg-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+        <div key={kpi.title} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none p-5 shadow-sm hover:shadow-lg transition-all duration-300 min-h-[140px] flex flex-col cursor-pointer hover:scale-[1.02] hover:-translate-y-1 will-change-transform motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:hover:translate-y-0">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
               {kpi.title}
             </span>
             <div className={`h-10 w-10 ${kpi.bgColor} rounded-xl flex items-center justify-center`}>
               <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {kpi.value}
           </p>
-          <p className="text-xs text-gray-400 mt-1">{kpi.description}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{kpi.description}</p>
         </div>
       ))}
     </div>

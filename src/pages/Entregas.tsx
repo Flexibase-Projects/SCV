@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Add as Plus, Print as Printer } from '@mui/icons-material';
+import { Add as Plus, Print as Printer, Description as FileText, Person as User, DirectionsCar, CalendarMonth as CalendarIcon, Build as Wrench } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { KPICards } from '@/components/dashboard/KPICards';
 import { EntregaTable } from '@/components/dashboard/EntregaTable';
@@ -7,16 +7,24 @@ import { EntregaFormModal } from '@/components/dashboard/EntregaFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega } from '@/hooks/useEntregas';
-import { Entrega, EntregaFormData, StatusEntrega } from '@/types/entrega';
+import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useMotoristasEntregas, useVeiculosEntregas } from '@/hooks/useEntregas';
+import { Entrega, EntregaFormData, StatusEntrega, StatusMontagem } from '@/types/entrega';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
 import { formatDateLocal } from '@/utils/dateUtils';
 import { SharedFilter } from '@/components/shared/SharedFilter';
 import { useDebounce } from '@/hooks/use-debounce';
 import { PaginationControl } from '@/components/shared/PaginationControl';
 import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 const Entregas = () => {
+  // Tab State
+  const [activeTab, setActiveTab] = useState('todos');
+
   // Pagination State
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -27,8 +35,24 @@ const Entregas = () => {
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
 
+  // Estados específicos da aba "Por Motorista"
+  const [selectedMotorista, setSelectedMotorista] = useState<string | null>(null);
+  const [selectedDateMotorista, setSelectedDateMotorista] = useState<Date | null>(null);
+
+  // Estados específicos da aba "Por Veículo"
+  const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
+  const [selectedDateVeiculo, setSelectedDateVeiculo] = useState<Date | null>(null);
+
+  // Estados específicos da aba "Por Status de Montagem"
+  const [selectedStatusMontagem, setSelectedStatusMontagem] = useState<StatusMontagem | null>(null);
+  const [selectedDateMontagem, setSelectedDateMontagem] = useState<Date | null>(null);
+
   // Flag to track if auto-filter has been applied
   const autoFilterApplied = useRef(false);
+
+  // Hooks para buscar valores únicos
+  const { data: motoristasList = [] } = useMotoristasEntregas();
+  const { data: veiculosList = [] } = useVeiculosEntregas();
 
   // Data Fetching (Server-Side Pagination)
   const {
@@ -37,20 +61,20 @@ const Entregas = () => {
   } = useEntregasPaginated({
     page,
     pageSize,
-    searchTerm: debouncedSearchTerm,
-    dateFrom,
-    dateTo
+    searchTerm: activeTab === 'todos' ? debouncedSearchTerm : undefined,
+    dateFrom: activeTab === 'todos' ? dateFrom : null,
+    dateTo: activeTab === 'todos' ? dateTo : null,
+    motorista: activeTab === 'por-motorista' ? selectedMotorista : null,
+    veiculo: activeTab === 'por-veiculo' ? selectedVeiculo : null,
+    dataEspecifica: activeTab === 'por-motorista' ? selectedDateMotorista : 
+                    activeTab === 'por-veiculo' ? selectedDateVeiculo : 
+                    activeTab === 'por-montagem' ? selectedDateMontagem : null,
+    statusMontagem: activeTab === 'por-montagem' ? selectedStatusMontagem : null
   });
 
   const entregas = paginatedResult?.data || [];
   const totalRecords = paginatedResult?.count || 0;
   const totalPages = Math.ceil(totalRecords / pageSize);
-
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:44', message: 'Estado dos dados paginados', data: { entregasLength: entregas.length, totalRecords, page, totalPages, dateFrom: dateFrom?.toISOString(), dateTo: dateTo?.toISOString(), searchTerm: debouncedSearchTerm }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'B' }) }).catch(() => { });
-  }, [entregas.length, totalRecords, page, totalPages, dateFrom, dateTo, debouncedSearchTerm]);
-  // #endregion
 
   // Stats Fetching (Global Stats for Filters)
   // Get stats with filters for table calculations
@@ -97,10 +121,24 @@ const Entregas = () => {
   const [entregaToDelete, setEntregaToDelete] = useState<Entrega | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
-  // Reset page when filters change
-  useMemo(() => {
+  // Limpar filtros ao mudar de aba para melhorar UX
+  useEffect(() => {
+    if (activeTab !== 'por-motorista') {
+      setSelectedMotorista(null);
+      setSelectedDateMotorista(null);
+    }
+    if (activeTab !== 'por-veiculo') {
+      setSelectedVeiculo(null);
+      setSelectedDateVeiculo(null);
+    }
+    // Resetar página ao mudar de aba
     setPage(1);
-  }, [debouncedSearchTerm, dateFrom, dateTo]);
+  }, [activeTab]);
+
+  // Resetar página quando filtros mudam
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, dateFrom, dateTo, selectedMotorista, selectedDateMotorista, selectedVeiculo, selectedDateVeiculo, selectedStatusMontagem, selectedDateMontagem]);
 
   // Auto-filter by most recent year on first load
   useEffect(() => {
@@ -175,15 +213,6 @@ const Entregas = () => {
 
     fetchMostRecentYear();
   }, [dateFrom, dateTo]);
-
-  const motoristas = useMemo(() => {
-    const uniqueMotoristas = new Set(
-      entregas
-        .map(e => e.motorista)
-        .filter((m): m is string => m !== null && m !== '')
-    );
-    return Array.from(uniqueMotoristas).sort();
-  }, [entregas]);
 
   // Client-side filtering removed - handled by server
   const filteredEntregas = entregas;
@@ -360,41 +389,333 @@ const Entregas = () => {
         <div className="space-y-6">
           <KPICards entregas={filteredEntregas} stats={kpiStats} />
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <SharedFilter
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                dateFrom={dateFrom}
-                onDateFromChange={setDateFrom}
-                dateTo={dateTo}
-                onDateToChange={setDateTo}
-                placeholder="Buscar por cliente, PV Foco, NF ou motorista..."
+          {/* Abas e Tabela */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid w-full max-w-3xl grid-cols-4">
+              <TabsTrigger value="todos">
+                <FileText className="h-4 w-4 mr-2" />
+                Todos
+              </TabsTrigger>
+              <TabsTrigger value="por-motorista">
+                <User className="h-4 w-4 mr-2" />
+                Por Motorista
+              </TabsTrigger>
+              <TabsTrigger value="por-veiculo">
+                <DirectionsCar className="h-4 w-4 mr-2" />
+                Por Veículo
+              </TabsTrigger>
+              <TabsTrigger value="por-montagem">
+                <Wrench className="h-4 w-4 mr-2" />
+                Por Montagem
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="todos" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <SharedFilter
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  dateFrom={dateFrom}
+                  onDateFromChange={setDateFrom}
+                  dateTo={dateTo}
+                  onDateToChange={setDateTo}
+                  placeholder="Buscar por cliente, PV Foco, NF ou motorista..."
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir / PDF
+                </Button>
+              </div>
+
+              <EntregaTable
+                entregas={filteredEntregas}
+                onEdit={handleOpenForm}
+                onDelete={handleOpenDeleteDialog}
               />
-              <Button
-                variant="outline"
-                onClick={() => setIsPrintModalOpen(true)}
-                className="gap-2"
-              >
-                <Printer className="h-4 w-4" />
-                Imprimir / PDF
-              </Button>
-            </div>
 
-            <EntregaTable
-              entregas={filteredEntregas}
-              onEdit={handleOpenForm}
-              onDelete={handleOpenDeleteDialog}
-            />
+              <PaginationControl
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                totalRecords={totalRecords}
+                itemsPerPage={pageSize}
+              />
+            </TabsContent>
 
-            <PaginationControl
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              totalRecords={totalRecords}
-              itemsPerPage={pageSize}
-            />
-          </div>
+            <TabsContent value="por-motorista" className="space-y-4">
+              {/* Filtros específicos da aba Por Motorista */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 max-w-md">
+                  <Select value={selectedMotorista || ''} onValueChange={(value) => setSelectedMotorista(value || null)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um motorista..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {motoristasList.map((motorista) => (
+                        <SelectItem key={motorista} value={motorista}>
+                          {motorista}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[240px] justify-start text-left font-normal",
+                          !selectedDateMotorista && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDateMotorista ? format(selectedDateMotorista, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDateMotorista || undefined}
+                        onSelect={(date) => setSelectedDateMotorista(date || null)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {(selectedMotorista || selectedDateMotorista) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedMotorista(null);
+                      setSelectedDateMotorista(null);
+                    }}
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="gap-2 ml-auto"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir / PDF
+                </Button>
+              </div>
+
+              {!selectedMotorista ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Selecione um motorista para visualizar as entregas</p>
+                  <p className="text-sm mt-2">Use o filtro acima para escolher um motorista</p>
+                </div>
+              ) : (
+                <>
+                  <EntregaTable
+                    entregas={filteredEntregas}
+                    onEdit={handleOpenForm}
+                    onDelete={handleOpenDeleteDialog}
+                  />
+
+                  <PaginationControl
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    totalRecords={totalRecords}
+                    itemsPerPage={pageSize}
+                  />
+                </>
+              )}
+            </TabsContent>
+
+            <TabsContent value="por-veiculo" className="space-y-4">
+              {/* Filtros específicos da aba Por Veículo */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 max-w-md">
+                  <Select value={selectedVeiculo || ''} onValueChange={(value) => setSelectedVeiculo(value || null)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um veículo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {veiculosList.map((veiculo) => (
+                        <SelectItem key={veiculo} value={veiculo}>
+                          {veiculo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[240px] justify-start text-left font-normal",
+                          !selectedDateVeiculo && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDateVeiculo ? format(selectedDateVeiculo, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDateVeiculo || undefined}
+                        onSelect={(date) => setSelectedDateVeiculo(date || null)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {(selectedVeiculo || selectedDateVeiculo) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedVeiculo(null);
+                      setSelectedDateVeiculo(null);
+                    }}
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="gap-2 ml-auto"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir / PDF
+                </Button>
+              </div>
+
+              {!selectedVeiculo ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <DirectionsCar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Selecione um veículo para visualizar as entregas</p>
+                  <p className="text-sm mt-2">Use o filtro acima para escolher um veículo</p>
+                </div>
+              ) : (
+                <>
+                  <EntregaTable
+                    entregas={filteredEntregas}
+                    onEdit={handleOpenForm}
+                    onDelete={handleOpenDeleteDialog}
+                  />
+
+                  <PaginationControl
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    totalRecords={totalRecords}
+                    itemsPerPage={pageSize}
+                  />
+                </>
+              )}
+            </TabsContent>
+
+            <TabsContent value="por-montagem" className="space-y-4">
+              {/* Filtros específicos da aba Por Montagem */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 max-w-md">
+                  <Select 
+                    value={selectedStatusMontagem || ''} 
+                    onValueChange={(value) => setSelectedStatusMontagem(value as StatusMontagem || null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um status..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PENDENTE">Pendente</SelectItem>
+                      <SelectItem value="CONCLUIDO">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[240px] justify-start text-left font-normal",
+                          !selectedDateMontagem && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDateMontagem ? format(selectedDateMontagem, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDateMontagem || undefined}
+                        onSelect={(date) => setSelectedDateMontagem(date || null)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {(selectedStatusMontagem || selectedDateMontagem) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSelectedStatusMontagem(null);
+                      setSelectedDateMontagem(null);
+                    }}
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="gap-2 ml-auto"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir / PDF
+                </Button>
+              </div>
+
+              {!selectedStatusMontagem ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Wrench className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Selecione um status de montagem para visualizar as entregas</p>
+                  <p className="text-sm mt-2">Use o filtro acima para escolher um status</p>
+                </div>
+              ) : (
+                <>
+                  <EntregaTable
+                    entregas={filteredEntregas}
+                    onEdit={handleOpenForm}
+                    onDelete={handleOpenDeleteDialog}
+                  />
+
+                  <PaginationControl
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    totalRecords={totalRecords}
+                    itemsPerPage={pageSize}
+                  />
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
 
         <EntregaFormModal

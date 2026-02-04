@@ -46,6 +46,7 @@ const formSchema = z.object({
   tipo_transporte: z.string().optional(),
   status: z.string().optional(),
   precisa_montagem: z.boolean().optional(),
+  status_montagem: z.enum(['PENDENTE', 'CONCLUIDO']).optional(),
   data_montagem: z.date().optional(),
   montadores: z.string().optional(),
   gastos_entrega: z.coerce.number().min(0).optional(),
@@ -53,6 +54,14 @@ const formSchema = z.object({
   produtividade: z.coerce.number().min(0).optional(),
   erros: z.string().optional(),
   descricao_erros: z.string().optional(),
+}).refine((data) => {
+  if (data.status_montagem === 'CONCLUIDO' && !data.data_montagem) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Data de montagem é obrigatória quando status é Concluído',
+  path: ['data_montagem']
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -91,6 +100,7 @@ export function EntregaFormModal({
       tipo_transporte: '',
       status: 'PENDENTE',
       precisa_montagem: false,
+      status_montagem: undefined,
       montadores: '',
       gastos_entrega: 0,
       gastos_montagem: 0,
@@ -120,6 +130,7 @@ export function EntregaFormModal({
         tipo_transporte: entrega.tipo_transporte || '',
         status: entrega.status || 'PENDENTE',
         precisa_montagem: entrega.precisa_montagem || false,
+        status_montagem: entrega.status_montagem || undefined,
         data_montagem: entrega.data_montagem ? parseDateLocal(entrega.data_montagem) || undefined : undefined,
         montadores: existingMontadores.join(', '),
         gastos_entrega: entrega.gastos_entrega || 0,
@@ -150,6 +161,28 @@ export function EntregaFormModal({
       });
     }
   }, [entrega, form]);
+
+  // Lógica de atualização automática de status_montagem
+  const precisaMontagem = form.watch('precisa_montagem');
+  const dataMontagem = form.watch('data_montagem');
+  const statusMontagem = form.watch('status_montagem');
+
+  useEffect(() => {
+    if (!precisaMontagem) {
+      // Se não precisa montagem, limpar status
+      form.setValue('status_montagem', undefined);
+      return;
+    }
+
+    // Se precisa montagem e tem data → CONCLUIDO
+    if (dataMontagem) {
+      form.setValue('status_montagem', 'CONCLUIDO');
+    } 
+    // Se precisa montagem mas não tem data → PENDENTE
+    else if (precisaMontagem && !dataMontagem) {
+      form.setValue('status_montagem', 'PENDENTE');
+    }
+  }, [precisaMontagem, dataMontagem, form]);
 
   const addMontador = (nome: string) => {
     if (nome && !selectedMontadores.includes(nome)) {
@@ -475,6 +508,38 @@ export function EntregaFormModal({
                     </FormItem>
                   )}
                 />
+                {precisaMontagem && (
+                  <FormField
+                    control={form.control}
+                    name="status_montagem"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Status da Montagem</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value || 'PENDENTE'}
+                          disabled={!!dataMontagem}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o status..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="PENDENTE">Pendente</SelectItem>
+                            <SelectItem value="CONCLUIDO">Concluído</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {dataMontagem 
+                            ? 'Status automaticamente definido como Concluído quando há data de montagem'
+                            : 'Defina como Concluído quando a montagem for finalizada'}
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <div className="md:col-span-2">
                   <FormItem>
                     <FormLabel>Montadores</FormLabel>

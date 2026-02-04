@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { StatusBadge } from './StatusBadge';
 import { Entrega } from '@/types/entrega';
+import { Badge } from '@/components/ui/badge';
 
 interface EntregaTableProps {
   entregas: Entrega[];
@@ -61,13 +62,14 @@ export function EntregaTable({ entregas, onEdit, onDelete }: EntregaTableProps) 
             <TableHead className="text-foreground font-semibold">Tipo</TableHead>
             <TableHead className="text-foreground font-semibold">Valor</TableHead>
             <TableHead className="text-foreground font-semibold">Status</TableHead>
+            <TableHead className="text-foreground font-semibold">Status Montagem</TableHead>
             <TableHead className="text-foreground font-semibold text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {entregas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
                 Nenhuma entrega encontrada.
               </TableCell>
             </TableRow>
@@ -90,6 +92,21 @@ export function EntregaTable({ entregas, onEdit, onDelete }: EntregaTableProps) 
                   <TableCell>{formatCurrency(entrega.valor)}</TableCell>
                   <TableCell>
                     <StatusBadge status={entrega.status} />
+                  </TableCell>
+                  <TableCell>
+                    {entrega.precisa_montagem ? (
+                      entrega.status_montagem === 'CONCLUIDO' ? (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          Concluído
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                          Pendente
+                        </Badge>
+                      )
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
