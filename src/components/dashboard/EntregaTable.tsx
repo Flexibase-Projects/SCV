@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/table';
 import { StatusBadge } from './StatusBadge';
 import { Entrega } from '@/types/entrega';
-import { Badge } from '@/components/ui/badge';
 
 interface EntregaTableProps {
   entregas: Entrega[];
@@ -29,47 +28,37 @@ export function EntregaTable({ entregas, onEdit, onDelete }: EntregaTableProps) 
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
-    // Parse string ISO (YYYY-MM-DD) diretamente sem conversão de timezone
     const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (match) {
       const [, year, month, day] = match;
-      const formatted = `${day}/${month}/${year}`;
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EntregaTable.tsx:formatDate',message:'formatDate exibindo data',data:{input:dateString,formatted,method:'direct_parse'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      return formatted;
+      return `${day}/${month}/${year}`;
     }
-    // Fallback para outros formatos
-    const date = new Date(dateString + 'T12:00:00'); // Usar meio-dia para evitar problemas de timezone
-    const formatted = date.toLocaleDateString('pt-BR');
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'EntregaTable.tsx:formatDate',message:'formatDate exibindo data',data:{input:dateString,formatted,method:'fallback'},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    return formatted;
+    const date = new Date(dateString + 'T12:00:00');
+    return date.toLocaleDateString('pt-BR');
   };
 
   return (
-    <div className="rounded-md border border-border bg-card overflow-hidden">
+    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="text-foreground font-semibold">PV Foco</TableHead>
-            <TableHead className="text-foreground font-semibold">NF</TableHead>
-            <TableHead className="text-foreground font-semibold">Cliente</TableHead>
-            <TableHead className="text-foreground font-semibold">UF</TableHead>
-            <TableHead className="text-foreground font-semibold">Data Saída</TableHead>
-            <TableHead className="text-foreground font-semibold">Motorista</TableHead>
-            <TableHead className="text-foreground font-semibold">Tipo</TableHead>
-            <TableHead className="text-foreground font-semibold">Valor</TableHead>
-            <TableHead className="text-foreground font-semibold">Status</TableHead>
-            <TableHead className="text-foreground font-semibold">Status Montagem</TableHead>
-            <TableHead className="text-foreground font-semibold text-right">Ações</TableHead>
+          <TableRow className="bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">PV Foco</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">NF</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">Cliente</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">UF</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">Data Saída</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">Motorista</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">Tipo</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">Valor</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">Status</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11">Montagem</TableHead>
+            <TableHead className="text-slate-500 dark:text-slate-400 font-semibold text-xs uppercase tracking-wider h-11 text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {entregas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={11} className="h-32 text-center text-slate-500">
                 Nenhuma entrega encontrada.
               </TableCell>
             </TableRow>
@@ -79,42 +68,45 @@ export function EntregaTable({ entregas, onEdit, onDelete }: EntregaTableProps) 
               const nfDisplay = entrega.nf || '-';
               
               return (
-                <TableRow key={entrega.id} className="hover:bg-muted/30">
-                  <TableCell>{entrega.pv_foco || '-'}</TableCell>
-                  <TableCell className={`font-medium ${isDeclaracao ? 'text-red-600 font-semibold' : ''}`}>
+                <TableRow 
+                  key={entrega.id} 
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 group border-b border-slate-100 dark:border-slate-800/50"
+                >
+                  <TableCell className="font-mono text-sm text-slate-700 dark:text-slate-300">{entrega.pv_foco || '-'}</TableCell>
+                  <TableCell className={`font-mono text-sm ${isDeclaracao ? 'text-rose-600 font-semibold' : 'text-slate-700 dark:text-slate-300'}`}>
                     {nfDisplay}
                   </TableCell>
-                  <TableCell>{entrega.cliente || '-'}</TableCell>
-                  <TableCell>{entrega.uf || '-'}</TableCell>
-                  <TableCell>{formatDate(entrega.data_saida)}</TableCell>
-                  <TableCell>{entrega.motorista || '-'}</TableCell>
-                  <TableCell>{entrega.tipo_transporte || '-'}</TableCell>
-                  <TableCell>{formatCurrency(entrega.valor)}</TableCell>
+                  <TableCell className="font-medium text-slate-900 dark:text-slate-100">{entrega.cliente || '-'}</TableCell>
+                  <TableCell className="font-mono text-sm text-slate-600 dark:text-slate-400">{entrega.uf || '-'}</TableCell>
+                  <TableCell className="font-mono text-sm text-slate-600 dark:text-slate-400">{formatDate(entrega.data_saida)}</TableCell>
+                  <TableCell className="text-sm text-slate-700 dark:text-slate-300">{entrega.motorista || '-'}</TableCell>
+                  <TableCell className="text-sm text-slate-600 dark:text-slate-400">{entrega.tipo_transporte || '-'}</TableCell>
+                  <TableCell className="font-mono text-sm font-medium text-slate-900 dark:text-slate-100">{formatCurrency(entrega.valor)}</TableCell>
                   <TableCell>
                     <StatusBadge status={entrega.status} />
                   </TableCell>
                   <TableCell>
                     {entrega.precisa_montagem ? (
                       entrega.status_montagem === 'CONCLUIDO' ? (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-xs font-medium">
                           Concluído
-                        </Badge>
+                        </span>
                       ) : (
-                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-xs font-medium">
                           Pendente
-                        </Badge>
+                        </span>
                       )
                     ) : (
-                      <span className="text-muted-foreground">-</span>
+                      <span className="text-slate-400">-</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => onEdit(entrega)}
-                        className="h-8 w-8 hover:bg-primary/10"
+                        className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 rounded-lg text-slate-400"
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -122,7 +114,7 @@ export function EntregaTable({ entregas, onEdit, onDelete }: EntregaTableProps) 
                         variant="ghost"
                         size="icon"
                         onClick={() => onDelete(entrega)}
-                        className="h-8 w-8 hover:bg-destructive/10 text-destructive"
+                        className="h-8 w-8 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg text-slate-400"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

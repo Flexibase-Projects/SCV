@@ -73,7 +73,7 @@ export function AcertoViagemPrintModal({ isOpen, onClose, acertoId }: AcertoViag
           <div 
             ref={printRef} 
             className="bg-white text-black p-8 print:p-6"
-            style={{ fontFamily: 'Arial, sans-serif' }}
+            style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
           >
             {/* Cabeçalho */}
             <div className="flex items-start gap-4 border-b-2 border-black pb-4 mb-4">

@@ -177,25 +177,31 @@ const Manutencao = () => {
 
   return (
     <ModuleLayout>
-      <div className="p-8 lg:p-10 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Controle de Manutenção</h2>
-            <p className="text-slate-500 mt-1">Gerenciamento de manutenções da frota</p>
+      <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115] transition-colors duration-300 px-4 lg:px-8 py-6">
+        <div className="max-w-[1600px] mx-auto space-y-6">
+          {/* HEADER - Minimalista Técnico */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                Controle de Manutenção
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Gerenciamento de manutenções da frota • {format(new Date(), 'yyyy')}
+              </p>
+            </div>
+            <Button
+              onClick={() => handleOpenForm()}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg h-10 px-4 font-semibold shadow-sm shadow-emerald-500/20 transition-all duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Manutenção
+            </Button>
           </div>
-          <Button
-            onClick={() => handleOpenForm()}
-            className="bg-brand-green hover:bg-emerald-600 gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Nova Manutenção
-          </Button>
-        </div>
 
         <div className="space-y-6">
           {/* Cards de resumo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Manutenções</span>
                 <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -206,7 +212,7 @@ const Manutencao = () => {
               <p className="text-xs text-gray-400 mt-1">registros encontrados</p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custo Total</span>
                 <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
@@ -219,7 +225,7 @@ const Manutencao = () => {
               <p className="text-xs text-gray-400 mt-1">custo acumulado</p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custo no Período</span>
                 <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
@@ -232,7 +238,7 @@ const Manutencao = () => {
               <p className="text-xs text-gray-400 mt-1">custo filtrado</p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Veículos Atendidos</span>
                 <div className="h-10 w-10 bg-purple-50 dark:bg-purple-500/10 rounded-xl flex items-center justify-center">
@@ -306,6 +312,7 @@ const Manutencao = () => {
           columns={printColumns}
           filters={filtersText}
         />
+        </div>
       </div>
     </ModuleLayout>
   );

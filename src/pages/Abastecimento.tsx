@@ -295,22 +295,22 @@ const AbastecimentoPage = () => {
 
   return (
     <ModuleLayout>
-      <div className="p-8 lg:p-10 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115] transition-colors duration-300 px-4 lg:px-8 py-6">
+        <div className="max-w-[1600px] mx-auto space-y-6">
+          {/* HEADER - Minimalista Técnico */}
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Controle de Abastecimento</h2>
-            <p className="text-slate-500 mt-1">Controle de abastecimentos e consumo</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+              Controle de Abastecimento
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Controle de abastecimentos e consumo • {format(new Date(), 'yyyy')}
+            </p>
           </div>
-          <Button onClick={() => handleOpenForm()} className="bg-brand-green hover:bg-emerald-600 gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Abastecimento
-          </Button>
-        </div>
 
         <div className="space-y-6">
           {/* Cards de resumo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Registros</span>
                 <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -321,7 +321,7 @@ const AbastecimentoPage = () => {
               <p className="text-xs text-gray-400 mt-1">abastecimentos listados</p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Litros</span>
                 <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
@@ -334,7 +334,7 @@ const AbastecimentoPage = () => {
               <p className="text-xs text-gray-400 mt-1">combustível consumido</p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Média de Consumo</span>
                 <div className="h-10 w-10 bg-purple-50 dark:bg-purple-500/10 rounded-xl flex items-center justify-center">
@@ -353,7 +353,7 @@ const AbastecimentoPage = () => {
               </p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Valor Total</span>
                 <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
@@ -369,23 +369,41 @@ const AbastecimentoPage = () => {
 
 
           {/* Abas e Tabela */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full max-w-2xl grid-cols-3">
-              <TabsTrigger value="todos">
-                <FileText className="h-4 w-4 mr-2" />
-                Todos
-              </TabsTrigger>
-              <TabsTrigger value="por-motorista">
-                <User className="h-4 w-4 mr-2" />
-                Por Motorista
-              </TabsTrigger>
-              <TabsTrigger value="por-veiculo">
-                <DirectionsCar className="h-4 w-4 mr-2" />
-                Por Veículo
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="flex items-center justify-between">
+              <TabsList className="bg-transparent border-b-0 w-auto justify-start h-auto p-0 gap-6">
+                <TabsTrigger 
+                  value="todos"
+                  className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-0 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Todos
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="por-motorista"
+                  className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-0 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Por Motorista
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="por-veiculo"
+                  className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-0 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all"
+                >
+                  <DirectionsCar className="h-4 w-4 mr-2" />
+                  Por Veículo
+                </TabsTrigger>
+              </TabsList>
+              <Button 
+                onClick={() => handleOpenForm()} 
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg h-10 px-4 font-semibold shadow-sm shadow-emerald-500/20 transition-all duration-200"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Abastecimento
+              </Button>
+            </div>
 
-            <TabsContent value="todos" className="space-y-4">
+            <TabsContent value="todos" className="space-y-4 animate-in fade-in-50 duration-300">
               <div className="flex items-center justify-between">
                 <SharedFilter
                   searchTerm={searchTerm}
@@ -414,7 +432,7 @@ const AbastecimentoPage = () => {
               />
             </TabsContent>
 
-            <TabsContent value="por-motorista" className="space-y-4">
+            <TabsContent value="por-motorista" className="space-y-4 animate-in fade-in-50 duration-300">
               {/* Filtros específicos da aba Por Motorista */}
               <div className="flex items-center gap-4">
                 <div className="flex-1 max-w-md">
@@ -480,10 +498,12 @@ const AbastecimentoPage = () => {
               </div>
 
               {!selectedMotoristaId ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Selecione um motorista para visualizar os abastecimentos</p>
-                  <p className="text-sm mt-2">Use o filtro acima para escolher um motorista</p>
+                <div className="text-center py-16 bg-brand-white dark:bg-[#181b21] border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl">
+                  <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <User className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">Selecione um motorista</p>
+                  <p className="text-sm text-slate-500 mt-1">Utilize os filtros acima para visualizar os dados</p>
                 </div>
               ) : (
                 <AbastecimentoTable
@@ -495,7 +515,7 @@ const AbastecimentoPage = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="por-veiculo" className="space-y-4">
+            <TabsContent value="por-veiculo" className="space-y-4 animate-in fade-in-50 duration-300">
               {/* Filtros específicos da aba Por Veículos */}
               <div className="flex items-center gap-4">
                 <div className="flex-1 max-w-md">
@@ -569,10 +589,12 @@ const AbastecimentoPage = () => {
               </div>
 
               {!selectedVeiculoId ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <DirectionsCar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Selecione um veículo para visualizar os abastecimentos</p>
-                  <p className="text-sm mt-2">Use o filtro acima para escolher um veículo</p>
+                <div className="text-center py-16 bg-brand-white dark:bg-[#181b21] border border-dashed border-slate-300 dark:border-slate-700 rounded-3xl">
+                  <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <DirectionsCar className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">Selecione um veículo</p>
+                  <p className="text-sm text-slate-500 mt-1">Utilize os filtros acima para visualizar os dados</p>
                 </div>
               ) : (
                 <AbastecimentoTable
@@ -612,6 +634,7 @@ const AbastecimentoPage = () => {
           columns={printColumns}
           filters={filtersText}
         />
+        </div>
       </div>
     </ModuleLayout>
   );

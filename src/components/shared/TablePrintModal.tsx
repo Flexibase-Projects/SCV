@@ -54,11 +54,11 @@ export function TablePrintModal<T extends Record<string, any>>({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 rounded-xl">
         <DialogHeader className="p-6 pb-4 border-b shrink-0">
           <DialogTitle className="flex items-center justify-between">
             <span>Visualizar / Imprimir {title}</span>
-            <Button onClick={handlePrint} className="gap-2">
+            <Button onClick={handlePrint} className="gap-2 rounded-xl">
               <Printer className="h-4 w-4" />
               Imprimir / PDF
             </Button>
@@ -69,7 +69,7 @@ export function TablePrintModal<T extends Record<string, any>>({
           <div 
             ref={printRef} 
             className="bg-white text-black p-8 print:p-6"
-            style={{ fontFamily: 'Arial, sans-serif' }}
+            style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}
           >
             {/* Cabeçalho */}
             <div className="flex items-start gap-4 border-b-2 border-black pb-4 mb-4">

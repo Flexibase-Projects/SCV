@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Add as Plus, Print as Printer, Description as FileText, Person as User, DirectionsCar, CalendarMonth as CalendarIcon, Build as Wrench } from '@mui/icons-material';
+import { Add as Plus, Print as Printer, Description as FileText, Person as User, DirectionsCar, CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { KPICards } from '@/components/dashboard/KPICards';
 import { EntregaTable } from '@/components/dashboard/EntregaTable';
@@ -8,7 +8,7 @@ import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog'
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useMotoristasEntregas, useVeiculosEntregas } from '@/hooks/useEntregas';
-import { Entrega, EntregaFormData, StatusEntrega, StatusMontagem } from '@/types/entrega';
+import { Entrega, EntregaFormData, StatusEntrega } from '@/types/entrega';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
 import { formatDateLocal } from '@/utils/dateUtils';
 import { SharedFilter } from '@/components/shared/SharedFilter';
@@ -43,10 +43,6 @@ const Entregas = () => {
   const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
   const [selectedDateVeiculo, setSelectedDateVeiculo] = useState<Date | null>(null);
 
-  // Estados específicos da aba "Por Status de Montagem"
-  const [selectedStatusMontagem, setSelectedStatusMontagem] = useState<StatusMontagem | null>(null);
-  const [selectedDateMontagem, setSelectedDateMontagem] = useState<Date | null>(null);
-
   // Flag to track if auto-filter has been applied
   const autoFilterApplied = useRef(false);
 
@@ -67,9 +63,7 @@ const Entregas = () => {
     motorista: activeTab === 'por-motorista' ? selectedMotorista : null,
     veiculo: activeTab === 'por-veiculo' ? selectedVeiculo : null,
     dataEspecifica: activeTab === 'por-motorista' ? selectedDateMotorista : 
-                    activeTab === 'por-veiculo' ? selectedDateVeiculo : 
-                    activeTab === 'por-montagem' ? selectedDateMontagem : null,
-    statusMontagem: activeTab === 'por-montagem' ? selectedStatusMontagem : null
+                    activeTab === 'por-veiculo' ? selectedDateVeiculo : null
   });
 
   const entregas = paginatedResult?.data || [];
@@ -95,20 +89,6 @@ const Entregas = () => {
   const kpiStats = useMemo(() => {
     return totalStats ?? stats;
   }, [totalStats, stats]);
-
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:53', message: 'Estatísticas recebidas', data: { statsTotalEntregas: stats?.totalEntregas, stats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
-  }, [stats]);
-
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:62', message: 'Estatísticas totais (sem filtros de data)', data: { totalStatsTotalEntregas: totalStats?.totalEntregas, totalStats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'FIX' }) }).catch(() => { });
-  }, [totalStats]);
-
-  useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:72', message: 'Stats sendo passado para KPICards', data: { kpiStatsTotalEntregas: kpiStats?.totalEntregas, usingTotalStats: !!totalStats, hasTotalStats: !!totalStats, hasStats: !!stats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'FIX' }) }).catch(() => { });
-  }, [kpiStats, totalStats, stats]);
-  // #endregion
 
   const createEntrega = useCreateEntrega();
   const updateEntrega = useUpdateEntrega();
@@ -138,7 +118,7 @@ const Entregas = () => {
   // Resetar página quando filtros mudam
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearchTerm, dateFrom, dateTo, selectedMotorista, selectedDateMotorista, selectedVeiculo, selectedDateVeiculo, selectedStatusMontagem, selectedDateMontagem]);
+  }, [debouncedSearchTerm, dateFrom, dateTo, selectedMotorista, selectedDateMotorista, selectedVeiculo, selectedDateVeiculo]);
 
   // Auto-filter by most recent year on first load
   useEffect(() => {
@@ -152,9 +132,6 @@ const Entregas = () => {
     // Fetch the most recent year from deliveries
     const fetchMostRecentYear = async () => {
       try {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:81', message: 'Iniciando busca do ano mais recente', data: { autoFilterApplied: autoFilterApplied.current, dateFrom: dateFrom?.toISOString(), dateTo: dateTo?.toISOString() }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-        // #endregion
         // Get the maximum data_saida to find the most recent year
         const { data, error } = await supabase
           .from('controle_entregas')
@@ -164,18 +141,11 @@ const Entregas = () => {
           .limit(1)
           .maybeSingle();
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:90', message: 'Resultado da busca do ano mais recente', data: { hasError: !!error, errorMessage: error?.message, dataSaida: data?.data_saida }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-        // #endregion
-
         if (error || !data?.data_saida) {
           // If no data found, use current year as fallback
           const currentYear = new Date().getFullYear();
           const yearStart = startOfYear(new Date(currentYear, 0, 1));
           const yearEnd = endOfYear(new Date(currentYear, 11, 31));
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:97', message: 'Aplicando fallback para ano atual', data: { currentYear, yearStart: yearStart.toISOString(), yearEnd: yearEnd.toISOString() }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-          // #endregion
           setDateFrom(yearStart);
           setDateTo(yearEnd);
           autoFilterApplied.current = true;
@@ -190,17 +160,11 @@ const Entregas = () => {
         const yearStart = startOfYear(new Date(year, 0, 1));
         const yearEnd = endOfYear(new Date(year, 11, 31));
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:110', message: 'Aplicando filtro automático por ano', data: { year, mostRecentDate: mostRecentDate.toISOString(), yearStart: yearStart.toISOString(), yearEnd: yearEnd.toISOString() }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-        // #endregion
         setDateFrom(yearStart);
         setDateTo(yearEnd);
         autoFilterApplied.current = true;
       } catch (err) {
         console.error('Error fetching most recent year:', err);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'Entregas.tsx:115', message: 'Erro ao buscar ano mais recente', data: { error: String(err) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-        // #endregion
         // Fallback to current year on error
         const currentYear = new Date().getFullYear();
         const yearStart = startOfYear(new Date(currentYear, 0, 1));
@@ -361,10 +325,26 @@ const Entregas = () => {
   if (isLoading) {
     return (
       <ModuleLayout>
-        <div className="flex h-full items-center justify-center">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Carregando...</p>
+        <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115] transition-colors duration-300 px-4 lg:px-8 py-6">
+          <div className="max-w-[1600px] mx-auto space-y-6">
+            {/* Header Skeleton */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="space-y-2">
+                <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
+                <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
+              </div>
+              <div className="h-10 w-36 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
+            </div>
+            
+            {/* KPI Cards Skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+              ))}
+            </div>
+            
+            {/* Table Skeleton */}
+            <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
           </div>
         </div>
       </ModuleLayout>
@@ -373,62 +353,77 @@ const Entregas = () => {
 
   return (
     <ModuleLayout>
-      <div className="p-8 lg:p-10 space-y-8">
-        {/* HEADER DA PÁGINA PADRONIZADO */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115] transition-colors duration-300 px-4 lg:px-8 py-6">
+        <div className="max-w-[1600px] mx-auto space-y-6">
+          {/* HEADER - Minimalista Técnico */}
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Controle de Entregas</h2>
-            <p className="text-slate-500 mt-1">Gerenciamento de rotas e entregas</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+              Controle de Entregas
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Gerenciamento Logístico • {format(new Date(), 'yyyy')}
+            </p>
           </div>
-          <Button onClick={() => handleOpenForm()} className="bg-brand-green hover:bg-emerald-600 gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Entrega
-          </Button>
-        </div>
 
-        <div className="space-y-6">
-          <KPICards entregas={filteredEntregas} stats={kpiStats} />
+          <div className="space-y-6">
+            <KPICards entregas={filteredEntregas} stats={kpiStats} />
 
           {/* Abas e Tabela */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid w-full max-w-3xl grid-cols-4">
-              <TabsTrigger value="todos">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="flex items-center justify-between">
+              <TabsList className="bg-transparent border-b-0 w-auto justify-start h-auto p-0 gap-6">
+              <TabsTrigger 
+                value="todos"
+                className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-0 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all"
+              >
                 <FileText className="h-4 w-4 mr-2" />
                 Todos
               </TabsTrigger>
-              <TabsTrigger value="por-motorista">
+              <TabsTrigger 
+                value="por-motorista"
+                className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-0 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all"
+              >
                 <User className="h-4 w-4 mr-2" />
                 Por Motorista
               </TabsTrigger>
-              <TabsTrigger value="por-veiculo">
+              <TabsTrigger 
+                value="por-veiculo"
+                className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-0 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all"
+              >
                 <DirectionsCar className="h-4 w-4 mr-2" />
                 Por Veículo
               </TabsTrigger>
-              <TabsTrigger value="por-montagem">
-                <Wrench className="h-4 w-4 mr-2" />
-                Por Montagem
-              </TabsTrigger>
             </TabsList>
+            <Button 
+              onClick={() => handleOpenForm()} 
+              className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg h-10 px-4 font-semibold shadow-sm shadow-emerald-500/20 transition-all duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Entrega
+            </Button>
+            </div>
 
-            <TabsContent value="todos" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <SharedFilter
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  dateFrom={dateFrom}
-                  onDateFromChange={setDateFrom}
-                  dateTo={dateTo}
-                  onDateToChange={setDateTo}
-                  placeholder="Buscar por cliente, PV Foco, NF ou motorista..."
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
+            <TabsContent value="todos" className="space-y-4 animate-in fade-in-50 duration-300">
+              <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between gap-4">
+                  <SharedFilter
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    dateFrom={dateFrom}
+                    onDateFromChange={setDateFrom}
+                    dateTo={dateTo}
+                    onDateToChange={setDateTo}
+                    placeholder="Buscar por cliente, PV Foco, NF ou motorista..."
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Imprimir / PDF
+                  </Button>
+                </div>
               </div>
 
               <EntregaTable
@@ -436,7 +431,6 @@ const Entregas = () => {
                 onEdit={handleOpenForm}
                 onDelete={handleOpenDeleteDialog}
               />
-
               <PaginationControl
                 currentPage={page}
                 totalPages={totalPages}
@@ -446,76 +440,81 @@ const Entregas = () => {
               />
             </TabsContent>
 
-            <TabsContent value="por-motorista" className="space-y-4">
+            <TabsContent value="por-motorista" className="space-y-4 animate-in fade-in-50 duration-300">
               {/* Filtros específicos da aba Por Motorista */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 max-w-md">
-                  <Select value={selectedMotorista || ''} onValueChange={(value) => setSelectedMotorista(value || null)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um motorista..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {motoristasList.map((motorista) => (
-                        <SelectItem key={motorista} value={motorista}>
-                          {motorista}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 max-w-md">
+                    <Select value={selectedMotorista || ''} onValueChange={(value) => setSelectedMotorista(value || null)}>
+                      <SelectTrigger className="rounded-lg border-slate-200 dark:border-slate-800 focus:ring-0 focus:border-emerald-500 h-10">
+                        <SelectValue placeholder="Selecione um motorista..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg border-slate-200 dark:border-slate-800">
+                        {motoristasList.map((motorista) => (
+                          <SelectItem key={motorista} value={motorista}>
+                            {motorista}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !selectedDateMotorista && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDateMotorista ? format(selectedDateMotorista, 'dd/MM/yyyy') : 'Filtrar por data...'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDateMotorista || undefined}
-                        onSelect={(date) => setSelectedDateMotorista(date || null)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                  <div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[220px] justify-start text-left font-normal rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 h-10",
+                            !selectedDateMotorista && "text-slate-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                          {selectedDateMotorista ? format(selectedDateMotorista, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-lg border-slate-200 dark:border-slate-800" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDateMotorista || undefined}
+                          onSelect={(date) => setSelectedDateMotorista(date || null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-                {(selectedMotorista || selectedDateMotorista) && (
+                  {(selectedMotorista || selectedDateMotorista) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedMotorista(null);
+                        setSelectedDateMotorista(null);
+                      }}
+                      className="rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-medium h-10"
+                    >
+                      Limpar Filtros
+                    </Button>
+                  )}
+
                   <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedMotorista(null);
-                      setSelectedDateMotorista(null);
-                    }}
+                    variant="outline"
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="gap-2 ml-auto rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
                   >
-                    Limpar Filtros
+                    <Printer className="h-4 w-4" />
+                    Imprimir / PDF
                   </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2 ml-auto"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
+                </div>
               </div>
 
               {!selectedMotorista ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Selecione um motorista para visualizar as entregas</p>
-                  <p className="text-sm mt-2">Use o filtro acima para escolher um motorista</p>
+                <div className="text-center py-16 bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
+                  <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <User className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">Selecione um motorista</p>
+                  <p className="text-sm text-slate-500 mt-1">Utilize os filtros acima para visualizar os dados</p>
                 </div>
               ) : (
                 <>
@@ -536,76 +535,81 @@ const Entregas = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="por-veiculo" className="space-y-4">
+            <TabsContent value="por-veiculo" className="space-y-4 animate-in fade-in-50 duration-300">
               {/* Filtros específicos da aba Por Veículo */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 max-w-md">
-                  <Select value={selectedVeiculo || ''} onValueChange={(value) => setSelectedVeiculo(value || null)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um veículo..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {veiculosList.map((veiculo) => (
-                        <SelectItem key={veiculo} value={veiculo}>
-                          {veiculo}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 max-w-md">
+                    <Select value={selectedVeiculo || ''} onValueChange={(value) => setSelectedVeiculo(value || null)}>
+                      <SelectTrigger className="rounded-lg border-slate-200 dark:border-slate-800 focus:ring-0 focus:border-emerald-500 h-10">
+                        <SelectValue placeholder="Selecione um veículo..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg border-slate-200 dark:border-slate-800">
+                        {veiculosList.map((veiculo) => (
+                          <SelectItem key={veiculo} value={veiculo}>
+                            {veiculo}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !selectedDateVeiculo && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDateVeiculo ? format(selectedDateVeiculo, 'dd/MM/yyyy') : 'Filtrar por data...'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDateVeiculo || undefined}
-                        onSelect={(date) => setSelectedDateVeiculo(date || null)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                  <div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[220px] justify-start text-left font-normal rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 h-10",
+                            !selectedDateVeiculo && "text-slate-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                          {selectedDateVeiculo ? format(selectedDateVeiculo, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-lg border-slate-200 dark:border-slate-800" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDateVeiculo || undefined}
+                          onSelect={(date) => setSelectedDateVeiculo(date || null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-                {(selectedVeiculo || selectedDateVeiculo) && (
+                  {(selectedVeiculo || selectedDateVeiculo) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedVeiculo(null);
+                        setSelectedDateVeiculo(null);
+                      }}
+                      className="rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-medium h-10"
+                    >
+                      Limpar Filtros
+                    </Button>
+                  )}
+
                   <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedVeiculo(null);
-                      setSelectedDateVeiculo(null);
-                    }}
+                    variant="outline"
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="gap-2 ml-auto rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
                   >
-                    Limpar Filtros
+                    <Printer className="h-4 w-4" />
+                    Imprimir / PDF
                   </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2 ml-auto"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
+                </div>
               </div>
 
               {!selectedVeiculo ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <DirectionsCar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Selecione um veículo para visualizar as entregas</p>
-                  <p className="text-sm mt-2">Use o filtro acima para escolher um veículo</p>
+                <div className="text-center py-16 bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
+                  <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <DirectionsCar className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">Selecione um veículo</p>
+                  <p className="text-sm text-slate-500 mt-1">Utilize os filtros acima para visualizar os dados</p>
                 </div>
               ) : (
                 <>
@@ -626,95 +630,6 @@ const Entregas = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="por-montagem" className="space-y-4">
-              {/* Filtros específicos da aba Por Montagem */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 max-w-md">
-                  <Select 
-                    value={selectedStatusMontagem || ''} 
-                    onValueChange={(value) => setSelectedStatusMontagem(value as StatusMontagem || null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um status..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PENDENTE">Pendente</SelectItem>
-                      <SelectItem value="CONCLUIDO">Concluído</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !selectedDateMontagem && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDateMontagem ? format(selectedDateMontagem, 'dd/MM/yyyy') : 'Filtrar por data...'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDateMontagem || undefined}
-                        onSelect={(date) => setSelectedDateMontagem(date || null)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {(selectedStatusMontagem || selectedDateMontagem) && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedStatusMontagem(null);
-                      setSelectedDateMontagem(null);
-                    }}
-                  >
-                    Limpar Filtros
-                  </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2 ml-auto"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
-              </div>
-
-              {!selectedStatusMontagem ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Wrench className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Selecione um status de montagem para visualizar as entregas</p>
-                  <p className="text-sm mt-2">Use o filtro acima para escolher um status</p>
-                </div>
-              ) : (
-                <>
-                  <EntregaTable
-                    entregas={filteredEntregas}
-                    onEdit={handleOpenForm}
-                    onDelete={handleOpenDeleteDialog}
-                  />
-
-                  <PaginationControl
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
-                    totalRecords={totalRecords}
-                    itemsPerPage={pageSize}
-                  />
-                </>
-              )}
-            </TabsContent>
           </Tabs>
         </div>
 
@@ -743,6 +658,7 @@ const Entregas = () => {
           columns={printColumns}
           filters={filtersText}
         />
+        </div>
       </div>
     </ModuleLayout>
   );

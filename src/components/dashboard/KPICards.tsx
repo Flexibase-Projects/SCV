@@ -1,5 +1,4 @@
-import { Inventory2 as Package, AttachMoney as DollarSign, Build as Wrench, TrendingUp } from '@mui/icons-material';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LocalShipping as Truck, AttachMoney as DollarSign, TrendingUp, AccountBalanceWallet as Wallet } from '@mui/icons-material';
 import { Entrega } from '@/types/entrega';
 
 interface KPICardsProps {
@@ -9,32 +8,23 @@ interface KPICardsProps {
     custoTotalEntregas: number;
     custoTotalMontagem: number;
     percentualMedioGastos: number;
+    valorTotalEntregas?: number;
+    entregasConcluidas?: number;
   };
 }
 
 export function KPICards({ entregas, stats }: KPICardsProps) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'KPICards.tsx:15', message: 'KPICards recebeu dados', data: { entregasLength: entregas.length, hasStats: !!stats, statsTotal: stats?.totalEntregas, statsObject: stats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'FIX' }) }).catch(() => { });
-  // #endregion
   const totalEntregas = stats ? stats.totalEntregas : entregas.length;
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'KPICards.tsx:20', message: 'Total de entregas calculado', data: { totalEntregas, statsTotalEntregas: stats?.totalEntregas, usingStats: !!stats }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'post-fix', hypothesisId: 'FIX' }) }).catch(() => { });
-  // #endregion
+  const valorTotalEntregas = stats?.valorTotalEntregas || entregas.reduce((acc, e) => acc + (e.valor || 0), 0);
 
-  const custoTotalEntregas = stats
-    ? stats.custoTotalEntregas
-    : entregas.reduce((acc, e) => acc + (e.gastos_entrega || 0), 0);
+  const entregasConcluidas = stats?.entregasConcluidas || entregas.filter(e => e.status === 'ENTREGUE' || e.status === 'CONCLUIDO').length;
+  
+  const taxaConclusao = totalEntregas > 0 ? Math.round((entregasConcluidas / totalEntregas) * 100) : 0;
 
-  const custoTotalMontagem = stats
-    ? stats.custoTotalMontagem
-    : entregas.reduce((acc, e) => acc + (e.gastos_montagem || 0), 0);
-
-  const percentualMedioGastos = stats
-    ? stats.percentualMedioGastos
-    : (entregas.length > 0
-      ? entregas.reduce((acc, e) => acc + (e.percentual_gastos || 0), 0) / entregas.length
-      : 0);
+  const gastosTotais = stats
+    ? (stats.custoTotalEntregas + stats.custoTotalMontagem)
+    : entregas.reduce((acc, e) => acc + (e.gastos_entrega || 0) + (e.gastos_montagem || 0), 0);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -47,53 +37,59 @@ export function KPICards({ entregas, stats }: KPICardsProps) {
     {
       title: 'Total de Entregas',
       value: totalEntregas.toString(),
-      icon: Package,
-      description: 'Total de entregas listadas',
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-500/10"
+      icon: Truck,
+      description: 'entregas no período',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
+      iconColor: 'text-emerald-600 dark:text-emerald-400'
     },
     {
-      title: 'Custo de Entregas',
-      value: formatCurrency(custoTotalEntregas),
+      title: 'Valor Total',
+      value: formatCurrency(valorTotalEntregas),
       icon: DollarSign,
-      description: 'Gastos totais com transporte',
-      color: "text-emerald-600 dark:text-emerald-400",
-      bgColor: "bg-emerald-50 dark:bg-emerald-500/10"
+      description: 'em entregas',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
+      iconColor: 'text-emerald-600 dark:text-emerald-400'
     },
     {
-      title: 'Custo de Montagem',
-      value: formatCurrency(custoTotalMontagem),
-      icon: Wrench,
-      description: 'Gastos totais com montagem',
-      color: "text-amber-600 dark:text-amber-400",
-      bgColor: "bg-amber-50 dark:bg-amber-500/10"
-    },
-    {
-      title: '% Médio de Gastos',
-      value: `${percentualMedioGastos.toFixed(1)}%`,
+      title: 'Taxa de Conclusão',
+      value: `${taxaConclusao}%`,
       icon: TrendingUp,
-      description: 'Percentual médio de gastos',
-      color: "text-lime-600 dark:text-lime-400",
-      bgColor: "bg-lime-50 dark:bg-lime-500/10"
+      description: `${entregasConcluidas} de ${totalEntregas} concluídas`,
+      iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
+      iconColor: 'text-emerald-600 dark:text-emerald-400'
+    },
+    {
+      title: 'Gastos Totais',
+      value: formatCurrency(gastosTotais),
+      icon: Wallet,
+      description: 'gastos operacionais',
+      iconBg: 'bg-amber-50 dark:bg-amber-500/10',
+      iconColor: 'text-amber-600 dark:text-amber-400'
     }
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {kpis.map((kpi) => (
-        <div key={kpi.title} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none p-5 shadow-sm hover:shadow-lg transition-all duration-300 min-h-[140px] flex flex-col cursor-pointer hover:scale-[1.02] hover:-translate-y-1 will-change-transform motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:hover:translate-y-0">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {kpis.map((kpi, index) => (
+        <div 
+          key={kpi.title} 
+          className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-4"
+          style={{ animationDelay: `${index * 100}ms` }}
+        >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+            <span className="text-sm font-medium text-slate-500">
               {kpi.title}
             </span>
-            <div className={`h-10 w-10 ${kpi.bgColor} rounded-xl flex items-center justify-center`}>
-              <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
+            <div className={`h-10 w-10 ${kpi.iconBg} rounded-lg flex items-center justify-center`}>
+              <kpi.icon className={`h-5 w-5 ${kpi.iconColor}`} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <p className="text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
             {kpi.value}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{kpi.description}</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {kpi.description}
+          </p>
         </div>
       ))}
     </div>

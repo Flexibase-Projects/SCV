@@ -401,6 +401,55 @@ export default function Ajuda() {
                 </div>
 
                 <div>
+                  <h4 className="font-semibold mb-3">Filtros Avançados - Tabs de Visualização:</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    A página de Entregas possui 3 formas de visualizar e filtrar os dados:
+                  </p>
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <p className="font-medium text-blue-800 dark:text-blue-200">Tab "Todos"</p>
+                      </div>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Visualização geral de todas as entregas. Use a busca para filtrar por cliente, PV Foco, NF ou motorista, e o filtro de data para definir um período específico.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-5 w-5 text-emerald-600" />
+                        <p className="font-medium text-emerald-800 dark:text-emerald-200">Tab "Por Motorista"</p>
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-emerald-700 dark:text-emerald-300 ml-2">
+                        <li>Selecione um <strong>motorista</strong> no dropdown</li>
+                        <li>Opcionalmente, escolha uma <strong>data específica</strong> usando o calendário</li>
+                        <li>As entregas são exibidas automaticamente ordenadas por data (mais recente primeiro)</li>
+                        <li>Use o botão <strong>"Limpar Filtros"</strong> para resetar a seleção</li>
+                      </ol>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Car className="h-5 w-5 text-violet-600" />
+                        <p className="font-medium text-violet-800 dark:text-violet-200">Tab "Por Veículo"</p>
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-violet-700 dark:text-violet-300 ml-2">
+                        <li>Selecione um <strong>veículo</strong> no dropdown</li>
+                        <li>Opcionalmente, escolha uma <strong>data específica</strong> usando o calendário</li>
+                        <li>As entregas são exibidas automaticamente ordenadas por data (mais recente primeiro)</li>
+                        <li>Use o botão <strong>"Limpar Filtros"</strong> para resetar a seleção</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mt-4">
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      <strong>Dica:</strong> Ao mudar de tab, os filtros são automaticamente limpos para melhorar a experiência de uso.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
                   <h4 className="font-semibold mb-3">Status das entregas:</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 text-center">
@@ -426,7 +475,7 @@ export default function Ajuda() {
                   <div className="flex items-start gap-2">
                     <Lightbulb className="h-5 w-5 text-amber-600 mt-0.5" />
                     <p className="text-sm text-amber-800 dark:text-amber-200">
-                      <strong>Dica:</strong> Use os filtros por status, motorista ou busque por cliente/NF para encontrar entregas rapidamente.
+                      <strong>Dica:</strong> Use as tabs de filtros para visualizar entregas de forma mais específica. A tab "Todos" é ideal para buscas gerais, enquanto "Por Motorista" e "Por Veículo" facilitam análises focadas.
                     </p>
                   </div>
                 </div>
@@ -462,6 +511,55 @@ export default function Ajuda() {
                   </ol>
                 </div>
 
+                <div>
+                  <h4 className="font-semibold mb-3">Filtros Avançados - Tabs de Visualização:</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    A página de Abastecimento possui 3 formas de visualizar e filtrar os dados:
+                  </p>
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        <p className="font-medium text-blue-800 dark:text-blue-200">Tab "Todos"</p>
+                      </div>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Visualização geral de todos os abastecimentos. Use a busca para filtrar por placa, condutor ou posto, e o filtro de data para definir um período específico.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-5 w-5 text-emerald-600" />
+                        <p className="font-medium text-emerald-800 dark:text-emerald-200">Tab "Por Motorista"</p>
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-emerald-700 dark:text-emerald-300 ml-2">
+                        <li>Selecione um <strong>motorista</strong> no dropdown</li>
+                        <li>Opcionalmente, escolha uma <strong>data específica</strong> usando o calendário</li>
+                        <li>Os abastecimentos são exibidos automaticamente ordenados por data (mais recente primeiro)</li>
+                        <li>Use o botão <strong>"Limpar Filtros"</strong> para resetar a seleção</li>
+                      </ol>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Car className="h-5 w-5 text-violet-600" />
+                        <p className="font-medium text-violet-800 dark:text-violet-200">Tab "Por Veículo"</p>
+                      </div>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-violet-700 dark:text-violet-300 ml-2">
+                        <li>Selecione um <strong>veículo</strong> no dropdown</li>
+                        <li>Opcionalmente, escolha uma <strong>data específica</strong> usando o calendário</li>
+                        <li>Os abastecimentos são exibidos automaticamente ordenados por data (mais recente primeiro)</li>
+                        <li>Use o botão <strong>"Limpar Filtros"</strong> para resetar a seleção</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mt-4">
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      <strong>Dica:</strong> Ao mudar de tab, os filtros são automaticamente limpos para melhorar a experiência de uso.
+                    </p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
                     <div className="flex items-start gap-2">
@@ -493,7 +591,7 @@ export default function Ajuda() {
                   <div className="flex items-start gap-2">
                     <Lightbulb className="h-5 w-5 text-amber-600 mt-0.5" />
                     <p className="text-sm text-amber-800 dark:text-amber-200">
-                      <strong>Dica:</strong> Filtre por veículo para ver o histórico de abastecimentos e identificar padrões de consumo.
+                      <strong>Dica:</strong> Use as tabs de filtros para visualizar abastecimentos de forma mais específica. A tab "Por Veículo" é ideal para acompanhar o histórico de consumo de um veículo específico.
                     </p>
                   </div>
                 </div>
@@ -591,7 +689,8 @@ export default function Ajuda() {
                     <li>Registre o <strong>Valor adiantado</strong></li>
                     <li>Adicione as <strong>Despesas</strong>:
                       <ul className="list-disc list-inside ml-4 mt-1 space-y-1 text-xs">
-                        <li>Combustível, Veículo, Material de montagem</li>
+                        <li><strong>Combustível</strong> - Pode ser preenchido manualmente ou vinculando abastecimentos (veja abaixo)</li>
+                        <li>Veículo, Material de montagem</li>
                         <li>Ajudante, Passagem de ônibus, Cartão telefônico</li>
                         <li>Hotel, Alimentação, Lavanderia</li>
                         <li>Diária motorista/montador, Táxi/Transporte, Outros</li>
@@ -600,6 +699,49 @@ export default function Ajuda() {
                     <li>Vincule as <strong>Entregas relacionadas</strong> à viagem</li>
                     <li>Clique em <strong>Salvar</strong></li>
                   </ol>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3">Vincular Abastecimentos ao Acerto:</h4>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-2 mb-3">
+                      <Fuel className="h-5 w-5 text-emerald-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-emerald-800 dark:text-emerald-200">Como funciona:</p>
+                        <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
+                          Em vez de digitar manualmente o valor de combustível, você pode vincular abastecimentos reais que foram feitos durante a viagem. O sistema calcula automaticamente o total.
+                        </p>
+                      </div>
+                    </div>
+                    <ol className="list-decimal list-inside space-y-2 text-sm text-emerald-700 dark:text-emerald-300 ml-2">
+                      <li>Selecione primeiro o <strong>Motorista</strong> no formulário</li>
+                      <li>Localize o campo <strong>"Despesa de Combustível"</strong></li>
+                      <li>Clique no botão <strong>"Vincular"</strong> ao lado do campo</li>
+                      <li>Uma janela será aberta mostrando apenas os abastecimentos do motorista selecionado</li>
+                      <li>Selecione os abastecimentos que foram feitos durante a viagem</li>
+                      <li>O sistema calcula automaticamente o total e preenche o campo de combustível</li>
+                      <li>O campo fica <strong>desabilitado</strong> quando há abastecimentos vinculados (para evitar erros)</li>
+                    </ol>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-blue-800 dark:text-blue-200">Vantagens da Vinculação:</p>
+                        <ul className="list-disc list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300 mt-1 ml-2">
+                          <li><strong>Precisão:</strong> Usa valores reais dos abastecimentos registrados</li>
+                          <li><strong>Rastreabilidade:</strong> Você sabe exatamente quais abastecimentos foram usados na viagem</li>
+                          <li><strong>Automação:</strong> Não precisa calcular manualmente o total</li>
+                          <li><strong>Validação:</strong> Evita erros de digitação</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mt-3">
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      <strong>Importante:</strong> Se você mudar o motorista após vincular abastecimentos, os vínculos serão automaticamente removidos, pois os abastecimentos são filtrados pelo motorista selecionado.
+                    </p>
+                  </div>
                 </div>
 
                 <div>
@@ -628,15 +770,29 @@ export default function Ajuda() {
                   </div>
                 </div>
 
-                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
-                  <div className="flex items-start gap-2">
-                    <Calculator className="h-5 w-5 text-emerald-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-emerald-800 dark:text-emerald-200">Cálculo Automático</p>
-                      <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
-                        O sistema calcula automaticamente:<br />
-                        <code className="bg-emerald-100 dark:bg-emerald-800 px-1 rounded">Saldo = Adiantamento - Total de Despesas</code>
-                      </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Calculator className="h-5 w-5 text-emerald-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-emerald-800 dark:text-emerald-200">Cálculo Automático de Saldo</p>
+                        <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
+                          O sistema calcula automaticamente:<br />
+                          <code className="bg-emerald-100 dark:bg-emerald-800 px-1 rounded">Saldo = Adiantamento - Total de Despesas</code>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Fuel className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-blue-800 dark:text-blue-200">Cálculo Automático de Combustível</p>
+                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                          Ao vincular abastecimentos, o sistema soma automaticamente os valores dos abastecimentos selecionados e preenche o campo de despesa de combustível.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -940,6 +1096,65 @@ export default function Ajuda() {
                     </AccordionTrigger>
                     <AccordionContent className="pb-4 text-sm text-muted-foreground">
                       <p>O sistema suporta até 7 montadores na planilha. Os <strong>primeiros 2</strong> são salvos nos campos específicos (Montador 1 e Montador 2). Os <strong>montadores excedentes</strong> (3, 4, 5, 6, 7) são concatenados e adicionados ao campo "Descrição de Erros" no formato "Montadores adicionais: Nome3, Nome4, ..." para não perder a informação.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="q12" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline text-left">
+                      <span className="text-sm">❓ Como usar os filtros por motorista e veículo em Entregas?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4 text-sm text-muted-foreground">
+                      <p>Na página de Entregas, você encontrará 3 tabs no topo:</p>
+                      <ul className="list-disc list-inside mt-2 ml-2 space-y-1">
+                        <li><strong>"Todos"</strong> - Visualização geral com busca e filtro de período</li>
+                        <li><strong>"Por Motorista"</strong> - Selecione um motorista e opcionalmente uma data específica para ver apenas as entregas daquele motorista</li>
+                        <li><strong>"Por Veículo"</strong> - Selecione um veículo e opcionalmente uma data específica para ver apenas as entregas daquele veículo</li>
+                      </ul>
+                      <p className="mt-2">As entregas são automaticamente ordenadas por data (mais recente primeiro) nas tabs específicas. Ao mudar de tab, os filtros são limpos automaticamente.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="q13" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline text-left">
+                      <span className="text-sm">❓ Como usar os filtros por motorista e veículo em Abastecimento?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4 text-sm text-muted-foreground">
+                      <p>Na página de Abastecimento, você encontrará 3 tabs no topo:</p>
+                      <ul className="list-disc list-inside mt-2 ml-2 space-y-1">
+                        <li><strong>"Todos"</strong> - Visualização geral com busca e filtro de período</li>
+                        <li><strong>"Por Motorista"</strong> - Selecione um motorista e opcionalmente uma data específica para ver apenas os abastecimentos daquele motorista</li>
+                        <li><strong>"Por Veículo"</strong> - Selecione um veículo e opcionalmente uma data específica para ver apenas os abastecimentos daquele veículo</li>
+                      </ul>
+                      <p className="mt-2">Os abastecimentos são automaticamente ordenados por data (mais recente primeiro) nas tabs específicas. Use o botão "Limpar Filtros" para resetar a seleção. Ao mudar de tab, os filtros são limpos automaticamente.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="q14" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline text-left">
+                      <span className="text-sm">❓ Como vincular abastecimentos no Acerto de Viagem?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4 text-sm text-muted-foreground">
+                      <p>Para vincular abastecimentos ao acerto de viagem:</p>
+                      <ol className="list-decimal list-inside mt-2 ml-2 space-y-1">
+                        <li>Primeiro, selecione o <strong>Motorista</strong> no formulário</li>
+                        <li>Localize o campo <strong>"Despesa de Combustível"</strong></li>
+                        <li>Clique no botão <strong>"Vincular"</strong> ao lado do campo</li>
+                        <li>Uma janela será aberta mostrando apenas os abastecimentos do motorista selecionado</li>
+                        <li>Selecione os abastecimentos que foram feitos durante a viagem</li>
+                        <li>O sistema calcula automaticamente o total e preenche o campo</li>
+                      </ol>
+                      <p className="mt-2"><strong>Importante:</strong> O campo de combustível fica desabilitado quando há abastecimentos vinculados. Se você mudar o motorista, os vínculos serão removidos automaticamente.</p>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="q15" className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline text-left">
+                      <span className="text-sm">❓ O cálculo de combustível no Acerto de Viagem é automático?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-4 text-sm text-muted-foreground">
+                      <p>Sim! Quando você vincula abastecimentos ao acerto de viagem, o sistema <strong>calcula automaticamente</strong> o total somando os valores de todos os abastecimentos selecionados.</p>
+                      <p className="mt-2">Você também pode preencher manualmente o campo de despesa de combustível, mas ao vincular abastecimentos, o valor é calculado automaticamente e o campo fica desabilitado para evitar erros.</p>
+                      <p className="mt-2"><strong>Vantagem:</strong> Isso garante precisão e rastreabilidade, pois você sabe exatamente quais abastecimentos foram usados na viagem.</p>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

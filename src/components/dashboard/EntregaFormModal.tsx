@@ -213,31 +213,35 @@ export function EntregaFormModal({
     onSubmit(submitData);
   };
 
+  const inputClasses = "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-lg focus-visible:ring-0 focus-visible:border-emerald-500 font-medium h-10 text-slate-900 dark:text-slate-100";
+  const labelClasses = "text-xs font-medium text-slate-500 uppercase tracking-wide";
+  const sectionHeaderClasses = "text-sm font-semibold text-slate-900 dark:text-slate-50 uppercase tracking-wide border-b border-slate-200 dark:border-slate-800 pb-2 mb-4";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-card border-border">
-        <DialogHeader>
-          <DialogTitle className="text-foreground">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-0 gap-0">
+        <DialogHeader className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+          <DialogTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">
             {entrega ? 'Editar Entrega' : 'Nova Entrega'}
           </DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="p-6 space-y-8">
             {/* Dados do Pedido */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+              <h3 className={sectionHeaderClasses}>
                 Dados do Pedido
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="pv_foco"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>PV Foco</FormLabel>
+                      <FormLabel className={labelClasses}>PV Foco</FormLabel>
                       <FormControl>
-                        <Input {...field} className="bg-background border-border" />
+                        <Input {...field} className={inputClasses} placeholder="000000" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -248,12 +252,12 @@ export function EntregaFormModal({
                   name="nf"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nota Fiscal</FormLabel>
+                      <FormLabel className={labelClasses}>Nota Fiscal</FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
-                          className="bg-background border-border" 
-                          placeholder="Número da NF ou DECLARAÇÃO"
+                          className={inputClasses} 
+                          placeholder="NÚMERO DA NF"
                         />
                       </FormControl>
                       <FormMessage />
@@ -265,12 +269,12 @@ export function EntregaFormModal({
                   name="valor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Valor (R$)</FormLabel>
+                      <FormLabel className={labelClasses}>Valor (R$)</FormLabel>
                       <FormControl>
                         <CurrencyInput
                           value={field.value}
                           onValueChange={field.onChange}
-                          className="bg-background border-border"
+                          className={inputClasses}
                           placeholder="0,00"
                         />
                       </FormControl>
@@ -282,10 +286,10 @@ export function EntregaFormModal({
                   control={form.control}
                   name="cliente"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cliente *</FormLabel>
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className={labelClasses}>Cliente *</FormLabel>
                       <FormControl>
-                        <Input {...field} className="bg-background border-border" />
+                        <Input {...field} className={inputClasses} placeholder="NOME DO CLIENTE" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,16 +300,16 @@ export function EntregaFormModal({
                   name="uf"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>UF</FormLabel>
+                      <FormLabel className={labelClasses}>UF</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue placeholder="Selecione" />
+                          <SelectTrigger className={inputClasses}>
+                            <SelectValue placeholder="SELECIONE" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-popover border-border">
+                        <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                           {ESTADOS_BRASILEIROS.map((uf) => (
-                            <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                            <SelectItem key={uf} value={uf} className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50 rounded-lg cursor-pointer">{uf}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -318,16 +322,16 @@ export function EntregaFormModal({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel className={labelClasses}>Status</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue placeholder="Selecione" />
+                          <SelectTrigger className={inputClasses}>
+                            <SelectValue placeholder="SELECIONE" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-popover border-border">
+                        <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                           {STATUS_OPTIONS.map((status) => (
-                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                            <SelectItem key={status} value={status} className="focus:bg-slate-100 dark:focus:bg-slate-800 focus:text-slate-900 dark:focus:text-slate-50 rounded-lg cursor-pointer">{status}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -340,37 +344,38 @@ export function EntregaFormModal({
 
             {/* Dados do Transporte */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+              <h3 className={sectionHeaderClasses}>
                 Dados do Transporte
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="data_saida"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Data de Saída</FormLabel>
+                      <FormLabel className={labelClasses}>Data de Saída</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
                               variant="outline"
                               className={cn(
-                                "pl-3 text-left font-normal bg-background border-border",
+                                inputClasses,
+                                "pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
-                              {field.value ? format(field.value, "dd/MM/yyyy") : "Selecione"}
+                              {field.value ? format(field.value, "dd/MM/yyyy") : "SELECIONE"}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-popover border-border" align="start">
+                        <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm" align="start">
                           <Calendar
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            className="pointer-events-auto"
+                            className="pointer-events-auto rounded-lg"
                           />
                         </PopoverContent>
                       </Popover>
@@ -383,16 +388,16 @@ export function EntregaFormModal({
                   name="motorista"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Motorista</FormLabel>
+                      <FormLabel className={labelClasses}>Motorista</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue placeholder="Selecione" />
+                          <SelectTrigger className={inputClasses}>
+                            <SelectValue placeholder="SELECIONE" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-popover border-border">
+                        <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                           {motoristas.map((motorista) => (
-                            <SelectItem key={motorista.id} value={motorista.nome}>
+                            <SelectItem key={motorista.id} value={motorista.nome} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">
                               {motorista.nome}
                             </SelectItem>
                           ))}
@@ -407,16 +412,16 @@ export function EntregaFormModal({
                   name="carro"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Veículo</FormLabel>
+                      <FormLabel className={labelClasses}>Veículo</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue placeholder="Selecione" />
+                          <SelectTrigger className={inputClasses}>
+                            <SelectValue placeholder="SELECIONE" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-popover border-border">
+                        <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                           {veiculos.map((veiculo) => (
-                            <SelectItem key={veiculo.id} value={`${veiculo.modelo || veiculo.fabricante || 'Sem modelo'} - ${veiculo.placa}`}>
+                            <SelectItem key={veiculo.id} value={`${veiculo.modelo || veiculo.fabricante || 'Sem modelo'} - ${veiculo.placa}`} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">
                               {veiculo.modelo || veiculo.fabricante || 'Sem modelo'} - {veiculo.placa}
                             </SelectItem>
                           ))}
@@ -431,16 +436,16 @@ export function EntregaFormModal({
                   name="tipo_transporte"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de Transporte</FormLabel>
+                      <FormLabel className={labelClasses}>Tipo de Transporte</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue placeholder="Selecione" />
+                          <SelectTrigger className={inputClasses}>
+                            <SelectValue placeholder="SELECIONE" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="bg-popover border-border">
+                        <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                           {TIPO_TRANSPORTE_OPTIONS.map((tipo) => (
-                            <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
+                            <SelectItem key={tipo} value={tipo} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">{tipo}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -453,22 +458,23 @@ export function EntregaFormModal({
 
             {/* Montagem */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
+              <h3 className={sectionHeaderClasses}>
                 Montagem
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="precisa_montagem"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-3 shadow-sm">
+                    <FormItem className="flex flex-row items-center justify-between border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                       <div className="space-y-0.5">
-                        <FormLabel>Precisa Montagem?</FormLabel>
+                        <FormLabel className={labelClasses}>Precisa Montagem?</FormLabel>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-500"
                         />
                       </FormControl>
                     </FormItem>
@@ -479,28 +485,29 @@ export function EntregaFormModal({
                   name="data_montagem"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Data de Montagem</FormLabel>
+                      <FormLabel className={labelClasses}>Data de Montagem</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
                               variant="outline"
                               className={cn(
-                                "pl-3 text-left font-normal bg-background border-border",
+                                inputClasses,
+                                "pl-3 text-left font-normal",
                                 !field.value && "text-muted-foreground"
                               )}
                             >
-                              {field.value ? format(field.value, "dd/MM/yyyy") : "Selecione"}
+                              {field.value ? format(field.value, "dd/MM/yyyy") : "SELECIONE"}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-popover border-border" align="start">
+                        <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm" align="start">
                           <Calendar
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            className="pointer-events-auto"
+                            className="pointer-events-auto rounded-lg"
                           />
                         </PopoverContent>
                       </Popover>
@@ -513,108 +520,88 @@ export function EntregaFormModal({
                     control={form.control}
                     name="status_montagem"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Status da Montagem</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          value={field.value || 'PENDENTE'}
-                          disabled={!!dataMontagem}
-                        >
+                      <FormItem>
+                        <FormLabel className={labelClasses}>Status Montagem</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o status..." />
+                            <SelectTrigger className={inputClasses}>
+                              <SelectValue placeholder="SELECIONE" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="PENDENTE">Pendente</SelectItem>
-                            <SelectItem value="CONCLUIDO">Concluído</SelectItem>
+                          <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+                            <SelectItem value="PENDENTE" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">PENDENTE</SelectItem>
+                            <SelectItem value="CONCLUIDO" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">CONCLUÍDO</SelectItem>
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {dataMontagem 
-                            ? 'Status automaticamente definido como Concluído quando há data de montagem'
-                            : 'Defina como Concluído quando a montagem for finalizada'}
-                        </p>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 )}
-                <div className="md:col-span-2">
-                  <FormItem>
-                    <FormLabel>Montadores</FormLabel>
-                    <div className="space-y-3">
-                      {/* Montadores selecionados */}
-                      {selectedMontadores.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedMontadores.map((nome) => (
-                            <Badge
-                              key={nome}
-                              variant="secondary"
-                              className="flex items-center gap-1 py-1 px-2"
-                            >
-                              {nome}
-                              <button
-                                type="button"
-                                onClick={() => removeMontador(nome)}
-                                className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full p-0.5"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {/* Seletor para adicionar mais montadores */}
-                      {availableMontadores.length > 0 && (
-                        <Select onValueChange={(value) => addMontador(value)} value="">
-                          <SelectTrigger className="bg-background border-border">
-                            <SelectValue placeholder="Adicionar montador..." />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover border-border">
-                            {availableMontadores.map((montador) => (
-                              <SelectItem key={montador.id} value={montador.nome}>
-                                <div className="flex items-center gap-2">
-                                  <Plus className="h-4 w-4" />
-                                  {montador.nome}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                      
-                      {availableMontadores.length === 0 && selectedMontadores.length === 0 && (
-                        <p className="text-sm text-muted-foreground">Nenhum montador cadastrado</p>
-                      )}
-                      
-                      {availableMontadores.length === 0 && selectedMontadores.length > 0 && (
-                        <p className="text-sm text-muted-foreground">Todos os montadores já foram selecionados</p>
-                      )}
-                    </div>
-                  </FormItem>
-                </div>
               </div>
+
+              {precisaMontagem && (
+                <div className="space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <div className="flex flex-col gap-2">
+                    <FormLabel className={labelClasses}>Montadores</FormLabel>
+                    <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg">
+                      {selectedMontadores.length === 0 && (
+                        <span className="text-slate-400 text-sm p-1">Nenhum montador selecionado</span>
+                      )}
+                      {selectedMontadores.map((montador) => (
+                        <Badge key={montador} variant="secondary" className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/20">
+                          {montador}
+                          <button
+                            type="button"
+                            onClick={() => removeMontador(montador)}
+                            className="ml-2 hover:text-red-500"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 items-end">
+                    <Select onValueChange={addMontador}>
+                      <SelectTrigger className={cn(inputClasses, "w-full")}>
+                        <SelectValue placeholder="ADICIONAR MONTADOR" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+                        {availableMontadores.length === 0 ? (
+                          <div className="p-2 text-sm text-slate-500">Todos os montadores selecionados</div>
+                        ) : (
+                          availableMontadores.map((montador) => (
+                            <SelectItem key={montador.id} value={montador.nome} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">
+                              {montador.nome}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Custos */}
+            {/* Custos e Métricas */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                Custos e Produtividade
+              <h3 className={sectionHeaderClasses}>
+                Custos e Métricas
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="gastos_entrega"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gastos Entrega (R$)</FormLabel>
+                      <FormLabel className={labelClasses}>Gastos Entrega (R$)</FormLabel>
                       <FormControl>
                         <CurrencyInput
                           value={field.value}
                           onValueChange={field.onChange}
-                          className="bg-background border-border"
+                          className={inputClasses}
                           placeholder="0,00"
                         />
                       </FormControl>
@@ -627,12 +614,12 @@ export function EntregaFormModal({
                   name="gastos_montagem"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gastos Montagem (R$)</FormLabel>
+                      <FormLabel className={labelClasses}>Gastos Montagem (R$)</FormLabel>
                       <FormControl>
                         <CurrencyInput
                           value={field.value}
                           onValueChange={field.onChange}
-                          className="bg-background border-border"
+                          className={inputClasses}
                           placeholder="0,00"
                         />
                       </FormControl>
@@ -645,9 +632,15 @@ export function EntregaFormModal({
                   name="produtividade"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Produtividade</FormLabel>
+                      <FormLabel className={labelClasses}>Produtividade (%)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" {...field} className="bg-background border-border" />
+                        <Input 
+                          type="number" 
+                          {...field} 
+                          className={inputClasses}
+                          min={0}
+                          max={100}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -656,21 +649,32 @@ export function EntregaFormModal({
               </div>
             </div>
 
-            {/* Erros */}
+            {/* Ocorrências */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground border-b border-border pb-2">
-                Observações
+              <h3 className={sectionHeaderClasses}>
+                Ocorrências
               </h3>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="erros"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Erros</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="bg-background border-border" />
-                      </FormControl>
+                      <FormLabel className={labelClasses}>Tipo de Erro</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className={inputClasses}>
+                            <SelectValue placeholder="SELECIONE" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+                          <SelectItem value="NENHUM" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">Nenhum</SelectItem>
+                          <SelectItem value="AVARIA" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">Avaria</SelectItem>
+                          <SelectItem value="EXTRAVIO" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">Extravio</SelectItem>
+                          <SelectItem value="ATRASO" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">Atraso</SelectItem>
+                          <SelectItem value="DIVERGENCIA" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">Divergência</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -680,9 +684,13 @@ export function EntregaFormModal({
                   name="descricao_erros"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Descrição dos Erros</FormLabel>
+                      <FormLabel className={labelClasses}>Descrição do Erro</FormLabel>
                       <FormControl>
-                        <Textarea {...field} className="bg-background border-border" />
+                        <Textarea 
+                          {...field} 
+                          className={cn(inputClasses, "min-h-[80px] py-2 resize-none")} 
+                          placeholder="Descreva o erro ocorrido..."
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -691,17 +699,21 @@ export function EntregaFormModal({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <div className="flex justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="border-border"
+                className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium h-10 px-6"
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : entrega ? 'Atualizar' : 'Cadastrar'}
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-medium h-10 px-6 shadow-sm shadow-emerald-500/20 transition-all duration-200"
+              >
+                {isLoading ? 'Salvando...' : 'Salvar Entrega'}
               </Button>
             </div>
           </form>

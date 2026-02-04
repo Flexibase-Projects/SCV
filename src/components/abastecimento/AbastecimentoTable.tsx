@@ -49,7 +49,7 @@ export function AbastecimentoTable({
   }
 
   return (
-    <div className="rounded-md border border-border bg-card overflow-hidden">
+    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl shadow-sm overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">

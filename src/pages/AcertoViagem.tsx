@@ -24,7 +24,7 @@ const AcertoViagemPage = () => {
 
   // #region agent log
   useEffect(() => {
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AcertoViagem.tsx:23', message: 'Estado da query', data: { isLoading, isError, errorMessage: error?.message, acertosLength: acertos.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AcertoViagem.tsx:23', message: 'Estado da query', data: { isLoading, isError, errorMessage: error?.message, acertosLength: acertos.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
   }, [isLoading, isError, error, acertos.length]);
   // #endregion
 
@@ -156,7 +156,7 @@ const AcertoViagemPage = () => {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
                 <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -165,7 +165,7 @@ const AcertoViagemPage = () => {
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalAcertos}</p>
           </div>
-          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-10 w-10 bg-yellow-50 dark:bg-yellow-500/10 rounded-xl flex items-center justify-center">
                 <FileText className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
@@ -174,7 +174,7 @@ const AcertoViagemPage = () => {
             </div>
             <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{acertosPendentes}</p>
           </div>
-          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-10 w-10 bg-green-50 dark:bg-green-500/10 rounded-xl flex items-center justify-center">
                 <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -183,7 +183,7 @@ const AcertoViagemPage = () => {
             </div>
             <p className="text-2xl font-bold text-green-600 dark:text-green-400">{acertosFinalizados}</p>
           </div>
-          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+          <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
             <div className="flex items-center gap-2 mb-3">
               <div className="h-10 w-10 bg-orange-50 dark:bg-orange-500/10 rounded-xl flex items-center justify-center">
                 <FileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />

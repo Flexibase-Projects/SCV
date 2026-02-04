@@ -69,21 +69,21 @@ export interface UnifiedParseResult {
  */
 function sanitizeMonetaryValue(value: any): number | null {
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:ENTRY',message:'sanitizeMonetaryValue entrada',data:{value,valueType:typeof value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:ENTRY',message:'sanitizeMonetaryValue entrada',data:{value,valueType:typeof value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
     // #endregion
     if (value === null || value === undefined || value === '') return null;
 
     // Se já for número, retornar
     if (typeof value === 'number') {
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:NUMBER_RETURN',message:'sanitizeMonetaryValue retornou número',data:{value,returnValue:isNaN(value)?null:value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:NUMBER_RETURN',message:'sanitizeMonetaryValue retornou número',data:{value,returnValue:isNaN(value)?null:value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
         // #endregion
         return isNaN(value) ? null : value;
     }
 
     let strValue = String(value).trim();
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:STRING_VALUE',message:'sanitizeMonetaryValue strValue inicial',data:{value,strValue},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:STRING_VALUE',message:'sanitizeMonetaryValue strValue inicial',data:{value,strValue},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
     // #endregion
 
     // 1. Remove "R$" e espaços extras
@@ -101,7 +101,7 @@ function sanitizeMonetaryValue(value: any): number | null {
         const lastCommaIndex = strValue.lastIndexOf(',');
         const lastDotIndex = strValue.lastIndexOf('.');
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:FORMAT_DETECTION',message:'Detecção de formato com vírgula e ponto',data:{strValue,lastCommaIndex,lastDotIndex,commaIsDecimal:lastCommaIndex>lastDotIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:FORMAT_DETECTION',message:'Detecção de formato com vírgula e ponto',data:{strValue,lastCommaIndex,lastDotIndex,commaIsDecimal:lastCommaIndex>lastDotIndex},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
         // #endregion
         
         if (lastCommaIndex > lastDotIndex) {
@@ -111,14 +111,14 @@ function sanitizeMonetaryValue(value: any): number | null {
             // Substitui vírgula por ponto (decimal)
             strValue = strValue.replace(',', '.');
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:BR_FORMAT',message:'Aplicado formato brasileiro',data:{strValue},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
+            fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:BR_FORMAT',message:'Aplicado formato brasileiro',data:{strValue},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
             // #endregion
         } else {
             // Ponto está mais à direita = formato americano (1,644.30)
             // Remove todas as vírgulas (separadores de milhar)
             strValue = strValue.replace(/,/g, '');
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:US_FORMAT',message:'Aplicado formato americano',data:{strValue},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
+            fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:sanitizeMonetaryValue:US_FORMAT',message:'Aplicado formato americano',data:{strValue},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'N'})}).catch(()=>{});
             // #endregion
             // Ponto já é decimal, manter
         }
@@ -528,11 +528,11 @@ function processRow(
         'preco_unitario',
     ]);
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorUnitarioValue',message:'Valor unitário bruto antes de sanitizar',data:{lineNumber,valorUnitarioValue,valorUnitarioType:typeof valorUnitarioValue,valorUnitarioString:String(valorUnitarioValue)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorUnitarioValue',message:'Valor unitário bruto antes de sanitizar',data:{lineNumber,valorUnitarioValue,valorUnitarioType:typeof valorUnitarioValue,valorUnitarioString:String(valorUnitarioValue)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
     // #endregion
     parsedRow.valor_unitario = sanitizeMonetaryValue(valorUnitarioValue);
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorUnitarioSanitized',message:'Valor unitário após sanitizar',data:{lineNumber,valorUnitarioSanitized:parsedRow.valor_unitario,valorUnitarioType:typeof parsedRow.valor_unitario},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorUnitarioSanitized',message:'Valor unitário após sanitizar',data:{lineNumber,valorUnitarioSanitized:parsedRow.valor_unitario,valorUnitarioType:typeof parsedRow.valor_unitario},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
     // #endregion
     if (parsedRow.valor_unitario === null) {
         errors.push({ lineNumber, field: 'valor_unitario', message: 'Valor unitário é obrigatório' });
@@ -542,11 +542,11 @@ function processRow(
     // VALOR TOTAL (monetário) - NÃO RECALCULAR, usar valor do Excel
     const valorTotalValue = findValueByVariations(row, ['valor_total', 'valortotal', 'total']);
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorTotalValue',message:'Valor total bruto antes de sanitizar',data:{lineNumber,valorTotalValue,valorTotalType:typeof valorTotalValue,valorTotalString:String(valorTotalValue)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorTotalValue',message:'Valor total bruto antes de sanitizar',data:{lineNumber,valorTotalValue,valorTotalType:typeof valorTotalValue,valorTotalString:String(valorTotalValue)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
     // #endregion
     parsedRow.valor_total = sanitizeMonetaryValue(valorTotalValue);
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorTotalSanitized',message:'Valor total após sanitizar',data:{lineNumber,valorTotalSanitized:parsedRow.valor_total,valorTotalType:typeof parsedRow.valor_total},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:processRow:valorTotalSanitized',message:'Valor total após sanitizar',data:{lineNumber,valorTotalSanitized:parsedRow.valor_total,valorTotalType:typeof parsedRow.valor_total},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
     // #endregion
     if (parsedRow.valor_total === null) {
         errors.push({ lineNumber, field: 'valor_total', message: 'Valor total é obrigatório' });
@@ -620,13 +620,13 @@ export async function parseUnifiedExcel(file: File): Promise<UnifiedParseResult>
                                 // v = valor bruto (número, data, etc)
                                 // #region agent log
                                 if (header.includes('valor') && rowIndex <= 5) {
-                                    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:parseUnifiedExcel:CELL_READ',message:'Lendo célula do Excel',data:{rowIndex,colIndex,header,cellAddress,cellW:cell.w,cellV:cell.v,cellT:cell.t,cellZ:cell.z,cellF:cell.f},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+                                    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:parseUnifiedExcel:CELL_READ',message:'Lendo célula do Excel',data:{rowIndex,colIndex,header,cellAddress,cellW:cell.w,cellV:cell.v,cellT:cell.t,cellZ:cell.z,cellF:cell.f},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
                                 }
                                 // #endregion
                                 value = cell.w || cell.v || null;
                                 // #region agent log
                                 if (header.includes('valor') && rowIndex <= 5) {
-                                    fetch('http://127.0.0.1:7242/ingest/1876b801-4017-4911-86b8-3f0fe2655b09',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:parseUnifiedExcel:CELL_VALUE',message:'Valor escolhido da célula',data:{rowIndex,header,value,valueType:typeof value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+                                    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'abastecimentoUnifiedParser.ts:parseUnifiedExcel:CELL_VALUE',message:'Valor escolhido da célula',data:{rowIndex,header,value,valueType:typeof value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
                                 }
                                 // #endregion
                                 

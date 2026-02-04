@@ -36,14 +36,14 @@ export function SharedFilter({
     };
 
     return (
-        <div className={cn("flex flex-col gap-4 md:flex-row md:items-center w-full", className)}>
+        <div className={cn("flex flex-col gap-3 md:flex-row md:items-center w-full", className)}>
             <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                     placeholder={placeholder}
                     value={searchTerm}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className="pl-10 bg-card border-border shadow-sm focus-visible:ring-primary"
+                    className="pl-10 bg-brand-white dark:bg-[#181b21] border-gray-100 dark:border-white/5 rounded-xl focus-visible:ring-0 focus-visible:border-emerald-500 font-medium placeholder:text-slate-400 h-10"
                 />
             </div>
 
@@ -53,15 +53,15 @@ export function SharedFilter({
                         <Button
                             variant="outline"
                             className={cn(
-                                "w-[140px] md:w-[160px] justify-start text-left font-normal bg-card border-border shadow-sm",
-                                !dateFrom && "text-muted-foreground"
+                                "w-[140px] md:w-[150px] justify-start text-left font-normal bg-brand-white dark:bg-[#181b21] border-gray-100 dark:border-white/5 rounded-xl h-10 hover:bg-slate-50 dark:hover:bg-slate-800",
+                                !dateFrom && "text-slate-400"
                             )}
                         >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Início"}
+                            <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                            {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "Data inicial"}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 rounded-xl border-gray-100 dark:border-white/5 bg-brand-white dark:bg-[#181b21]" align="start">
                         <Calendar
                             mode="single"
                             selected={dateFrom || undefined}
@@ -76,15 +76,15 @@ export function SharedFilter({
                         <Button
                             variant="outline"
                             className={cn(
-                                "w-[140px] md:w-[160px] justify-start text-left font-normal bg-card border-border shadow-sm",
-                                !dateTo && "text-muted-foreground"
+                                "w-[140px] md:w-[150px] justify-start text-left font-normal bg-brand-white dark:bg-[#181b21] border-gray-100 dark:border-white/5 rounded-xl h-10 hover:bg-slate-50 dark:hover:bg-slate-800",
+                                !dateTo && "text-slate-400"
                             )}
                         >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateTo ? format(dateTo, "dd/MM/yyyy") : "Fim"}
+                            <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                            {dateTo ? format(dateTo, "dd/MM/yyyy") : "Data final"}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 rounded-xl border-gray-100 dark:border-white/5 bg-brand-white dark:bg-[#181b21]" align="start">
                         <Calendar
                             mode="single"
                             selected={dateTo || undefined}
@@ -100,9 +100,9 @@ export function SharedFilter({
                         variant="ghost"
                         size="sm"
                         onClick={handleClear}
-                        className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                        className="h-10 px-3 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm font-medium"
                     >
-                        <X className="mr-2 h-4 w-4" />
+                        <X className="mr-1.5 h-4 w-4" />
                         Limpar
                     </Button>
                 )}

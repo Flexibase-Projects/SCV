@@ -30,15 +30,15 @@ export function EntregaFilters({
           placeholder="Buscar por cliente ou PV Foco..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 bg-card border-border"
+          className="pl-10 bg-card border-border rounded-xl"
         />
       </div>
       
       <Select value={statusFilter} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-full md:w-[180px] bg-card border-border">
+        <SelectTrigger className="w-full md:w-[180px] bg-card border-border rounded-xl">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
-        <SelectContent className="bg-popover border-border">
+        <SelectContent className="bg-popover border-border rounded-xl">
           <SelectItem value="all">Todos os Status</SelectItem>
           {STATUS_OPTIONS.map((status) => (
             <SelectItem key={status} value={status}>
@@ -49,10 +49,10 @@ export function EntregaFilters({
       </Select>
       
       <Select value={motoristaFilter} onValueChange={onMotoristaChange}>
-        <SelectTrigger className="w-full md:w-[180px] bg-card border-border">
+        <SelectTrigger className="w-full md:w-[180px] bg-card border-border rounded-xl">
           <SelectValue placeholder="Motorista" />
         </SelectTrigger>
-        <SelectContent className="bg-popover border-border">
+        <SelectContent className="bg-popover border-border rounded-xl">
           <SelectItem value="all">Todos os Motoristas</SelectItem>
           {motoristas.map((motorista) => (
             <SelectItem key={motorista} value={motorista}>
