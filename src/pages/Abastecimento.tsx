@@ -308,9 +308,9 @@ const AbastecimentoPage = () => {
           </div>
 
         <div className="space-y-6">
-          {/* Cards de resumo */}
+          {/* Cards de resumo - mesmo efeito de Entregas (hover scale + entrada em sequência) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-4 min-h-[140px] flex flex-col" style={{ animationDelay: '0ms' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Registros</span>
                 <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
@@ -321,7 +321,7 @@ const AbastecimentoPage = () => {
               <p className="text-xs text-gray-400 mt-1">abastecimentos listados</p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-4 min-h-[140px] flex flex-col" style={{ animationDelay: '100ms' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Litros</span>
                 <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
@@ -334,7 +334,7 @@ const AbastecimentoPage = () => {
               <p className="text-xs text-gray-400 mt-1">combustível consumido</p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-4 min-h-[140px] flex flex-col" style={{ animationDelay: '200ms' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Média de Consumo</span>
                 <div className="h-10 w-10 bg-purple-50 dark:bg-purple-500/10 rounded-xl flex items-center justify-center">
@@ -353,7 +353,7 @@ const AbastecimentoPage = () => {
               </p>
             </div>
 
-            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
+            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-4 min-h-[140px] flex flex-col" style={{ animationDelay: '300ms' }}>
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Valor Total</span>
                 <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
@@ -404,24 +404,26 @@ const AbastecimentoPage = () => {
             </div>
 
             <TabsContent value="todos" className="space-y-4 animate-in fade-in-50 duration-300">
-              <div className="flex items-center justify-between">
-                <SharedFilter
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  dateFrom={dateFrom}
-                  onDateFromChange={setDateFrom}
-                  dateTo={dateTo}
-                  onDateToChange={setDateTo}
-                  placeholder="Buscar por placa, condutor ou posto..."
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
+              <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between gap-4">
+                  <SharedFilter
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    dateFrom={dateFrom}
+                    onDateFromChange={setDateFrom}
+                    dateTo={dateTo}
+                    onDateToChange={setDateTo}
+                    placeholder="Buscar por placa, condutor ou posto..."
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Imprimir / PDF
+                  </Button>
+                </div>
               </div>
 
               <AbastecimentoTable
@@ -433,68 +435,70 @@ const AbastecimentoPage = () => {
             </TabsContent>
 
             <TabsContent value="por-motorista" className="space-y-4 animate-in fade-in-50 duration-300">
-              {/* Filtros específicos da aba Por Motorista */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 max-w-md">
-                  <Select value={selectedMotoristaId || ''} onValueChange={(value) => setSelectedMotoristaId(value || null)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um motorista..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {motoristas.map((motorista) => (
-                        <SelectItem key={motorista.id} value={motorista.id}>
-                          {motorista.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Filtros específicos da aba Por Motorista - card padrão Entregas */}
+              <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 max-w-md">
+                    <Select value={selectedMotoristaId || ''} onValueChange={(value) => setSelectedMotoristaId(value || null)}>
+                      <SelectTrigger className="rounded-lg border-slate-200 dark:border-slate-800 focus:ring-0 focus:border-emerald-500 h-10">
+                        <SelectValue placeholder="Selecione um motorista..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg border-slate-200 dark:border-slate-800">
+                        {motoristas.map((motorista) => (
+                          <SelectItem key={motorista.id} value={motorista.id}>
+                            {motorista.nome}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !selectedDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'Filtrar por data...'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate || undefined}
-                        onSelect={(date) => setSelectedDate(date || null)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                  <div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[220px] justify-start text-left font-normal rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 h-10",
+                            !selectedDate && "text-slate-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                          {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-lg border-slate-200 dark:border-slate-800" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate || undefined}
+                          onSelect={(date) => setSelectedDate(date || null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-                {(selectedMotoristaId || selectedDate) && (
+                  {(selectedMotoristaId || selectedDate) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedMotoristaId(null);
+                        setSelectedDate(null);
+                      }}
+                    >
+                      Limpar Filtros
+                    </Button>
+                  )}
+
                   <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedMotoristaId(null);
-                      setSelectedDate(null);
-                    }}
+                    variant="outline"
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10 ml-auto"
                   >
-                    Limpar Filtros
+                    <Printer className="h-4 w-4" />
+                    Imprimir / PDF
                   </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2 ml-auto"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
+                </div>
               </div>
 
               {!selectedMotoristaId ? (
@@ -516,76 +520,78 @@ const AbastecimentoPage = () => {
             </TabsContent>
 
             <TabsContent value="por-veiculo" className="space-y-4 animate-in fade-in-50 duration-300">
-              {/* Filtros específicos da aba Por Veículos */}
-              <div className="flex items-center gap-4">
-                <div className="flex-1 max-w-md">
-                  <Select value={selectedVeiculoId || ''} onValueChange={(value) => setSelectedVeiculoId(value || null)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um veículo..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {veiculos.map((veiculo) => {
-                        // Formatação: Placa - Modelo (ou Fabricante se não houver modelo)
-                        const displayText = veiculo.modelo 
-                          ? `${veiculo.placa} - ${veiculo.modelo}`
-                          : veiculo.fabricante
-                          ? `${veiculo.placa} - ${veiculo.fabricante}`
-                          : veiculo.placa;
-                        return (
-                          <SelectItem key={veiculo.id} value={veiculo.id}>
-                            {displayText}
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Filtros específicos da aba Por Veículos - card padrão Entregas */}
+              <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 max-w-md">
+                    <Select value={selectedVeiculoId || ''} onValueChange={(value) => setSelectedVeiculoId(value || null)}>
+                      <SelectTrigger className="rounded-lg border-slate-200 dark:border-slate-800 focus:ring-0 focus:border-emerald-500 h-10">
+                        <SelectValue placeholder="Selecione um veículo..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg border-slate-200 dark:border-slate-800">
+                        {veiculos.map((veiculo) => {
+                          // Formatação: Placa - Modelo (ou Fabricante se não houver modelo)
+                          const displayText = veiculo.modelo 
+                            ? `${veiculo.placa} - ${veiculo.modelo}`
+                            : veiculo.fabricante
+                            ? `${veiculo.placa} - ${veiculo.fabricante}`
+                            : veiculo.placa;
+                          return (
+                            <SelectItem key={veiculo.id} value={veiculo.id}>
+                              {displayText}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !selectedDateVeiculo && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDateVeiculo ? format(selectedDateVeiculo, 'dd/MM/yyyy') : 'Filtrar por data...'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDateVeiculo || undefined}
-                        onSelect={(date) => setSelectedDateVeiculo(date || null)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                  <div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-[220px] justify-start text-left font-normal rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 h-10",
+                            !selectedDateVeiculo && "text-slate-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                          {selectedDateVeiculo ? format(selectedDateVeiculo, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-lg border-slate-200 dark:border-slate-800" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDateVeiculo || undefined}
+                          onSelect={(date) => setSelectedDateVeiculo(date || null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-                {(selectedVeiculoId || selectedDateVeiculo) && (
+                  {(selectedVeiculoId || selectedDateVeiculo) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedVeiculoId(null);
+                        setSelectedDateVeiculo(null);
+                      }}
+                    >
+                      Limpar Filtros
+                    </Button>
+                  )}
+
                   <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedVeiculoId(null);
-                      setSelectedDateVeiculo(null);
-                    }}
+                    variant="outline"
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10 ml-auto"
                   >
-                    Limpar Filtros
+                    <Printer className="h-4 w-4" />
+                    Imprimir / PDF
                   </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="gap-2 ml-auto"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir / PDF
-                </Button>
+                </div>
               </div>
 
               {!selectedVeiculoId ? (

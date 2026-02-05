@@ -1,6 +1,4 @@
 <div align="center">
-  <img src="public/logo-flexibase.svg" alt="Flexibase Logo" width="200"/>
-  
   # 🚛 Sistema de Controle de Veículos (SCV)
   
   **Plataforma completa para gestão de frotas, abastecimentos, manutenções e controle financeiro**
@@ -137,14 +135,16 @@ O **SCV (Sistema de Controle de Veículos)** é uma aplicação web completa des
 ### Instalação
 
 ```bash
-# Clone o repositório
-git clone https://github.com/gustavorochaC/Controle-Frotas
-
-# Acesse a pasta do projeto
-cd Controle-Frotas
+# Clone o repositório (substitua pela URL do seu repositório)
+git clone https://github.com/SEU_USUARIO/SCV.git
+cd SCV
 
 # Instale as dependências
 npm install
+
+# Configure as variáveis de ambiente (veja seção Variáveis de Ambiente)
+cp .env.example .env
+# Edite .env com suas chaves do Supabase
 
 # Execute o projeto em modo de desenvolvimento
 npm run dev
@@ -217,6 +217,47 @@ VITE_ENABLE_IMPORT=true
 
 > ⚠️ **Importante**: Nunca commite o arquivo `.env` com valores reais. Use o arquivo `.env.example` como referência.
 
+## 📤 Preparando para o GitHub – O que pode e o que NÃO pode ser enviado
+
+### ✅ Pode ser enviado (já ignorados ou seguros)
+
+- Código-fonte em `src/`, configurações (`vite.config.ts`, `tailwind.config.ts`, `tsconfig.*.json`, `eslint.config.js`)
+- `package.json`, `package-lock.json` (ou `bun.lockb`)
+- `.env.example` (template **sem** valores reais – apenas chaves vazias ou placeholders)
+- `public/`, `index.html`, `components.json`
+- Migrations em `supabase/migrations/`
+- `supabase/config.toml.example` (não o `config.toml` com project_id real)
+- Documentação: `README.md`, `docs/`, `LICENSE`
+- Workflows em `.github/workflows/` (ex.: deploy)
+
+### ❌ NÃO pode ser enviado
+
+| Item | Motivo |
+|------|--------|
+| `.env` | Contém URL e chave do Supabase – **nunca** commitar |
+| `.env.local`, `.env.*.local`, `.env.production` | Variáveis sensíveis por ambiente |
+| `node_modules/` | Dependências – instalar com `npm install` |
+| `dist/` | Build de produção – gerado com `npm run build` |
+| `.agent/` | Configurações de agentes locais |
+| `.cursor/plans/` | Planos locais do Cursor |
+| `supabase/config.toml` | Pode conter `project_id` e dados do projeto |
+| Logs (`*.log`, `logs/`) | Arquivos temporários |
+| Arquivos de IDE (`.vscode/` com secrets, `.idea/`) | Preferências locais |
+| Chaves, tokens, senhas em qualquer arquivo | Segurança |
+
+### Verificação antes do primeiro push
+
+```bash
+# Confirme que .env não será commitado
+git status
+# .env não deve aparecer na lista de arquivos a commitar
+
+# Se .env foi adicionado por engano, remova do índice (mantém o arquivo local)
+git rm --cached .env
+```
+
+O `.gitignore` do projeto já está configurado para ignorar os itens da lista “NÃO pode ser enviado”. Antes de fazer push, sempre rode `git status` e confira se nenhum arquivo sensível aparece.
+
 ## 📱 Screenshots
 
 <img width="1904" height="918" alt="front" src="https://github.com/user-attachments/assets/06befa8c-6e65-4b93-9833-92037b50320f" />
@@ -225,13 +266,14 @@ VITE_ENABLE_IMPORT=true
 
 ## 🤝 Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests.
+Contribuições são bem-vindas! Siga as regras da seção **Preparando para o GitHub** e use boas práticas de commit.
 
 1. Faça um Fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature` ou `fix/correcao`)
+3. **Não commite** `.env`, `node_modules`, `dist` ou arquivos sensíveis
+4. Commit com mensagens claras (`git commit -m 'feat: adiciona X'` ou `fix: corrige Y'`)
+5. Push para a branch (`git push origin feature/nova-feature`)
+6. Abra um Pull Request
 
 ## 📄 Licença
 
@@ -240,9 +282,9 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 ---
 
 <div align="center">
-  Desenvolvido com ❤️ por <b>Flexibase</b>
-  
+  SCV – Sistema de Controle de Veículos
+
   <br/><br/>
-  
+
   ⭐ Se este projeto te ajudou, considere dar uma estrela!
 </div>

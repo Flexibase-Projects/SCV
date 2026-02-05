@@ -1,4 +1,6 @@
-# Logs
+# ==============================
+# Logs e temporários
+# ==============================
 logs
 *.log
 npm-debug.log*
@@ -7,27 +9,38 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Environment variables
+# ==============================
+# Variáveis de ambiente (NUNCA commitar)
+# ==============================
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
 .env.production
+.env.*.local
+!.env.example
 
-# Agent configuration (não commitar)
-.agent/
-
-# Cursor plans (não commitar)
-.cursor/plans/
-
-# Supabase config (contém project_id)
-supabase/config.toml
-
+# ==============================
+# Build e dependências
+# ==============================
 node_modules
 dist
 dist-ssr
 *.local
 
-# Editor directories and files
+# ==============================
+# Configurações locais / agentes (não enviar ao GitHub)
+# ==============================
+.agent/
+.cursor/
+.cursor/plans/
+
+# Supabase (contém project_id e dados sensíveis)
+supabase/config.toml
+
+# ==============================
+# IDE e sistema
+# ==============================
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -37,3 +50,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
+
+# ==============================
+# Testes e cobertura (opcional – descomente se não quiser commitar)
+# ==============================
+# coverage

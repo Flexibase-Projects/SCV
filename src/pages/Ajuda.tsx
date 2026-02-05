@@ -13,6 +13,7 @@ import {
   Lightbulb,
   HelpOutline as HelpCircle,
   People as Users,
+  Person as User,
   DirectionsCar as Car,
   AccessTime as Clock,
   WarningAmber as AlertTriangle,
@@ -65,7 +66,7 @@ export default function Ajuda() {
             </div>
             <Badge variant="outline" className="hidden sm:flex gap-1">
               <Clock className="h-3 w-3" />
-              Atualizado em Jan/2025
+              Atualizado em Fev/2025
             </Badge>
           </div>
         </div>
