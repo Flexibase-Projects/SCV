@@ -5,9 +5,6 @@ import {
     AttachMoney as DollarSign,
     TrendingUp,
     LocalGasStation as Fuel,
-    WarningAmber as AlertTriangle,
-    CheckCircle as CheckCircle2,
-    AccessTime as Clock,
     ArrowForward as ArrowRight,
     CalendarToday as Calendar,
     Add as Plus,
@@ -18,6 +15,7 @@ import {
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     AreaChart,
     Area,
@@ -29,8 +27,6 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
     Legend
 } from 'recharts';
 import {
@@ -40,8 +36,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    ChartLegendContent,
+    type ChartConfig,
+} from "@/components/ui/chart";
 
-// Hooks de Dados Reais
 import { useEntregas } from '@/hooks/useEntregas';
 import { useAbastecimentos } from '@/hooks/useAbastecimentos';
 import { useManutencoes } from '@/hooks/useManutencoes';
@@ -49,6 +59,9 @@ import { useMotoristas } from '@/hooks/useMotoristas';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import { useMontadores } from '@/hooks/useMontadores';
 import { useAcertosViagem } from '@/hooks/useAcertosViagem';
+import { StatusBadge } from './StatusBadge';
+import type { Entrega } from '@/types/entrega';
+import { glassCard, solidCard } from '@/lib/cardStyles';
 
 const MONTHS = [
     'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
@@ -72,40 +85,32 @@ const greeting = () => {
     return 'Boa noite';
 };
 
-// Custom tooltip para gráficos
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{label}</p>
-                {payload.map((entry: any, index: number) => (
-                    <p key={index} className="text-xs text-gray-600 dark:text-gray-400">
-                        <span className="font-medium" style={{ color: entry.color }}>{entry.name}:</span> {entry.value}
-                    </p>
-                ))}
-            </div>
-        );
-    }
-    return null;
-};
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(String);
+
+// Chart configs for shadcn Chart (tooltip + legend)
+const deliveryChartConfig: ChartConfig = {
+    concluidas: { label: 'Concluídas', color: '#10b981' },
+    em_rota: { label: 'Em Rota', color: '#3b82f6' },
+    pendentes: { label: 'Pendentes', color: '#f59e0b' },
+    mes: { label: 'Mês' },
+} satisfies ChartConfig;
+
+const fuelChartConfig: ChartConfig = {
+    litros: { label: 'Litros', color: '#3b82f6' },
+    mes: { label: 'Mês' },
+} satisfies ChartConfig;
+
+const maintenanceChartConfig: ChartConfig = {
+    preventiva: { label: 'Preventiva', color: '#3b82f6' },
+    corretiva: { label: 'Corretiva', color: '#f59e0b' },
+    emergencial: { label: 'Emergencial', color: '#ef4444' },
+} satisfies ChartConfig;
 
 export function DashboardHome() {
-    // #region agent log
-    try {
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DashboardHome.tsx:ENTRY', message: 'DashboardHome iniciando', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
-    } catch (error) {
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DashboardHome.tsx:ERROR_INIT', message: 'Erro ao iniciar DashboardHome', data: { errorMessage: error instanceof Error ? error.message : String(error) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'D' }) }).catch(() => { });
-    }
-    // #endregion
-    
     const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
-    // Fetch Data
     const { data: entregas = [] } = useEntregas();
-
-    // #region agent log
-    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'DashboardHome.tsx:96', message: 'Entregas recebidas no componente', data: { entregasLength: entregas.length, firstId: entregas[0]?.id, lastId: entregas[entregas.length - 1]?.id }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
-    // #endregion
     const { data: abastecimentos = [] } = useAbastecimentos();
     const { data: manutencoes = [] } = useManutencoes();
     const { data: motoristas = [] } = useMotoristas(true);
@@ -113,9 +118,6 @@ export function DashboardHome() {
     const { data: montadores = [] } = useMontadores();
     const { data: acertosViagem = [] } = useAcertosViagem();
 
-    // --- AGREGADORES ---
-
-    // 1. Dados de Entregas por Mês (Filtrado pelo Ano Selecionado)
     const deliveryTrendData = useMemo(() => {
         const monthlyData = Array(12).fill(0).map((_, i) => ({
             mes: MONTHS[i],
@@ -140,7 +142,6 @@ export function DashboardHome() {
         return monthlyData;
     }, [entregas, selectedYear]);
 
-    // 2. Dados de Abastecimento por Mês
     const fuelData = useMemo(() => {
         const monthlyData = Array(12).fill(0).map((_, i) => ({
             mes: MONTHS[i],
@@ -161,7 +162,6 @@ export function DashboardHome() {
         return monthlyData;
     }, [abastecimentos, selectedYear]);
 
-    // 3. Distribuição de Manutenção (Total do Ano Selecionado)
     const maintenanceDistribution = useMemo(() => {
         const counts = { preventiva: 0, corretiva: 0, emergencial: 0 };
 
@@ -183,7 +183,6 @@ export function DashboardHome() {
         ].filter(item => item.value > 0);
     }, [manutencoes, selectedYear]);
 
-    // 4. KPIs Gerais
     const kpis = useMemo(() => {
         const currentMonth = new Date().getMonth();
         const currentYearNum = new Date().getFullYear();
@@ -257,13 +256,24 @@ export function DashboardHome() {
         };
     }, [acertosViagem]);
 
+    const ultimasEntregas = useMemo(() => {
+        return [...entregas]
+            .filter(e => e.data_saida)
+            .sort((a, b) => new Date(b.data_saida!).getTime() - new Date(a.data_saida!).getTime())
+            .slice(0, 8);
+    }, [entregas]);
+
+    const formatDate = (dateStr: string | null) => {
+        if (!dateStr) return '—';
+        return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    };
 
     return (
-        <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115] transition-colors duration-300">
+        <div className="min-h-screen bg-white dark:bg-[#0f1115] transition-colors duration-300">
             <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
 
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-8 p-4 rounded-2xl bg-white/50 dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
@@ -277,219 +287,173 @@ export function DashboardHome() {
 
                         <div className="flex items-center gap-3">
                             <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                <SelectTrigger className="w-[140px] bg-brand-white dark:bg-[#181b21] border-brand-white dark:border-white/10 text-gray-900 dark:text-gray-100">
+                                <SelectTrigger className="w-[140px] bg-white/80 dark:bg-white/10 backdrop-blur-sm border border-white/30 dark:border-white/10 text-gray-900 dark:text-gray-100">
                                     <SelectValue placeholder="Selecione o Ano" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="2024">2024</SelectItem>
-                                    <SelectItem value="2025">2025</SelectItem>
-                                    <SelectItem value="2026">2026</SelectItem>
+                                    {YEAR_OPTIONS.map(y => (
+                                        <SelectItem key={y} value={y}>{y}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
                 </div>
 
-                {/* KPIs */}
+                {/* Section Cards - KPIs (dashboard-01 style) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Frota Ativa</span>
-                            <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
-                                <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <Card className={`${glassCard} overflow-hidden`}>
+                        <CardContent className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-medium text-muted-foreground">Frota Ativa</span>
+                                <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
+                                    <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            {kpis.fleet.active}<span className="text-base text-gray-400 dark:text-gray-500 font-normal ml-1">/ {kpis.fleet.total}</span>
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">veículos operando</p>
-                    </div>
+                            <p className="text-2xl font-bold">
+                                {kpis.fleet.active}<span className="text-base text-muted-foreground font-normal ml-1">/ {kpis.fleet.total}</span>
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">veículos operando</p>
+                        </CardContent>
+                    </Card>
 
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Manutenções</span>
-                            <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
-                                <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <Card className={`${glassCard} overflow-hidden`}>
+                        <CardContent className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-medium text-muted-foreground">Manutenções</span>
+                                <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
+                                    <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-amber-400">
-                            {kpis.maintenance.pending}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">ordens pendentes</p>
-                    </div>
+                            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                                {kpis.maintenance.pending}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">ordens pendentes</p>
+                        </CardContent>
+                    </Card>
 
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custos Mês</span>
-                            <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    <Card className={`${glassCard} overflow-hidden`}>
+                        <CardContent className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-medium text-muted-foreground">Custos Mês</span>
+                                <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                                    <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            {formatCurrency(kpis.costs.month)}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">mês atual</p>
-                    </div>
+                            <p className="text-2xl font-bold">
+                                {formatCurrency(kpis.costs.month)}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">mês atual</p>
+                        </CardContent>
+                    </Card>
 
-                    <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow min-h-[140px] flex flex-col">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Conclusão ({selectedYear})</span>
-                            <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
-                                <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <Card className={`${glassCard} overflow-hidden`}>
+                        <CardContent className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-medium text-muted-foreground">Conclusão ({selectedYear})</span>
+                                <div className="h-10 w-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center">
+                                    <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                </div>
                             </div>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            {kpis.deliveryRate}%
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{kpis.deliveryCompleted} de {kpis.deliveryTotal} entregas</p>
-                    </div>
+                            <p className="text-2xl font-bold">
+                                {kpis.deliveryRate}%
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{kpis.deliveryCompleted} de {kpis.deliveryTotal} entregas</p>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* Bento Grid com Gráficos */}
+                {/* Bento Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                    {/* LEFT SECTION - Col 1-8 */}
                     <div className="lg:col-span-8 space-y-6">
 
-                        {/* Gráfico de Entregas - Área */}
-                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                        <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                        Entregas - {selectedYear}
-                                    </h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Evolução mensal</p>
+                        {/* Gráfico de Entregas - Chart shadcn */}
+                        <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                            <CardHeader className="pb-2">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                            Entregas - {selectedYear}
+                                        </CardTitle>
+                                        <CardDescription>Evolução mensal</CardDescription>
+                                    </div>
+                                    <Link to="/entregas">
+                                        <Button variant="outline" size="sm" className="border-gray-200 dark:border-white/10">
+                                            Ver detalhes
+                                        </Button>
+                                    </Link>
                                 </div>
-                                <Link to="/entregas">
-                                    <Button variant="outline" size="sm" className="border-gray-200 dark:border-white/10">
-                                        Ver detalhes
-                                    </Button>
-                                </Link>
-                            </div>
+                            </CardHeader>
+                            <CardContent>
+                                <ChartContainer config={deliveryChartConfig} className="h-[300px] w-full">
+                                    <AreaChart data={deliveryTrendData}>
+                                        <defs>
+                                            <linearGradient id="colorConcluidas" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorEmRota" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorPendentes" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                        <XAxis dataKey="mes" tickLine={false} axisLine={false} />
+                                        <YAxis tickLine={false} axisLine={false} />
+                                        <ChartTooltip content={<ChartTooltipContent />} />
+                                        <Legend content={<ChartLegendContent nameKey="mes" />} />
+                                        <Area type="monotone" dataKey="concluidas" stroke="#10b981" fill="url(#colorConcluidas)" strokeWidth={2} />
+                                        <Area type="monotone" dataKey="em_rota" stroke="#3b82f6" fill="url(#colorEmRota)" strokeWidth={2} />
+                                        <Area type="monotone" dataKey="pendentes" stroke="#f59e0b" fill="url(#colorPendentes)" strokeWidth={2} />
+                                    </AreaChart>
+                                </ChartContainer>
+                            </CardContent>
+                        </Card>
 
-                            <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart data={deliveryTrendData}>
-                                    <defs>
-                                        <linearGradient id="colorConcluidas" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="colorEmRota" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="colorPendentes" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:opacity-10" />
-                                    <XAxis
-                                        dataKey="mes"
-                                        stroke="#9ca3af"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <YAxis
-                                        stroke="#9ca3af"
-                                        style={{ fontSize: '12px' }}
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend
-                                        wrapperStyle={{ fontSize: '12px' }}
-                                        iconType="circle"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="concluidas"
-                                        stroke="#10b981"
-                                        fillOpacity={1}
-                                        fill="url(#colorConcluidas)"
-                                        strokeWidth={2}
-                                        name="Concluídas"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="em_rota"
-                                        stroke="#3b82f6"
-                                        fillOpacity={1}
-                                        fill="url(#colorEmRota)"
-                                        strokeWidth={2}
-                                        name="Em Rota"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="pendentes"
-                                        stroke="#f59e0b"
-                                        fillOpacity={1}
-                                        fill="url(#colorPendentes)"
-                                        strokeWidth={2}
-                                        name="Pendentes"
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        {/* Grid 2 colunas - Abastecimento e Manutenção */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                            {/* Gráfico de Abastecimento - Barras */}
-                            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm flex flex-col">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                            <Fuel className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                            Abastecimento
-                                        </h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Litros por mês ({selectedYear})</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex-1">
-                                    <ResponsiveContainer width="100%" height={240}>
+                            <Card className={`${solidCard} rounded-2xl overflow-hidden flex flex-col`}>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <Fuel className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                        Abastecimento
+                                    </CardTitle>
+                                    <CardDescription>Litros por mês ({selectedYear})</CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex-1">
+                                    <ChartContainer config={fuelChartConfig} className="h-[240px] w-full">
                                         <BarChart data={fuelData}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:opacity-10" />
-                                            <XAxis
-                                                dataKey="mes"
-                                                stroke="#9ca3af"
-                                                style={{ fontSize: '11px' }}
-                                            />
-                                            <YAxis
-                                                stroke="#9ca3af"
-                                                style={{ fontSize: '11px' }}
-                                            />
-                                            <Tooltip content={<CustomTooltip />} />
-                                            <Bar
-                                                dataKey="litros"
-                                                fill="#3b82f6"
-                                                radius={[8, 8, 0, 0]}
-                                                name="Litros"
-                                            />
+                                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                            <XAxis dataKey="mes" tickLine={false} axisLine={false} />
+                                            <YAxis tickLine={false} axisLine={false} />
+                                            <ChartTooltip content={<ChartTooltipContent />} />
+                                            <Bar dataKey="litros" fill="#3b82f6" radius={[8, 8, 0, 0]} />
                                         </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
+                                    </ChartContainer>
+                                    <Link to="/abastecimento" className="mt-4 block">
+                                        <Button variant="ghost" size="sm" className="w-full text-muted-foreground h-9">
+                                            Ver histórico completo <ArrowRight className="h-3 w-3 ml-1" />
+                                        </Button>
+                                    </Link>
+                                </CardContent>
+                            </Card>
 
-                                <Link to="/abastecimento" className="mt-4 block">
-                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400 h-9">
-                                        Ver histórico completo <ArrowRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </Link>
-                            </div>
-
-                            {/* Gráfico de Manutenção - Donut */}
-                            <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm flex flex-col">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                            <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                                            Manutenção
-                                        </h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Distribuição ({selectedYear})</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex-1">
-                                    <ResponsiveContainer width="100%" height={240}>
+                            <Card className={`${solidCard} rounded-2xl overflow-hidden flex flex-col`}>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <Wrench className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                        Manutenção
+                                    </CardTitle>
+                                    <CardDescription>Distribuição ({selectedYear})</CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex-1">
+                                    <ChartContainer config={maintenanceChartConfig} className="h-[240px] w-full">
                                         <PieChart>
                                             <Pie
                                                 data={maintenanceDistribution}
@@ -504,133 +468,179 @@ export function DashboardHome() {
                                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                                 ))}
                                             </Pie>
-                                            <Tooltip content={<CustomTooltip />} />
-                                            <Legend
-                                                verticalAlign="bottom"
-                                                height={36}
-                                                wrapperStyle={{ fontSize: '11px' }}
-                                            />
+                                            <ChartTooltip content={<ChartTooltipContent />} />
+                                            <Legend content={<ChartLegendContent />} />
                                         </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-
-                                <Link to="/manutencao" className="mt-4 block">
-                                    <Button variant="ghost" size="sm" className="w-full text-gray-500 dark:text-gray-400 h-9">
-                                        Ver todas O.S. <ArrowRight className="h-3 w-3 ml-1" />
-                                    </Button>
-                                </Link>
-                            </div>
+                                    </ChartContainer>
+                                    <Link to="/manutencao" className="mt-4 block">
+                                        <Button variant="ghost" size="sm" className="w-full text-muted-foreground h-9">
+                                            Ver todas O.S. <ArrowRight className="h-3 w-3 ml-1" />
+                                        </Button>
+                                    </Link>
+                                </CardContent>
+                            </Card>
                         </div>
 
-                        {/* Card Cadastros */}
-                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                        <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                        Cadastros Ativos
-                                    </h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Base de dados atual</p>
-                                </div>
-                                <Link to="/cadastros">
-                                    <Button variant="outline" size="sm" className="border-gray-200 dark:border-white/10">
-                                        Gerenciar
-                                    </Button>
-                                </Link>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="text-center p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20">
-                                    <div className="h-12 w-12 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                        <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        {/* Cadastros Ativos */}
+                        <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                            Cadastros Ativos
+                                        </CardTitle>
+                                        <CardDescription>Base de dados atual</CardDescription>
                                     </div>
-                                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{cadastrosCounts.motoristas}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Motoristas</p>
+                                    <Link to="/cadastros">
+                                        <Button variant="outline" size="sm" className="border-gray-200 dark:border-white/10">
+                                            Gerenciar
+                                        </Button>
+                                    </Link>
                                 </div>
-
-                                <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
-                                    <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                        <Truck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20">
+                                        <div className="h-12 w-12 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                            <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{cadastrosCounts.motoristas}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">Motoristas</p>
                                     </div>
-                                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{cadastrosCounts.veiculos}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Veículos</p>
-                                </div>
-
-                                <div className="text-center p-4 bg-lime-50 dark:bg-lime-500/10 rounded-xl border border-lime-100 dark:border-lime-500/20">
-                                    <div className="h-12 w-12 bg-lime-100 dark:bg-lime-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                                        <Activity className="h-6 w-6 text-lime-600 dark:text-lime-400" />
+                                    <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+                                        <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                            <Truck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                                        </div>
+                                        <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{cadastrosCounts.veiculos}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">Veículos</p>
                                     </div>
-                                    <p className="text-2xl font-bold text-lime-600 dark:text-lime-400">{cadastrosCounts.montadores}</p>
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Montadores</p>
+                                    <div className="text-center p-4 bg-lime-50 dark:bg-lime-500/10 rounded-xl border border-lime-100 dark:border-lime-500/20">
+                                        <div className="h-12 w-12 bg-lime-100 dark:bg-lime-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                            <Activity className="h-6 w-6 text-lime-600 dark:text-lime-400" />
+                                        </div>
+                                        <p className="text-2xl font-bold text-lime-600 dark:text-lime-400">{cadastrosCounts.montadores}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">Montadores</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Últimas entregas - DataTable style */}
+                        <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                            Últimas entregas
+                                        </CardTitle>
+                                        <CardDescription>Resumo recente</CardDescription>
+                                    </div>
+                                    <Link to="/entregas">
+                                        <Button variant="outline" size="sm" className="border-gray-200 dark:border-white/10">
+                                            Ver todas
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="border-gray-100 dark:border-white/5">
+                                                <TableHead className="text-muted-foreground">Data</TableHead>
+                                                <TableHead className="text-muted-foreground">Veículo</TableHead>
+                                                <TableHead className="text-muted-foreground">Cliente / PV</TableHead>
+                                                <TableHead className="text-muted-foreground">Status</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {ultimasEntregas.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                                        Nenhuma entrega registrada
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                ultimasEntregas.map((e: Entrega) => (
+                                                    <TableRow key={e.id} className="border-gray-100 dark:border-white/5">
+                                                        <TableCell className="font-medium">{formatDate(e.data_saida)}</TableCell>
+                                                        <TableCell>{e.carro ?? '—'}</TableCell>
+                                                        <TableCell>{(e.cliente || e.pv_foco) ?? '—'}</TableCell>
+                                                        <TableCell>
+                                                            <StatusBadge status={e.status} />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
 
-                    {/* RIGHT SIDEBAR - Col 9-12 */}
                     <div className="lg:col-span-4 space-y-6">
 
-                        {/* Financeiro CTA */}
-                        <div className="bg-gradient-to-br from-brand-green to-emerald-600 dark:from-brand-green dark:to-emerald-700 border border-brand-green/20 rounded-3xl p-6 shadow-lg text-white">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                    <DollarSign className="h-5 w-5" />
+                        <Card className="bg-gradient-to-br from-brand-green to-emerald-600 dark:from-brand-green dark:to-emerald-700 border border-white/20 dark:border-white/10 backdrop-blur-sm rounded-2xl overflow-hidden text-white shadow-lg shadow-emerald-900/20">
+                            <CardContent className="p-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                        <DollarSign className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-medium opacity-90">Pendências Financeiras</h3>
+                                        <p className="text-xs opacity-70">Acerto de Viagem</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-sm font-medium opacity-90">Pendências Financeiras</h3>
-                                    <p className="text-xs opacity-70">Acerto de Viagem</p>
+                                <div className="my-6">
+                                    <p className="text-4xl font-bold mb-1">{formatCurrency(financialPending.totalValue)}</p>
+                                    <p className="text-sm opacity-80">{financialPending.count} solicitações aguardando</p>
                                 </div>
-                            </div>
+                                <Link to="/acerto-viagem">
+                                    <Button className="w-full bg-white hover:bg-gray-100 text-brand-green font-medium transition-colors shadow-sm">
+                                        Revisar Pendências
+                                        <ArrowRight className="h-4 w-4 ml-2" />
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </Card>
 
-                            <div className="my-6">
-                                <p className="text-4xl font-bold mb-1">{formatCurrency(financialPending.totalValue)}</p>
-                                <p className="text-sm opacity-80">{financialPending.count} solicitações aguardando</p>
-                            </div>
-
-                            <Link to="/acerto-viagem">
-                                <Button className="w-full bg-brand-white hover:bg-gray-100 text-brand-green font-medium transition-colors shadow-sm">
-                                    Revisar Pendências
-                                    <ArrowRight className="h-4 w-4 ml-2" />
-                                </Button>
-                            </Link>
-                        </div>
-
-                        {/* Ações Rápidas */}
-                        <div className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-sm">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ações Rápidas</h3>
-
-                            <div className="space-y-3">
+                        <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                            <CardHeader>
+                                <CardTitle className="text-lg">Ações Rápidas</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
                                 <Link to="/cadastros?tab=motoristas">
                                     <Button variant="outline" className="w-full justify-start gap-3 h-12 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
                                         <div className="h-9 w-9 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
                                             <UserPlus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                         </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cadastrar Motorista</span>
+                                        <span className="text-sm font-medium">Cadastrar Motorista</span>
                                     </Button>
                                 </Link>
-
                                 <Link to="/cadastros?tab=veiculos">
                                     <Button variant="outline" className="w-full justify-start gap-3 h-12 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
                                         <div className="h-9 w-9 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg flex items-center justify-center">
                                             <CarFront className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                         </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cadastrar Veículo</span>
+                                        <span className="text-sm font-medium">Cadastrar Veículo</span>
                                     </Button>
                                 </Link>
-
                                 <Link to="/entregas">
                                     <Button variant="outline" className="w-full justify-start gap-3 h-12 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
                                         <div className="h-9 w-9 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
                                             <Plus className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                         </div>
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Nova Entrega</span>
+                                        <span className="text-sm font-medium">Nova Entrega</span>
                                     </Button>
                                 </Link>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }

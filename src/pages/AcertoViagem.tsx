@@ -9,12 +9,16 @@ import { AcertoViagemTable } from '@/components/acertoViagem/AcertoViagemTable';
 import { AcertoViagemFormModal } from '@/components/acertoViagem/AcertoViagemFormModal';
 import { AcertoViagemPrintModal } from '@/components/acertoViagem/AcertoViagemPrintModal';
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
+import { PaginationControl } from '@/components/shared/PaginationControl';
 import { AcertoViagem } from '@/types/acertoViagem';
 import { calcularTotalDespesas, calcularSaldo, calcularDiasViagem } from '@/types/acertoViagem';
 import { format } from 'date-fns';
 
+const ROWS_PER_PAGE = 100;
+
 const AcertoViagemPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [tablePage, setTablePage] = useState(1);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isTablePrintModalOpen, setIsTablePrintModalOpen] = useState(false);
@@ -29,7 +33,7 @@ const AcertoViagemPage = () => {
   // #endregion
 
   // Filtrar acertos
-  const filteredAcertos = acertos.filter(acerto => {
+  const filteredAcertos = useMemo(() => acertos.filter(acerto => {
     const searchLower = searchTerm.toLowerCase();
     return (
       acerto.destino?.toLowerCase().includes(searchLower) ||
@@ -37,7 +41,18 @@ const AcertoViagemPage = () => {
       acerto.montador_nome?.toLowerCase().includes(searchLower) ||
       acerto.veiculo_placa?.toLowerCase().includes(searchLower)
     );
-  });
+  }), [acertos, searchTerm]);
+
+  useEffect(() => {
+    setTablePage(1);
+  }, [searchTerm]);
+
+  const slicedAcertos = useMemo(() => {
+    if (filteredAcertos.length <= ROWS_PER_PAGE) return filteredAcertos;
+    return filteredAcertos.slice((tablePage - 1) * ROWS_PER_PAGE, tablePage * ROWS_PER_PAGE);
+  }, [filteredAcertos, tablePage]);
+  const totalTablePages = Math.ceil(filteredAcertos.length / ROWS_PER_PAGE);
+  const showTablePagination = filteredAcertos.length > ROWS_PER_PAGE;
 
   // KPIs
   const totalAcertos = acertos.length;
@@ -221,13 +236,22 @@ const AcertoViagemPage = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="px-6 pb-6">
+            <div className="px-6 pb-6 space-y-4">
               <AcertoViagemTable
-                acertos={filteredAcertos}
+                acertos={slicedAcertos}
                 isLoading={isLoading}
                 onEdit={handleEdit}
                 onPrint={handlePrint}
               />
+              {showTablePagination && (
+                <PaginationControl
+                  currentPage={tablePage}
+                  totalPages={totalTablePages}
+                  onPageChange={setTablePage}
+                  totalRecords={filteredAcertos.length}
+                  itemsPerPage={ROWS_PER_PAGE}
+                />
+              )}
             </div>
           </CardContent>
         </Card>

@@ -1,4 +1,6 @@
 import { LocalShipping as Truck, AttachMoney as DollarSign, TrendingUp, AccountBalanceWallet as Wallet } from '@mui/icons-material';
+import { Card, CardContent } from '@/components/ui/card';
+import { glassCard } from '@/lib/cardStyles';
 import { Entrega } from '@/types/entrega';
 
 interface KPICardsProps {
@@ -71,26 +73,28 @@ export function KPICards({ entregas, stats }: KPICardsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {kpis.map((kpi, index) => (
-        <div 
-          key={kpi.title} 
-          className="bg-brand-white dark:bg-[#181b21] border border-gray-100 dark:border-white/5 rounded-lg p-5 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 animate-in fade-in-50 slide-in-from-bottom-4"
+        <Card
+          key={kpi.title}
+          className={`${glassCard} overflow-hidden rounded-lg animate-in fade-in-50 slide-in-from-bottom-4`}
           style={{ animationDelay: `${index * 100}ms` }}
         >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-slate-500">
-              {kpi.title}
-            </span>
-            <div className={`h-10 w-10 ${kpi.iconBg} rounded-lg flex items-center justify-center`}>
-              <kpi.icon className={`h-5 w-5 ${kpi.iconColor}`} />
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {kpi.title}
+              </span>
+              <div className={`h-10 w-10 ${kpi.iconBg} rounded-lg flex items-center justify-center`}>
+                <kpi.icon className={`h-5 w-5 ${kpi.iconColor}`} />
+              </div>
             </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
-            {kpi.value}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            {kpi.description}
-          </p>
-        </div>
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
+              {kpi.value}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {kpi.description}
+            </p>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

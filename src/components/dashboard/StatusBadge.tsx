@@ -29,7 +29,10 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       case 'EM_TRANSITO':
         return 'Em Trânsito';
       case 'CONCLUIDO':
+      case 'ENTREGUE':
         return 'Concluído';
+      case 'PENDENTE':
+        return 'Pendente';
       case 'CANCELADA':
       case 'CANCELADO':
         return 'Cancelado';

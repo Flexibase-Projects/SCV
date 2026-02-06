@@ -121,7 +121,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115]">
+    <div className="min-h-screen bg-white dark:bg-[#0f1115]">
       <header className="border-b border-border bg-brand-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">

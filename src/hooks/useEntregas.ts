@@ -7,9 +7,6 @@ export function useEntregas() {
   return useQuery({
     queryKey: ['entregas'],
     queryFn: async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:10',message:'Iniciando query de entregas',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       // Use count: 'exact' to get the real total, but we still need to fetch data
       // For large datasets, consider using pagination or the stats RPC for totals
       const { data, error, count } = await supabase
@@ -18,15 +15,7 @@ export function useEntregas() {
         .order('created_at', { ascending: false })
         .limit(10000); // Increase limit to handle more records
 
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:17',message:'Query executada com range',data:{dataLength:data?.length||0,count:count||0,hasError:!!error,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       if (error) throw error;
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:22',message:'Retornando dados',data:{finalLength:data?.length||0,count:count||0,firstId:data?.[0]?.id,lastId:data?.[data.length-1]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
       return data as Entrega[];
     }
   });
@@ -58,9 +47,6 @@ export function useEntregasPaginated({
   return useQuery({
     queryKey: ['entregas-paginated', page, pageSize, searchTerm, dateFrom, dateTo, motorista, veiculo, dataEspecifica, statusMontagem],
     queryFn: async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:52',message:'Iniciando query paginada',data:{page,pageSize,searchTerm,dateFrom:dateFrom?.toISOString(),dateTo:dateTo?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       let query = supabase
         .from('controle_entregas')
         .select('*', { count: 'exact' });
@@ -72,17 +58,11 @@ export function useEntregasPaginated({
 
       if (dateFrom) {
         const dateFromStr = dateFrom.toISOString().split('T')[0];
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:63',message:'Aplicando filtro dateFrom',data:{dateFrom:dateFrom.toISOString(),dateFromStr},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         query = query.gte('data_saida', dateFromStr);
       }
 
       if (dateTo) {
         const dateToStr = dateTo.toISOString().split('T')[0];
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:68',message:'Aplicando filtro dateTo',data:{dateTo:dateTo.toISOString(),dateToStr},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         query = query.lte('data_saida', dateToStr);
       }
 
@@ -114,15 +94,7 @@ export function useEntregasPaginated({
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:75',message:'Executando query com paginação',data:{from,to},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-
       const { data, count, error } = await query.range(from, to);
-
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:78',message:'Resultado da query paginada',data:{dataLength:data?.length||0,count,hasError:!!error,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       if (error) throw error;
 
@@ -144,9 +116,6 @@ export function useEntregasStats({
   return useQuery({
     queryKey: ['entregas-stats', searchTerm, dateFrom, dateTo, statusMontagem],
     queryFn: async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:96',message:'Chamando RPC get_delivery_stats',data:{searchTerm,dateFrom:dateFrom?.toISOString(),dateTo:dateTo?.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       // Use RPC function to get accurate stats without fetching all records
       // This bypasses the 1000 row limit and is much more efficient
       const rpcParams = {
@@ -154,14 +123,7 @@ export function useEntregasStats({
         date_from: dateFrom ? dateFrom.toISOString() : null,
         date_to: dateTo ? dateTo.toISOString() : null
       };
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:102',message:'Parâmetros da RPC',data:{rpcParams},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       const { data, error } = await supabase.rpc('get_delivery_stats', rpcParams);
-
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:106',message:'Resultado da RPC get_delivery_stats',data:{hasError:!!error,errorMessage:error?.message,rpcData:data,totalEntregas:data?.totalEntregas},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
 
       if (error) {
         console.error('Error fetching delivery stats:', error);
@@ -169,16 +131,12 @@ export function useEntregasStats({
       }
 
       // The RPC returns a JSON object with the stats
-      const result = {
+      return {
         totalEntregas: data?.totalEntregas || 0,
         custoTotalEntregas: Number(data?.custoTotalEntregas || 0),
         custoTotalMontagem: Number(data?.custoTotalMontagem || 0),
         percentualMedioGastos: Number(data?.percentualMedioGastos || 0)
       };
-      // #region agent log
-      fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useEntregas.ts:118',message:'Retornando estatísticas processadas',data:{result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
-      return result;
     }
   });
 }

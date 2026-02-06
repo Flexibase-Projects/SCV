@@ -43,7 +43,7 @@ import { isImportEnabled } from '@/utils/featureFlags';
 
 export default function Ajuda() {
   return (
-    <div className="min-h-screen bg-brand-blue dark:bg-[#0f1115]">
+    <div className="min-h-screen bg-white dark:bg-[#0f1115]">
       {/* Header */}
       <header className="border-b border-border/60 bg-brand-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4">
