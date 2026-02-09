@@ -258,6 +258,20 @@ git rm --cached .env
 
 O `.gitignore` do projeto já está configurado para ignorar os itens da lista “NÃO pode ser enviado”. Antes de fazer push, sempre rode `git status` e confira se nenhum arquivo sensível aparece.
 
+### Deploy no GitHub Actions (GitHub Pages)
+
+O workflow em `.github/workflows/deploy.yml` usa **GitHub Secrets**. Configure no repositório:
+
+**Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret | Obrigatório | Descrição |
+|--------|-------------|-----------|
+| `VITE_SUPABASE_URL` | Sim | URL do projeto Supabase |
+| `VITE_SUPABASE_ANON_KEY` | Sim | Chave anônima do Supabase |
+| `VITE_ENABLE_IMPORT` | Não (default: `true`) | `true` ou `false` para habilitar importação em massa |
+
+Nunca coloque esses valores no código ou em arquivos commitados. Veja também [SECURITY.md](SECURITY.md) e o [checklist de deploy](docs/GITHUB-DEPLOY.md).
+
 ## 📱 Screenshots
 
 <img width="1904" height="918" alt="front" src="https://github.com/user-attachments/assets/06befa8c-6e65-4b93-9833-92037b50320f" />

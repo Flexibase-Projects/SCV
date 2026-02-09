@@ -14,11 +14,19 @@ lerna-debug.log*
 # ==============================
 .env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
 .env.production
+.env.production.local
 .env.*.local
 !.env.example
+.env.backup
+.env.*.backup
+*.pem
+*.key
+secrets.json
 
 # ==============================
 # Build e dependências
@@ -27,6 +35,9 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tsbuildinfo
+.turbo
+.cache
 
 # ==============================
 # Configurações locais / agentes (não enviar ao GitHub)
@@ -35,8 +46,10 @@ dist-ssr
 .cursor/
 .cursor/plans/
 
-# Supabase (contém project_id e dados sensíveis)
+# Supabase (contém project_id e dados sensíveis – use config.toml.example como referência)
 supabase/config.toml
+supabase/.branches
+supabase/.temp
 
 # ==============================
 # IDE e sistema
