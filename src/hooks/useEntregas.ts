@@ -3,17 +3,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { Entrega, EntregaFormData, StatusMontagem } from '@/types/entrega';
 import { toast } from '@/hooks/use-toast';
 
+// Select explícito sem status_montagem (migration 20260203) e sem updated_at (missing on server).
+// Count fica em requisição separada para evitar 400.
+const ENTREGA_SELECT =
+  'id, pv_foco, nf, valor, cliente, uf, data_saida, motorista, carro, tipo_transporte, status, precisa_montagem, data_montagem, gastos_entrega, gastos_montagem, produtividade, erros, descricao_erros, montador_1, montador_2, percentual_gastos, created_at';
+
+// Helper para remover campos que não existem no banco (status_montagem, updated_at, etc.)
+// Isso garante compatibilidade com bancos onde as migrations mais recentes não foram rodadas.
+function sanitizeEntregaPayload(data: Partial<EntregaFormData>) {
+  const { status_montagem, ...rest } = data;
+  return rest;
+}
+
 export function useEntregas() {
   return useQuery({
     queryKey: ['entregas'],
     queryFn: async () => {
-      // Use count: 'exact' to get the real total, but we still need to fetch data
-      // For large datasets, consider using pagination or the stats RPC for totals
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('controle_entregas')
-        .select('*', { count: 'exact' })
+        .select(ENTREGA_SELECT)
         .order('created_at', { ascending: false })
-        .limit(10000); // Increase limit to handle more records
+        .limit(10000);
 
       if (error) throw error;
       return data as Entrega[];
@@ -47,60 +57,54 @@ export function useEntregasPaginated({
   return useQuery({
     queryKey: ['entregas-paginated', page, pageSize, searchTerm, dateFrom, dateTo, motorista, veiculo, dataEspecifica, statusMontagem],
     queryFn: async () => {
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      
       let query = supabase
         .from('controle_entregas')
-        .select('*', { count: 'exact' });
+        .select(ENTREGA_SELECT);
 
-      // Apply filters
       if (searchTerm) {
         query = query.or(`cliente.ilike.%${searchTerm}%,pv_foco.ilike.%${searchTerm}%,nf.ilike.%${searchTerm}%,motorista.ilike.%${searchTerm}%`);
       }
-
       if (dateFrom) {
         const dateFromStr = dateFrom.toISOString().split('T')[0];
         query = query.gte('data_saida', dateFromStr);
       }
-
       if (dateTo) {
         const dateToStr = dateTo.toISOString().split('T')[0];
         query = query.lte('data_saida', dateToStr);
       }
-
-      // NOVOS FILTROS
-      if (motorista) {
-        query = query.eq('motorista', motorista);
-      }
-
-      if (veiculo) {
-        query = query.eq('carro', veiculo);
-      }
-
-      // Filtro de data específica (para as abas Por Motorista/Por Veículo/Por Montagem)
+      if (motorista) query = query.eq('motorista', motorista);
+      if (veiculo) query = query.eq('carro', veiculo);
       if (dataEspecifica) {
         const dataStr = dataEspecifica.toISOString().split('T')[0];
         query = query.eq('data_saida', dataStr);
       }
+      if (statusMontagem) query = query.eq('status_montagem', statusMontagem);
 
-      // NOVO FILTRO: Status de Montagem
-      if (statusMontagem) {
-        query = query.eq('status_montagem', statusMontagem);
-      }
-
-      // ORDENAÇÃO PADRÃO: Sempre por data_saida DESC (mais recente primeiro)
-      // Aplicado para todas as abas: Todos, Por Motorista, Por Veículo e Por Montagem
       query = query.order('data_saida', { ascending: false });
 
-      // Pagination
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
+      const { data: pageData, error: pageError } = await query.range(from, to);
 
-      const { data, count, error } = await query.range(from, to);
+      if (pageError) throw pageError;
 
-      if (error) throw error;
+      let totalCount = (pageData?.length ?? 0);
+      let countQuery = supabase.from('controle_entregas').select('id', { count: 'exact', head: true });
+      if (searchTerm) countQuery = countQuery.or(`cliente.ilike.%${searchTerm}%,pv_foco.ilike.%${searchTerm}%,nf.ilike.%${searchTerm}%,motorista.ilike.%${searchTerm}%`);
+      if (dateFrom) countQuery = countQuery.gte('data_saida', dateFrom.toISOString().split('T')[0]);
+      if (dateTo) countQuery = countQuery.lte('data_saida', dateTo.toISOString().split('T')[0]);
+      if (motorista) countQuery = countQuery.eq('motorista', motorista);
+      if (veiculo) countQuery = countQuery.eq('carro', veiculo);
+      if (dataEspecifica) countQuery = countQuery.eq('data_saida', dataEspecifica.toISOString().split('T')[0]);
+      if (statusMontagem) countQuery = countQuery.eq('status_montagem', statusMontagem);
+      const { count: exactCount, error: countError } = await countQuery;
+      
+      if (!countError && exactCount != null) totalCount = exactCount;
 
       return {
-        data: data as Entrega[],
-        count: count || 0
+        data: (pageData ?? []) as Entrega[],
+        count: totalCount
       };
     },
     placeholderData: (previousData) => previousData // Keep prev data while fetching
@@ -141,17 +145,27 @@ export function useEntregasStats({
   });
 }
 
+// Helper para remover campos que não existem no banco (status_montagem, updated_at, etc.)
+// Isso garante compatibilidade com bancos onde as migrations mais recentes não foram rodadas.
+function sanitizeEntregaPayload(data: Partial<EntregaFormData>) {
+  const { status_montagem, ...rest } = data;
+  return rest;
+}
+
 export function useCreateEntrega() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (entrega: Partial<EntregaFormData>) => {
+      // Sanitizar payload removendo colunas inexistentes no banco
+      const payload = sanitizeEntregaPayload(entrega);
+      
       const { data, error } = await supabase
         .from('controle_entregas')
-        .insert([entrega])
+        .insert([payload])
         .select()
         .single();
-
+      
       if (error) throw error;
       return data;
     },
@@ -177,9 +191,12 @@ export function useUpdateEntrega() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<EntregaFormData> }) => {
+      // Sanitizar payload
+      const payload = sanitizeEntregaPayload(data);
+
       const { data: updatedData, error } = await supabase
         .from('controle_entregas')
-        .update(data)
+        .update(payload)
         .eq('id', id)
         .select()
         .single();
