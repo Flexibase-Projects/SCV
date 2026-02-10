@@ -8,15 +8,24 @@ export default defineConfig(({ mode }) => {
   // Carregar .env para o config; senão VITE_HMR_DISABLED no .env é ignorado e HMR fica ativo → reload em loop
   const env = loadEnv(mode, process.cwd(), "");
   const hmrDisabled = env.VITE_HMR_DISABLED === "1" || env.VITE_HMR_DISABLED === "true";
-  const hmrOption = hmrDisabled
-    ? false
-    : {
-        host: env.VITE_HMR_HOST || "scv.flexibase.com",
-        port: env.VITE_HMR_PORT ? Number(env.VITE_HMR_PORT) : 8080,
-        protocol: (env.VITE_HMR_PROTOCOL as "ws" | "wss") || "ws",
-      };
 
-  const devPort = env.VITE_DEV_PORT ? Number(env.VITE_DEV_PORT) : 8080;
+  let hmrOption: false | { host: string; port: number; protocol: string } = false;
+  if (!hmrDisabled) {
+    let hmrPort = 8080;
+    if (env.VITE_HMR_PORT) hmrPort = Number(env.VITE_HMR_PORT);
+    let hmrProtocol = "ws";
+    if (env.VITE_HMR_PROTOCOL === "wss") hmrProtocol = "wss";
+    hmrOption = {
+      host: env.VITE_HMR_HOST || "scv.flexibase.com",
+      port: hmrPort,
+      protocol: hmrProtocol,
+    };
+  }
+
+  let devPort = 8080;
+  if (env.VITE_DEV_PORT) {
+    devPort = Number(env.VITE_DEV_PORT);
+  }
 
   return {
   base: mode === 'production' ? '/Controle-Frotas/' : '/',
