@@ -226,18 +226,11 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
     };
 
     const formatCurrency = (value: number | null): string => {
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:formatCurrency:ENTRY', message: 'formatCurrency entrada', data: { value, valueType: typeof value }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'L' }) }).catch(() => { });
-        // #endregion
         if (value === null || value === undefined) return '—';
-        const formatted = new Intl.NumberFormat('pt-BR', {
+        return new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL',
         }).format(value);
-        // #region agent log
-        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:formatCurrency:RETURN', message: 'formatCurrency retorno', data: { value, formatted }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'L' }) }).catch(() => { });
-        // #endregion
-        return formatted;
     };
 
     const formatNumber = (value: number | null, decimals: number = 2): string => {
@@ -472,20 +465,10 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
                                                     {row.produto || <span className="text-gray-300">—</span>}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {(() => {
-                                                        // #region agent log
-                                                        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:TableCell:valorUnitario', message: 'Valor unitário antes de formatar', data: { lineNumber: row.lineNumber, valorUnitario: row.valor_unitario, valorUnitarioType: typeof row.valor_unitario }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'M' }) }).catch(() => { });
-                                                        // #endregion
-                                                        return formatCurrency(row.valor_unitario);
-                                                    })()}
+                                                    {formatCurrency(row.valor_unitario)}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {(() => {
-                                                        // #region agent log
-                                                        fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AbastecimentoUnifiedImporter.tsx:TableCell:valorTotal', message: 'Valor total antes de formatar', data: { lineNumber: row.lineNumber, valorTotal: row.valor_total, valorTotalType: typeof row.valor_total }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'M' }) }).catch(() => { });
-                                                        // #endregion
-                                                        return formatCurrency(row.valor_total);
-                                                    })()}
+                                                    {formatCurrency(row.valor_total)}
                                                 </TableCell>
                                                 <TableCell className="max-w-[200px]">
                                                     {row.parsingErrors.length > 0 ? (

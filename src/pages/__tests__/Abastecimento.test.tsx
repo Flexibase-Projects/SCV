@@ -125,7 +125,7 @@ describe('AbastecimentoPage - Ordenação por KM Inicial', () => {
 
     // Act
     render(
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <QueryClientProvider client={queryClient}>
           <AbastecimentoPage />
         </QueryClientProvider>

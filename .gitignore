@@ -45,6 +45,8 @@ dist-ssr
 .agent/
 .cursor/
 .cursor/plans/
+**/debug.log
+**/.cursor/debug.log
 
 # Supabase (contém project_id e dados sensíveis – use config.toml.example como referência)
 supabase/config.toml

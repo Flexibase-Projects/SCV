@@ -158,13 +158,7 @@ export function ExcelImporter({ onImportComplete }: ExcelImporterProps) {
         valor: row.valor || 0,
         cliente: row.cliente || '',
         uf: row.uf || '',
-        data_saida: (() => {
-          const value = row.data_saida || '';
-          // #region agent log
-          fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ExcelImporter.tsx:handleConfirmImport:data_saida',message:'data_saida antes de importar',data:{value,pv_foco:row.pv_foco},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-          // #endregion
-          return value;
-        })(),
+        data_saida: row.data_saida || '',
         motorista: row.motorista || '',
         carro: row.carro || '',
         tipo_transporte: row.tipo_transporte || '',

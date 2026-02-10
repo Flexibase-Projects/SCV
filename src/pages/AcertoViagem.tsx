@@ -26,12 +26,6 @@ const AcertoViagemPage = () => {
 
   const { data: acertos = [], isLoading, error, isError } = useAcertosViagem();
 
-  // #region agent log
-  useEffect(() => {
-    fetch('http://127.0.0.1:7248/ingest/b899a128-fb87-4900-a86f-9d897eaf2428', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'AcertoViagem.tsx:23', message: 'Estado da query', data: { isLoading, isError, errorMessage: error?.message, acertosLength: acertos.length }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-  }, [isLoading, isError, error, acertos.length]);
-  // #endregion
-
   // Filtrar acertos
   const filteredAcertos = useMemo(() => acertos.filter(acerto => {
     const searchLower = searchTerm.toLowerCase();

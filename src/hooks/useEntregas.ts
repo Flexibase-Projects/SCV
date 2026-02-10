@@ -145,13 +145,6 @@ export function useEntregasStats({
   });
 }
 
-// Helper para remover campos que não existem no banco (status_montagem, updated_at, etc.)
-// Isso garante compatibilidade com bancos onde as migrations mais recentes não foram rodadas.
-function sanitizeEntregaPayload(data: Partial<EntregaFormData>) {
-  const { status_montagem, ...rest } = data;
-  return rest;
-}
-
 export function useCreateEntrega() {
   const queryClient = useQueryClient();
 

@@ -270,7 +270,7 @@ O workflow em `.github/workflows/deploy.yml` usa **GitHub Secrets**. Configure n
 | `VITE_SUPABASE_ANON_KEY` | Sim | Chave anônima do Supabase |
 | `VITE_ENABLE_IMPORT` | Não (default: `true`) | `true` ou `false` para habilitar importação em massa |
 
-Nunca coloque esses valores no código ou em arquivos commitados. Veja também [SECURITY.md](SECURITY.md) e o [checklist de deploy](docs/GITHUB-DEPLOY.md).
+Nunca coloque esses valores no código ou em arquivos commitados. Veja também [SECURITY.md](SECURITY.md), [PRIVACY.md](PRIVACY.md) e o [checklist de deploy](docs/GITHUB-DEPLOY.md).
 
 ## 📱 Screenshots
 
@@ -288,6 +288,11 @@ Contribuições são bem-vindas! Siga as regras da seção **Preparando para o G
 4. Commit com mensagens claras (`git commit -m 'feat: adiciona X'` ou `fix: corrige Y'`)
 5. Push para a branch (`git push origin feature/nova-feature`)
 6. Abra um Pull Request
+
+## 🔒 Segurança e privacidade
+
+- **[SECURITY.md](SECURITY.md)** — O que não commitar, como reportar vulnerabilidades e boas práticas de deploy.
+- **[PRIVACY.md](PRIVACY.md)** — Política de privacidade de dados e tratamento de informações no repositório e na aplicação.
 
 ## 📄 Licença
 
