@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Add as Plus, Print as Printer, Description as FileText, Person as User, DirectionsCar, CalendarMonth as CalendarIcon } from '@mui/icons-material';
+import { useState, useMemo, useEffect } from 'react';
+import { Add as Plus, Print as Printer, Delete as TrashIcon, Description as FileText, Person as User, DirectionsCar, CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { KPICards } from '@/components/dashboard/KPICards';
@@ -9,14 +9,13 @@ import { EntregaFormModal } from '@/components/dashboard/EntregaFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useMotoristasEntregas, useVeiculosEntregas } from '@/hooks/useEntregas';
+import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useDeleteEntregasBulk, useMotoristasEntregas, useVeiculosEntregas, type DateFieldFilter } from '@/hooks/useEntregas';
 import { Entrega, EntregaFormData, StatusEntrega, TIPO_TRANSPORTE_LABELS, STATUS_MONTAGEM_LABELS } from '@/types/entrega';
-import { format, isWithinInterval, parseISO, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
+import { format } from 'date-fns';
 import { formatDateLocal } from '@/utils/dateUtils';
 import { SharedFilter } from '@/components/shared/SharedFilter';
 import { useDebounce } from '@/hooks/use-debounce';
 import { PaginationControl } from '@/components/shared/PaginationControl';
-import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
@@ -33,9 +32,10 @@ const Entregas = () => {
 
   // Filter State
   const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms debounce
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
+  const [dateField, setDateField] = useState<DateFieldFilter>('data_saida');
 
   // Estados específicos da aba "Por Motorista"
   const [selectedMotorista, setSelectedMotorista] = useState<string | null>(null);
@@ -45,9 +45,6 @@ const Entregas = () => {
   const [selectedVeiculo, setSelectedVeiculo] = useState<string | null>(null);
   const [selectedDateVeiculo, setSelectedDateVeiculo] = useState<Date | null>(null);
 
-  // Flag to track if auto-filter has been applied
-  const autoFilterApplied = useRef(false);
-
   // Hooks para buscar valores únicos
   const { data: motoristasList = [] } = useMotoristasEntregas();
   const { data: veiculosList = [] } = useVeiculosEntregas();
@@ -55,13 +52,15 @@ const Entregas = () => {
   // Data Fetching (Server-Side Pagination)
   const {
     data: paginatedResult,
-    isLoading
+    isLoading,
+    isFetching
   } = useEntregasPaginated({
     page,
     pageSize,
     searchTerm: activeTab === 'todos' ? debouncedSearchTerm : undefined,
     dateFrom: activeTab === 'todos' ? dateFrom : null,
     dateTo: activeTab === 'todos' ? dateTo : null,
+    dateField: activeTab === 'todos' ? dateField : 'data_saida',
     motorista: activeTab === 'por-motorista' ? selectedMotorista : null,
     veiculo: activeTab === 'por-veiculo' ? selectedVeiculo : null,
     dataEspecifica: activeTab === 'por-motorista' ? selectedDateMotorista : 
@@ -95,15 +94,18 @@ const Entregas = () => {
   const createEntrega = useCreateEntrega();
   const updateEntrega = useUpdateEntrega();
   const deleteEntrega = useDeleteEntrega();
+  const deleteBulk = useDeleteEntregasBulk();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [entregaToDelete, setEntregaToDelete] = useState<Entrega | null>(null);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
-  // Limpar filtros ao mudar de aba para melhorar UX
+  // Limpar filtros e seleção ao mudar de aba
   useEffect(() => {
     if (activeTab !== 'por-motorista') {
       setSelectedMotorista(null);
@@ -113,74 +115,17 @@ const Entregas = () => {
       setSelectedVeiculo(null);
       setSelectedDateVeiculo(null);
     }
-    // Resetar página ao mudar de aba
     setPage(1);
+    setSelectedIds(new Set());
   }, [activeTab]);
+
 
   // Resetar página quando filtros mudam
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearchTerm, dateFrom, dateTo, selectedMotorista, selectedDateMotorista, selectedVeiculo, selectedDateVeiculo]);
+  }, [debouncedSearchTerm, dateFrom, dateTo, dateField, selectedMotorista, selectedDateMotorista, selectedVeiculo, selectedDateVeiculo]);
 
-  // Auto-filter by most recent year on first load
-  useEffect(() => {
-    // Only apply auto-filter if:
-    // 1. Auto-filter hasn't been applied yet
-    // 2. No date filters are currently set
-    if (autoFilterApplied.current || dateFrom !== null || dateTo !== null) {
-      return;
-    }
-
-    // Fetch the most recent year from deliveries
-    const fetchMostRecentYear = async () => {
-      try {
-        // Get the maximum data_saida to find the most recent year
-        const { data, error } = await supabase
-          .from('controle_entregas')
-          .select('data_saida')
-          .not('data_saida', 'is', null)
-          .order('data_saida', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error || !data?.data_saida) {
-          // If no data found, use current year as fallback
-          const currentYear = new Date().getFullYear();
-          const yearStart = startOfYear(new Date(currentYear, 0, 1));
-          const yearEnd = endOfYear(new Date(currentYear, 11, 31));
-          setDateFrom(yearStart);
-          setDateTo(yearEnd);
-          autoFilterApplied.current = true;
-          return;
-        }
-
-        // Extract year from the most recent data_saida
-        const mostRecentDate = new Date(data.data_saida);
-        const year = mostRecentDate.getFullYear();
-
-        // Set dateFrom to January 1st and dateTo to December 31st of that year
-        const yearStart = startOfYear(new Date(year, 0, 1));
-        const yearEnd = endOfYear(new Date(year, 11, 31));
-
-        setDateFrom(yearStart);
-        setDateTo(yearEnd);
-        autoFilterApplied.current = true;
-      } catch (err) {
-        console.error('Error fetching most recent year:', err);
-        // Fallback to current year on error
-        const currentYear = new Date().getFullYear();
-        const yearStart = startOfYear(new Date(currentYear, 0, 1));
-        const yearEnd = endOfYear(new Date(currentYear, 11, 31));
-        setDateFrom(yearStart);
-        setDateTo(yearEnd);
-        autoFilterApplied.current = true;
-      }
-    };
-
-    fetchMostRecentYear();
-  }, [dateFrom, dateTo]);
-
-  // Client-side filtering removed - handled by server
+  // Dados já filtrados no servidor
   const filteredEntregas = entregas;
 
   // Configuração de colunas para impressão - TODOS os campos cadastrados
@@ -279,10 +224,11 @@ const Entregas = () => {
   const filtersText = useMemo(() => {
     const filters: string[] = [];
     if (searchTerm) filters.push(`Busca: "${searchTerm}"`);
+    if (dateField) filters.push(dateField === 'created_at' ? 'Por data de criação' : 'Por data de saída');
     if (dateFrom) filters.push(`De: ${format(dateFrom, 'dd/MM/yyyy')}`);
     if (dateTo) filters.push(`Até: ${format(dateTo, 'dd/MM/yyyy')}`);
     return filters.length > 0 ? filters.join(' | ') : 'Todos os registros';
-  }, [searchTerm, dateFrom, dateTo]);
+  }, [searchTerm, dateField, dateFrom, dateTo]);
 
   const handleOpenForm = (entrega?: Entrega) => {
     setSelectedEntrega(entrega || null);
@@ -313,13 +259,55 @@ const Entregas = () => {
         { onSuccess: handleCloseForm }
       );
     } else {
-      createEntrega.mutate(formattedData, { onSuccess: handleCloseForm });
+      createEntrega.mutate(formattedData, {
+        onSuccess: () => {
+          handleCloseForm();
+          setDateField('created_at');
+          setDateFrom(null);
+          setDateTo(null);
+          setPage(1);
+        }
+      });
     }
   };
 
   const handleOpenDeleteDialog = (entrega: Entrega) => {
     setEntregaToDelete(entrega);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAll = (ids: string[]) => {
+    setSelectedIds((prev) => {
+      const allSelected = ids.length > 0 && ids.every((id) => prev.has(id));
+      if (allSelected) {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      }
+      const next = new Set(prev);
+      ids.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const handleConfirmBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    deleteBulk.mutate(ids, {
+      onSuccess: () => {
+        setSelectedIds(new Set());
+        setIsBulkDeleteDialogOpen(false);
+      }
+    });
   };
 
   const handleConfirmDelete = () => {
@@ -333,29 +321,26 @@ const Entregas = () => {
     }
   };
 
-  if (isLoading) {
+  // Skeleton apenas na primeira carga (sem dados ainda); refetch mostra indicador leve
+  const isFirstLoad = !paginatedResult && isLoading;
+  if (isFirstLoad) {
     return (
       <ModuleLayout>
         <div className="min-h-screen bg-white dark:bg-[#0f1115] transition-colors duration-300 px-4 lg:px-8 py-6">
           <div className="max-w-[1600px] mx-auto space-y-6">
-            {/* Header Skeleton */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div className="space-y-2">
-                <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
-                <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
+                <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
               </div>
-              <div className="h-10 w-36 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
+              <div className="h-10 w-36 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
             </div>
-            
-            {/* KPI Cards Skeleton */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-24 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+                <div key={i} className="h-24 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
               ))}
             </div>
-            
-            {/* Table Skeleton */}
-            <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+            <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
           </div>
         </div>
       </ModuleLayout>
@@ -415,26 +400,53 @@ const Entregas = () => {
             </div>
 
             <TabsContent value="todos" className="space-y-4 animate-in fade-in-50 duration-300">
-              <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+              <Card className={cn(solidCard, 'rounded-2xl overflow-hidden', isFetching && 'relative')}>
+                {isFetching && (
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-500/60 animate-pulse z-10 rounded-t-2xl" aria-hidden />
+                )}
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <SharedFilter
-                      searchTerm={searchTerm}
-                      onSearchChange={setSearchTerm}
-                      dateFrom={dateFrom}
-                      onDateFromChange={setDateFrom}
-                      dateTo={dateTo}
-                      onDateToChange={setDateTo}
-                      placeholder="Buscar por cliente, PV Foco, NF ou motorista..."
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsPrintModalOpen(true)}
-                      className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Imprimir / PDF
-                    </Button>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Filtrar por:</span>
+                      <Select value={dateField} onValueChange={(v) => setDateField(v as DateFieldFilter)}>
+                        <SelectTrigger className="w-[180px] h-10 rounded-xl border-gray-100 dark:border-white/5 bg-brand-white dark:bg-[#181b21]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="data_saida">Data de saída</SelectItem>
+                          <SelectItem value="created_at">Data de criação</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <SharedFilter
+                        searchTerm={searchTerm}
+                        onSearchChange={setSearchTerm}
+                        dateFrom={dateFrom}
+                        onDateFromChange={setDateFrom}
+                        dateTo={dateTo}
+                        onDateToChange={setDateTo}
+                        placeholder="Buscar por cliente, PV Foco, NF ou motorista..."
+                      />
+                      {selectedIds.size > 0 && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsBulkDeleteDialogOpen(true)}
+                          className="gap-2 rounded-lg border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/50 text-red-700 dark:text-red-400 font-medium text-sm h-10"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                          Excluir selecionados ({selectedIds.size})
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsPrintModalOpen(true)}
+                        className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                      >
+                        <Printer className="h-4 w-4" />
+                        Imprimir / PDF
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -443,6 +455,12 @@ const Entregas = () => {
                 entregas={filteredEntregas}
                 onEdit={handleOpenForm}
                 onDelete={handleOpenDeleteDialog}
+                selection={{
+                  selectedIds,
+                  onToggle: handleToggleSelect,
+                  onSelectAll: handleSelectAll,
+                  allIds: filteredEntregas.map((e) => e.id),
+                }}
               />
               {totalPages > 1 && (
                 <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
@@ -684,6 +702,23 @@ const Entregas = () => {
           onConfirm={handleConfirmDelete}
           isLoading={deleteEntrega.isPending}
           clienteName={entregaToDelete?.cliente || ''}
+        />
+
+        <DeleteConfirmDialog
+          open={isBulkDeleteDialogOpen}
+          onOpenChange={setIsBulkDeleteDialogOpen}
+          onConfirm={handleConfirmBulkDelete}
+          isLoading={deleteBulk.isPending}
+          title="Excluir entregas selecionadas"
+          description={
+            <>
+              Tem certeza que deseja excluir <strong>{selectedIds.size}</strong> entrega(s)?
+              <br /><br />
+              <span className="block text-xs uppercase tracking-wider font-bold text-red-600 dark:text-red-400">
+                Esta ação é irreversível.
+              </span>
+            </>
+          }
         />
 
         <TablePrintModal

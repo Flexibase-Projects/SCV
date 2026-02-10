@@ -1,11 +1,19 @@
 import { Edit as Pencil, Delete as Trash2 } from '@mui/icons-material';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from './StatusBadge';
 import type { VirtualDataTableColumnMeta } from '@/components/shared/virtualDataTableTypes';
 import type { Entrega } from '@/types/entrega';
 import { STATUS_MONTAGEM_LABELS, TIPO_TRANSPORTE_LABELS } from '@/types/entrega';
+
+export interface EntregaSelectionProps {
+  selectedIds: Set<string>;
+  onToggle: (id: string) => void;
+  onSelectAll: (ids: string[]) => void;
+  allIds: string[];
+}
 
 function formatCurrency(value: number | null) {
   if (value === null || value === undefined) return '-';
@@ -25,9 +33,42 @@ function formatDate(dateString: string | null) {
 
 export function getEntregaColumns(
   onEdit: (e: Entrega) => void,
-  onDelete: (e: Entrega) => void
+  onDelete: (e: Entrega) => void,
+  selection?: EntregaSelectionProps
 ): ColumnDef<Entrega, unknown>[] {
-  return [
+  const baseColumns: ColumnDef<Entrega, unknown>[] = [
+    ...(selection
+      ? [
+          {
+            id: 'select',
+            header: () => {
+              const all = selection.allIds;
+              const selected = selection.selectedIds;
+              const allSelected = all.length > 0 && all.every((id) => selected.has(id));
+              const someSelected = selected.size > 0;
+              return (
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={() => selection.onSelectAll(all)}
+                  aria-label="Selecionar todas"
+                  className="translate-y-0"
+                />
+              );
+            },
+            enableSorting: false,
+            enableColumnFilter: false,
+            meta: { width: '44px', align: 'center', hideOnMobile: true } as VirtualDataTableColumnMeta,
+            cell: ({ row }) => (
+              <Checkbox
+                checked={selection.selectedIds.has(row.original.id)}
+                onCheckedChange={() => selection.onToggle(row.original.id)}
+                aria-label={`Selecionar ${row.original.cliente || row.original.id}`}
+                className="translate-y-0"
+              />
+            ),
+          } as ColumnDef<Entrega, unknown>,
+        ]
+      : []),
     {
       id: 'pv_foco',
       accessorKey: 'pv_foco',
@@ -207,4 +248,5 @@ export function getEntregaColumns(
       ),
     },
   ];
+  return baseColumns;
 }

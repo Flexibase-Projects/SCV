@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { solidCard } from '@/lib/cardStyles';
 import { VirtualDataTable, VIRTUAL_SCROLL_MAX_HEIGHT } from '@/components/shared/VirtualDataTable';
-import { getEntregaColumns } from './entregaColumns';
+import { getEntregaColumns, type EntregaSelectionProps } from './entregaColumns';
 import type { Entrega } from '@/types/entrega';
 
 const ENTREGA_TABLE_MIN_WIDTH = 1310;
@@ -10,9 +10,10 @@ interface EntregaTableProps {
   entregas: Entrega[];
   onEdit: (entrega: Entrega) => void;
   onDelete: (entrega: Entrega) => void;
+  selection?: EntregaSelectionProps;
 }
 
-export function EntregaTable({ entregas, onEdit, onDelete }: EntregaTableProps) {
+export function EntregaTable({ entregas, onEdit, onDelete, selection }: EntregaTableProps) {
   if (entregas.length === 0) {
     return (
       <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
@@ -23,7 +24,7 @@ export function EntregaTable({ entregas, onEdit, onDelete }: EntregaTableProps) 
     );
   }
 
-  const columns = getEntregaColumns(onEdit, onDelete);
+  const columns = getEntregaColumns(onEdit, onDelete, selection);
 
   return (
     <Card className={`${solidCard} rounded-2xl overflow-hidden`}>

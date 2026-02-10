@@ -28,16 +28,35 @@ export function useEntregas() {
   });
 }
 
+export type DateFieldFilter = 'data_saida' | 'created_at';
+
 interface UseEntregasPaginatedProps {
   page: number;
   pageSize: number;
   searchTerm?: string;
   dateFrom?: Date | null;
   dateTo?: Date | null;
+  dateField?: DateFieldFilter | null;
   motorista?: string | null;
   veiculo?: string | null;
   dataEspecifica?: Date | null;
   statusMontagem?: StatusMontagem | null;
+}
+
+function toDateOnlyStr(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
+
+function toStartOfDayISO(d: Date): string {
+  const copy = new Date(d);
+  copy.setHours(0, 0, 0, 0);
+  return copy.toISOString();
+}
+
+function toEndOfDayISO(d: Date): string {
+  const copy = new Date(d);
+  copy.setHours(23, 59, 59, 999);
+  return copy.toISOString();
 }
 
 export function useEntregasPaginated({
@@ -46,17 +65,19 @@ export function useEntregasPaginated({
   searchTerm,
   dateFrom,
   dateTo,
+  dateField = 'data_saida',
   motorista,
   veiculo,
   dataEspecifica,
   statusMontagem
 }: UseEntregasPaginatedProps) {
   return useQuery({
-    queryKey: ['entregas-paginated', page, pageSize, searchTerm, dateFrom, dateTo, motorista, veiculo, dataEspecifica, statusMontagem],
+    queryKey: ['entregas-paginated', page, pageSize, searchTerm, dateFrom, dateTo, dateField, motorista, veiculo, dataEspecifica, statusMontagem],
     queryFn: async () => {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
-      
+      const field = dateField ?? 'data_saida';
+
       let query = supabase
         .from('controle_entregas')
         .select(ENTREGA_SELECT);
@@ -64,13 +85,17 @@ export function useEntregasPaginated({
       if (searchTerm) {
         query = query.or(`cliente.ilike.%${searchTerm}%,pv_foco.ilike.%${searchTerm}%,nf.ilike.%${searchTerm}%,motorista.ilike.%${searchTerm}%`);
       }
-      if (dateFrom) {
-        const dateFromStr = dateFrom.toISOString().split('T')[0];
-        query = query.gte('data_saida', dateFromStr);
+      if (field === 'created_at' && dateFrom) {
+        query = query.gte('created_at', toStartOfDayISO(dateFrom));
       }
-      if (dateTo) {
-        const dateToStr = dateTo.toISOString().split('T')[0];
-        query = query.lte('data_saida', dateToStr);
+      if (field === 'created_at' && dateTo) {
+        query = query.lte('created_at', toEndOfDayISO(dateTo));
+      }
+      if (field === 'data_saida' && dateFrom) {
+        query = query.gte('data_saida', toDateOnlyStr(dateFrom));
+      }
+      if (field === 'data_saida' && dateTo) {
+        query = query.lte('data_saida', toDateOnlyStr(dateTo));
       }
       if (motorista) query = query.eq('motorista', motorista);
       if (veiculo) query = query.eq('carro', veiculo);
@@ -80,7 +105,7 @@ export function useEntregasPaginated({
       }
       if (statusMontagem) query = query.eq('status_montagem', statusMontagem);
 
-      query = query.order('data_saida', { ascending: false });
+      query = query.order(field, { ascending: false });
 
       const { data: pageData, error: pageError } = await query.range(from, to);
 
@@ -89,14 +114,16 @@ export function useEntregasPaginated({
       let totalCount = (pageData?.length ?? 0);
       let countQuery = supabase.from('controle_entregas').select('id', { count: 'exact', head: true });
       if (searchTerm) countQuery = countQuery.or(`cliente.ilike.%${searchTerm}%,pv_foco.ilike.%${searchTerm}%,nf.ilike.%${searchTerm}%,motorista.ilike.%${searchTerm}%`);
-      if (dateFrom) countQuery = countQuery.gte('data_saida', dateFrom.toISOString().split('T')[0]);
-      if (dateTo) countQuery = countQuery.lte('data_saida', dateTo.toISOString().split('T')[0]);
+      if (field === 'created_at' && dateFrom) countQuery = countQuery.gte('created_at', toStartOfDayISO(dateFrom));
+      if (field === 'created_at' && dateTo) countQuery = countQuery.lte('created_at', toEndOfDayISO(dateTo));
+      if (field === 'data_saida' && dateFrom) countQuery = countQuery.gte('data_saida', toDateOnlyStr(dateFrom));
+      if (field === 'data_saida' && dateTo) countQuery = countQuery.lte('data_saida', toDateOnlyStr(dateTo));
       if (motorista) countQuery = countQuery.eq('motorista', motorista);
       if (veiculo) countQuery = countQuery.eq('carro', veiculo);
       if (dataEspecifica) countQuery = countQuery.eq('data_saida', dataEspecifica.toISOString().split('T')[0]);
       if (statusMontagem) countQuery = countQuery.eq('status_montagem', statusMontagem);
       const { count: exactCount, error: countError } = await countQuery;
-      
+
       if (!countError && exactCount != null) totalCount = exactCount;
 
       return {
@@ -104,7 +131,7 @@ export function useEntregasPaginated({
         count: totalCount
       };
     },
-    placeholderData: (previousData) => previousData // Keep prev data while fetching
+    placeholderData: (previousData) => previousData
   });
 }
 
@@ -161,6 +188,8 @@ export function useCreateEntrega() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entregas'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-stats'] });
       toast({
         title: 'Sucesso!',
         description: 'Entrega cadastrada com sucesso.',
@@ -196,6 +225,8 @@ export function useUpdateEntrega() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entregas'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-stats'] });
       toast({
         title: 'Sucesso!',
         description: 'Entrega atualizada com sucesso.',
@@ -273,6 +304,8 @@ export function useDeleteEntrega() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entregas'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-stats'] });
       toast({
         title: 'Sucesso!',
         description: 'Entrega excluída com sucesso.',
@@ -282,6 +315,39 @@ export function useDeleteEntrega() {
       toast({
         title: 'Erro',
         description: 'Falha ao excluir entrega.',
+        variant: 'destructive',
+      });
+    }
+  });
+}
+
+export function useDeleteEntregasBulk() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return { count: 0 };
+      const { error } = await supabase
+        .from('controle_entregas')
+        .delete()
+        .in('id', ids);
+
+      if (error) throw error;
+      return { count: ids.length };
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ['entregas'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-stats'] });
+      toast({
+        title: 'Sucesso!',
+        description: ids.length === 1 ? 'Entrega excluída.' : `${ids.length} entregas excluídas.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao excluir entregas.',
         variant: 'destructive',
       });
     }
