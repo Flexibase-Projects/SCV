@@ -1,6 +1,6 @@
 // Tipos literais para status
 export type StatusEntrega = 'PENDENTE' | 'EM ROTA' | 'CONCLUIDO' | 'CANCELADO';
-export type StatusMontagem = 'PENDENTE' | 'CONCLUIDO';
+export type StatusMontagem = 'PENDENTE' | 'EM_MONTAGEM' | 'MONTAGEM_PARCIAL' | 'CONCLUIDO';
 
 export interface Entrega {
   id: string;
@@ -70,10 +70,29 @@ export const TIPO_TRANSPORTE_OPTIONS = [
   'FROTA PROPRIA',
   'TERCEIRO',
   'CORREIOS',
-  'TRANSPORTADORA'
+  'TRANSPORTADORA',
+  'RETIRADA_PELO_CLIENTE',
 ];
 
 export const STATUS_MONTAGEM_OPTIONS: StatusMontagem[] = [
   'PENDENTE',
-  'CONCLUIDO'
+  'EM_MONTAGEM',
+  'MONTAGEM_PARCIAL',
+  'CONCLUIDO',
 ];
+
+/** Rótulos amigáveis para exibição (valor técnico -> label) */
+export const STATUS_MONTAGEM_LABELS: Record<StatusMontagem, string> = {
+  PENDENTE: 'Pendente',
+  EM_MONTAGEM: 'Em montagem',
+  MONTAGEM_PARCIAL: 'Montagem parcial',
+  CONCLUIDO: 'Concluído',
+};
+
+export const TIPO_TRANSPORTE_LABELS: Record<string, string> = {
+  'FROTA PROPRIA': 'Frota própria',
+  'TERCEIRO': 'Terceiro',
+  'CORREIOS': 'Correios',
+  'TRANSPORTADORA': 'Transportadora',
+  'RETIRADA_PELO_CLIENTE': 'Retirada pelo cliente',
+};

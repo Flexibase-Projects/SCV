@@ -29,7 +29,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Entrega, ESTADOS_BRASILEIROS, STATUS_OPTIONS, TIPO_TRANSPORTE_OPTIONS } from '@/types/entrega';
+import { Entrega, ESTADOS_BRASILEIROS, STATUS_OPTIONS, TIPO_TRANSPORTE_OPTIONS, STATUS_MONTAGEM_OPTIONS, STATUS_MONTAGEM_LABELS, TIPO_TRANSPORTE_LABELS } from '@/types/entrega';
 import { useMotoristas } from '@/hooks/useMotoristas';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import { useMontadores } from '@/hooks/useMontadores';
@@ -46,7 +46,7 @@ const formSchema = z.object({
   tipo_transporte: z.string().optional(),
   status: z.string().optional(),
   precisa_montagem: z.boolean().optional(),
-  status_montagem: z.enum(['PENDENTE', 'CONCLUIDO']).optional(),
+  status_montagem: z.enum(['PENDENTE', 'EM_MONTAGEM', 'MONTAGEM_PARCIAL', 'CONCLUIDO']).optional(),
   data_montagem: z.date().optional(),
   montadores: z.string().optional(),
   gastos_entrega: z.coerce.number().min(0).optional(),
@@ -169,18 +169,17 @@ export function EntregaFormModal({
 
   useEffect(() => {
     if (!precisaMontagem) {
-      // Se não precisa montagem, limpar status
       form.setValue('status_montagem', undefined);
       return;
     }
-
-    // Se precisa montagem e tem data → CONCLUIDO
     if (dataMontagem) {
       form.setValue('status_montagem', 'CONCLUIDO');
-    } 
-    // Se precisa montagem mas não tem data → PENDENTE
-    else if (precisaMontagem && !dataMontagem) {
-      form.setValue('status_montagem', 'PENDENTE');
+    } else if (precisaMontagem && !dataMontagem) {
+      // Só define PENDENTE se ainda não for um status manual (Em montagem / Montagem parcial)
+      const current = form.getValues('status_montagem');
+      if (current !== 'EM_MONTAGEM' && current !== 'MONTAGEM_PARCIAL') {
+        form.setValue('status_montagem', 'PENDENTE');
+      }
     }
   }, [precisaMontagem, dataMontagem, form]);
 
@@ -445,7 +444,9 @@ export function EntregaFormModal({
                         </FormControl>
                         <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
                           {TIPO_TRANSPORTE_OPTIONS.map((tipo) => (
-                            <SelectItem key={tipo} value={tipo} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">{tipo}</SelectItem>
+                            <SelectItem key={tipo} value={tipo} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">
+                              {TIPO_TRANSPORTE_LABELS[tipo] ?? tipo}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -529,8 +530,11 @@ export function EntregaFormModal({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
-                            <SelectItem value="PENDENTE" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">PENDENTE</SelectItem>
-                            <SelectItem value="CONCLUIDO" className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">CONCLUÍDO</SelectItem>
+                            {STATUS_MONTAGEM_OPTIONS.map((value) => (
+                              <SelectItem key={value} value={value} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">
+                                {STATUS_MONTAGEM_LABELS[value]}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />

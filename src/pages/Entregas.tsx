@@ -10,7 +10,7 @@ import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog'
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useMotoristasEntregas, useVeiculosEntregas } from '@/hooks/useEntregas';
-import { Entrega, EntregaFormData, StatusEntrega } from '@/types/entrega';
+import { Entrega, EntregaFormData, StatusEntrega, TIPO_TRANSPORTE_LABELS, STATUS_MONTAGEM_LABELS } from '@/types/entrega';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
 import { formatDateLocal } from '@/utils/dateUtils';
 import { SharedFilter } from '@/components/shared/SharedFilter';
@@ -214,12 +214,21 @@ const Entregas = () => {
     },
     { key: 'motorista', label: 'Motorista' },
     { key: 'carro', label: 'Veículo' },
-    { key: 'tipo_transporte', label: 'Tipo Transporte' },
+    {
+      key: 'tipo_transporte',
+      label: 'Tipo Transporte',
+      render: (value) => (value && TIPO_TRANSPORTE_LABELS[value]) ? TIPO_TRANSPORTE_LABELS[value] : (value || '-')
+    },
     // Montagem
     {
       key: 'precisa_montagem',
       label: 'Precisa Montagem',
       render: (value) => value ? 'SIM' : 'NÃO'
+    },
+    {
+      key: 'status_montagem',
+      label: 'Status Montagem',
+      render: (value) => (value && STATUS_MONTAGEM_LABELS[value as keyof typeof STATUS_MONTAGEM_LABELS]) ? STATUS_MONTAGEM_LABELS[value as keyof typeof STATUS_MONTAGEM_LABELS] : (value || '-')
     },
     {
       key: 'data_montagem',

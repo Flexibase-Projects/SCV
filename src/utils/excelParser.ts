@@ -32,7 +32,7 @@ export interface ParsedEntregaRow {
   tipo_transporte: string | null;
   status: StatusEntrega | null;
   precisa_montagem: boolean | null;
-  status_montagem: 'PENDENTE' | 'CONCLUIDO' | null;
+  status_montagem: 'PENDENTE' | 'EM_MONTAGEM' | 'MONTAGEM_PARCIAL' | 'CONCLUIDO' | null;
   data_montagem: string | null;
   montador_1: string | null;
   montador_2: string | null;
@@ -343,9 +343,12 @@ function processRow(
 
   // STATUS MONTAGEM: tentar múltiplas variações ou inferir de precisa_montagem e data_montagem
   const statusMontagemValue = findValueByVariations(row, ['status_montagem', 'status_mont', 'status_m', 'status_montagem_status']);
-  parsedRow.status_montagem = statusMontagemValue === 'CONCLUIDO' ? 'CONCLUIDO' : 
-                              (parsedRow.precisa_montagem && parsedRow.data_montagem) ? 'CONCLUIDO' :
-                              parsedRow.precisa_montagem ? 'PENDENTE' : null;
+  const normalized = typeof statusMontagemValue === 'string' ? statusMontagemValue.toUpperCase().replace(/\s/g, '_') : '';
+  const validStatusMontagem: Array<'PENDENTE' | 'EM_MONTAGEM' | 'MONTAGEM_PARCIAL' | 'CONCLUIDO'> = ['PENDENTE', 'EM_MONTAGEM', 'MONTAGEM_PARCIAL', 'CONCLUIDO'];
+  const fromSheet = validStatusMontagem.includes(normalized as typeof validStatusMontagem[number]) ? (normalized as typeof validStatusMontagem[number]) : null;
+  parsedRow.status_montagem = fromSheet ?? (statusMontagemValue === 'CONCLUIDO' ? 'CONCLUIDO' :
+    (parsedRow.precisa_montagem && parsedRow.data_montagem) ? 'CONCLUIDO' :
+    parsedRow.precisa_montagem ? 'PENDENTE' : null);
 
   // 3. Processar montadores (MONTADOR 1-7)
   const montadoresData = processMontadores(row);

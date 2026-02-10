@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { StatusBadge } from './StatusBadge';
 import type { VirtualDataTableColumnMeta } from '@/components/shared/virtualDataTableTypes';
 import type { Entrega } from '@/types/entrega';
+import { STATUS_MONTAGEM_LABELS, TIPO_TRANSPORTE_LABELS } from '@/types/entrega';
 
 function formatCurrency(value: number | null) {
   if (value === null || value === undefined) return '-';
@@ -126,11 +127,15 @@ export function getEntregaColumns(
       enableColumnFilter: true,
       filterFn: 'includesString',
       meta: { width: '150px', align: 'left', hideOnMobile: true } as VirtualDataTableColumnMeta,
-      cell: ({ getValue }) => (
-        <span className="text-sm text-foreground whitespace-nowrap" title={(getValue() as string) || undefined}>
-          {(getValue() as string) || '-'}
-        </span>
-      ),
+      cell: ({ getValue }) => {
+        const v = getValue() as string | null;
+        const label = v ? (TIPO_TRANSPORTE_LABELS[v] ?? v) : '-';
+        return (
+          <span className="text-sm text-foreground whitespace-nowrap" title={v ?? undefined}>
+            {label}
+          </span>
+        );
+      },
     },
     {
       id: 'valor',
@@ -157,24 +162,29 @@ export function getEntregaColumns(
     },
     {
       id: 'montagem',
-      accessorFn: (row) => row.precisa_montagem
-        ? (row.status_montagem === 'CONCLUIDO' ? 'Concluído' : 'Pendente')
+      accessorFn: (row) => row.precisa_montagem && row.status_montagem
+        ? (STATUS_MONTAGEM_LABELS[row.status_montagem as keyof typeof STATUS_MONTAGEM_LABELS] ?? row.status_montagem)
         : '-',
       header: 'Montagem',
       enableSorting: true,
       enableColumnFilter: true,
       filterFn: 'includesString',
-      meta: { width: '112px', align: 'left', hideOnMobile: true } as VirtualDataTableColumnMeta,
+      meta: { width: '130px', align: 'left', hideOnMobile: true } as VirtualDataTableColumnMeta,
       cell: ({ row }) => {
         const e = row.original;
         if (!e.precisa_montagem) return <span className="text-muted-foreground">-</span>;
-        return e.status_montagem === 'CONCLUIDO' ? (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-xs font-medium whitespace-nowrap">
-            Concluído
-          </span>
-        ) : (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-xs font-medium whitespace-nowrap">
-            Pendente
+        const status = e.status_montagem;
+        const label = status ? (STATUS_MONTAGEM_LABELS[status as keyof typeof STATUS_MONTAGEM_LABELS] ?? status) : '-';
+        const isConcluido = status === 'CONCLUIDO';
+        const isEmAndamento = status === 'EM_MONTAGEM' || status === 'MONTAGEM_PARCIAL';
+        const variantClass = isConcluido
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+          : isEmAndamento
+            ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20'
+            : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20';
+        return (
+          <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full border text-xs font-medium whitespace-nowrap', variantClass)}>
+            {label}
           </span>
         );
       },

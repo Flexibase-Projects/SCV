@@ -164,6 +164,7 @@ export function ExcelImporter({ onImportComplete }: ExcelImporterProps) {
         tipo_transporte: row.tipo_transporte || '',
         status: row.status || 'PENDENTE',
         precisa_montagem: row.precisa_montagem ?? false,
+        status_montagem: row.status_montagem ?? (row.precisa_montagem && row.data_montagem ? 'CONCLUIDO' : row.precisa_montagem ? 'PENDENTE' : null),
         data_montagem: row.data_montagem || '',
         montador_1: row.montador_1 || '',
         montador_2: row.montador_2 || '',

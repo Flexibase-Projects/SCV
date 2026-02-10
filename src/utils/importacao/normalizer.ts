@@ -212,6 +212,20 @@ export function normalizeStatus(value: any): string | null {
   return mappings[status] || status;
 }
 
+const STATUS_MONTAGEM_VALIDOS = ['PENDENTE', 'EM_MONTAGEM', 'MONTAGEM_PARCIAL', 'CONCLUIDO'] as const;
+export type StatusMontagemNormalized = (typeof STATUS_MONTAGEM_VALIDOS)[number] | null;
+
+/**
+ * Normaliza status de montagem (PENDENTE, EM_MONTAGEM, MONTAGEM_PARCIAL, CONCLUIDO)
+ */
+export function normalizeStatusMontagem(value: any): StatusMontagemNormalized {
+  if (value === null || value === undefined || value === '') return null;
+  const normalized = String(value).trim().toUpperCase().replace(/\s+/g, '_');
+  return STATUS_MONTAGEM_VALIDOS.includes(normalized as (typeof STATUS_MONTAGEM_VALIDOS)[number])
+    ? (normalized as (typeof STATUS_MONTAGEM_VALIDOS)[number])
+    : null;
+}
+
 /**
  * Normaliza produto de abastecimento
  */
@@ -289,6 +303,7 @@ export function normalizeRow(row: Record<string, any>, type: ImportType): Record
       normalized.carro = normalizePlaca(row.carro);
       normalized.precisa_montagem = normalizeBoolean(row.precisa_montagem);
       normalized.data_montagem = normalizeDate(row.data_montagem);
+      normalized.status_montagem = normalizeStatusMontagem(row.status_montagem);
       normalized.montador_1 = normalizeText(row.montador_1, { titleCase: true });
       normalized.montador_2 = normalizeText(row.montador_2, { titleCase: true });
       normalized.gastos_entrega = normalizeNumber(row.gastos_entrega);

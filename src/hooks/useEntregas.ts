@@ -3,16 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Entrega, EntregaFormData, StatusMontagem } from '@/types/entrega';
 import { toast } from '@/hooks/use-toast';
 
-// Select explícito sem status_montagem (migration 20260203) e sem updated_at (missing on server).
-// Count fica em requisição separada para evitar 400.
+// Select inclui status_montagem quando a migration 20260203 (e a de novos status) estiver aplicada.
 const ENTREGA_SELECT =
-  'id, pv_foco, nf, valor, cliente, uf, data_saida, motorista, carro, tipo_transporte, status, precisa_montagem, data_montagem, gastos_entrega, gastos_montagem, produtividade, erros, descricao_erros, montador_1, montador_2, percentual_gastos, created_at';
+  'id, pv_foco, nf, valor, cliente, uf, data_saida, motorista, carro, tipo_transporte, status, precisa_montagem, status_montagem, data_montagem, gastos_entrega, gastos_montagem, produtividade, erros, descricao_erros, montador_1, montador_2, percentual_gastos, created_at';
 
-// Helper para remover campos que não existem no banco (status_montagem, updated_at, etc.)
-// Isso garante compatibilidade com bancos onde as migrations mais recentes não foram rodadas.
+// Envia payload; status_montagem é persistido quando a migration estiver aplicada.
 function sanitizeEntregaPayload(data: Partial<EntregaFormData>) {
-  const { status_montagem, ...rest } = data;
-  return rest;
+  return { ...data };
 }
 
 export function useEntregas() {
