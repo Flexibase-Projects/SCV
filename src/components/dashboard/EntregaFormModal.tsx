@@ -152,6 +152,8 @@ export function EntregaFormModal({
         tipo_transporte: '',
         status: 'PENDENTE',
         precisa_montagem: false,
+        data_montagem: undefined,
+        status_montagem: undefined,
         montadores: '',
         gastos_entrega: 0,
         gastos_montagem: 0,
@@ -172,14 +174,15 @@ export function EntregaFormModal({
       form.setValue('status_montagem', undefined);
       return;
     }
+    // Só preencher automaticamente quando o usuário ainda não escolheu um status
+    const current = form.getValues('status_montagem');
+    if (current !== undefined && current !== null && current !== '') {
+      return;
+    }
     if (dataMontagem) {
       form.setValue('status_montagem', 'CONCLUIDO');
-    } else if (precisaMontagem && !dataMontagem) {
-      // Só define PENDENTE se ainda não for um status manual (Em montagem / Montagem parcial)
-      const current = form.getValues('status_montagem');
-      if (current !== 'EM_MONTAGEM' && current !== 'MONTAGEM_PARCIAL') {
-        form.setValue('status_montagem', 'PENDENTE');
-      }
+    } else {
+      form.setValue('status_montagem', 'PENDENTE');
     }
   }, [precisaMontagem, dataMontagem, form]);
 
