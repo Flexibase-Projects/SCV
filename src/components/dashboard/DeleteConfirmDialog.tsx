@@ -16,7 +16,9 @@ interface DeleteConfirmDialogProps {
   isLoading: boolean;
   clienteName?: string;
   title?: string;
-  description?: string;
+  description?: React.ReactNode;
+  confirmLabel?: string;
+  loadingLabel?: string;
 }
 
 export function DeleteConfirmDialog({
@@ -26,7 +28,9 @@ export function DeleteConfirmDialog({
   isLoading,
   clienteName,
   title,
-  description
+  description,
+  confirmLabel = 'Confirmar Exclusão',
+  loadingLabel = 'Excluindo...'
 }: DeleteConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -57,7 +61,7 @@ export function DeleteConfirmDialog({
             disabled={isLoading}
             className="rounded-xl bg-red-600 hover:bg-red-700 text-white border-2 border-red-600 font-bold uppercase tracking-wider h-12 px-6 shadow-none hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(220,38,38,0.4)] transition-all duration-200"
           >
-            {isLoading ? 'Excluindo...' : 'Confirmar Exclusão'}
+            {isLoading ? loadingLabel : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

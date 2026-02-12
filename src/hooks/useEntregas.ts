@@ -353,3 +353,36 @@ export function useDeleteEntregasBulk() {
     }
   });
 }
+
+export function useClearDataMontagemBulk() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (ids.length === 0) return { count: 0 };
+      const { error } = await supabase
+        .from('controle_entregas')
+        .update({ data_montagem: null })
+        .in('id', ids);
+
+      if (error) throw error;
+      return { count: ids.length };
+    },
+    onSuccess: (_, ids) => {
+      queryClient.invalidateQueries({ queryKey: ['entregas'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['entregas-stats'] });
+      toast({
+        title: 'Sucesso!',
+        description: ids.length === 1 ? 'Data de montagem limpa.' : `Data de montagem limpa em ${ids.length} entregas.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao limpar data de montagem.',
+        variant: 'destructive',
+      });
+    }
+  });
+}

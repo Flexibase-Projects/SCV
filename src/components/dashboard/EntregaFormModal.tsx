@@ -100,6 +100,7 @@ export function EntregaFormModal({
       tipo_transporte: '',
       status: 'PENDENTE',
       precisa_montagem: false,
+      data_montagem: undefined,
       status_montagem: undefined,
       montadores: '',
       gastos_entrega: 0,
@@ -477,7 +478,10 @@ export function EntregaFormModal({
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            if (checked) form.setValue('data_montagem', undefined);
+                          }}
                           className="data-[state=checked]:bg-emerald-500 dark:data-[state=checked]:bg-emerald-500"
                         />
                       </FormControl>
@@ -490,31 +494,46 @@ export function EntregaFormModal({
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel className={labelClasses}>Data de Montagem</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                inputClasses,
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? format(field.value, "dd/MM/yyyy") : "SELECIONE"}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            className="pointer-events-auto rounded-lg"
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <div className="flex items-center gap-2">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  inputClasses,
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? format(field.value, "dd/MM/yyyy") : "SELECIONE"}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              className="pointer-events-auto rounded-lg"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        {field.value && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => field.onChange(undefined)}
+                            className="text-muted-foreground hover:text-destructive shrink-0 h-10"
+                            title="Limpar data"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Limpar
+                          </Button>
+                        )}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

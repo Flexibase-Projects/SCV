@@ -9,7 +9,7 @@ import { EntregaFormModal } from '@/components/dashboard/EntregaFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
 import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useDeleteEntregasBulk, useMotoristasEntregas, useVeiculosEntregas, type DateFieldFilter } from '@/hooks/useEntregas';
+import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useDeleteEntregasBulk, useClearDataMontagemBulk, useMotoristasEntregas, useVeiculosEntregas, type DateFieldFilter } from '@/hooks/useEntregas';
 import { Entrega, EntregaFormData, StatusEntrega, TIPO_TRANSPORTE_LABELS, STATUS_MONTAGEM_LABELS } from '@/types/entrega';
 import { format } from 'date-fns';
 import { formatDateLocal } from '@/utils/dateUtils';
@@ -95,6 +95,7 @@ const Entregas = () => {
   const updateEntrega = useUpdateEntrega();
   const deleteEntrega = useDeleteEntrega();
   const deleteBulk = useDeleteEntregasBulk();
+  const clearDataMontagemBulk = useClearDataMontagemBulk();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEntrega, setSelectedEntrega] = useState<Entrega | null>(null);
@@ -102,6 +103,7 @@ const Entregas = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [entregaToDelete, setEntregaToDelete] = useState<Entrega | null>(null);
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isClearDataMontagemDialogOpen, setIsClearDataMontagemDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
@@ -310,6 +312,17 @@ const Entregas = () => {
     });
   };
 
+  const handleConfirmClearDataMontagem = () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    clearDataMontagemBulk.mutate(ids, {
+      onSuccess: () => {
+        setSelectedIds(new Set());
+        setIsClearDataMontagemDialogOpen(false);
+      }
+    });
+  };
+
   const handleConfirmDelete = () => {
     if (entregaToDelete) {
       deleteEntrega.mutate(entregaToDelete.id, {
@@ -429,14 +442,24 @@ const Entregas = () => {
                         placeholder="Buscar por cliente, PV Foco, NF ou motorista..."
                       />
                       {selectedIds.size > 0 && (
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsBulkDeleteDialogOpen(true)}
-                          className="gap-2 rounded-lg border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/50 text-red-700 dark:text-red-400 font-medium text-sm h-10"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                          Excluir selecionados ({selectedIds.size})
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsClearDataMontagemDialogOpen(true)}
+                            className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                          >
+                            <CalendarIcon className="h-4 w-4" />
+                            Limpar data de montagem ({selectedIds.size})
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsBulkDeleteDialogOpen(true)}
+                            className="gap-2 rounded-lg border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/50 text-red-700 dark:text-red-400 font-medium text-sm h-10"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                            Excluir selecionados ({selectedIds.size})
+                          </Button>
+                        </>
                       )}
                       <Button
                         variant="outline"
@@ -719,6 +742,19 @@ const Entregas = () => {
               </span>
             </>
           }
+        />
+
+        <DeleteConfirmDialog
+          open={isClearDataMontagemDialogOpen}
+          onOpenChange={setIsClearDataMontagemDialogOpen}
+          onConfirm={handleConfirmClearDataMontagem}
+          isLoading={clearDataMontagemBulk.isPending}
+          title="Limpar data de montagem"
+          description={
+            <>Limpar a data de montagem das <strong>{selectedIds.size}</strong> entrega(s) selecionadas?</>
+          }
+          confirmLabel="Limpar data de montagem"
+          loadingLabel="Limpando..."
         />
 
         <TablePrintModal
