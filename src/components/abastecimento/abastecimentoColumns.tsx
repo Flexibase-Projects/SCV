@@ -158,7 +158,7 @@ export function getAbastecimentoColumns(
       meta: { width: '88px', align: 'right', hideOnMobile: false } as VirtualDataTableColumnMeta,
       cell: ({ getValue }) => (
         <span className="text-sm text-foreground whitespace-nowrap block">
-          {(getValue() as number)?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0'}
+          {(getValue() as number)?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) ?? '0'}
         </span>
       ),
     },
@@ -171,27 +171,12 @@ export function getAbastecimentoColumns(
       meta: { width: '100px', align: 'left', hideOnMobile: true } as VirtualDataTableColumnMeta,
       cell: ({ row }) => {
         const kmPorLitro = row.original.km_por_litro;
+        const valorExibir = kmPorLitro != null ? kmPorLitro : 0;
         return (
           <div className="overflow-hidden">
-            {kmPorLitro != null ? (
-              <Badge variant="outline" className="text-xs whitespace-nowrap">
-                {kmPorLitro.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/l
-              </Badge>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge variant="outline" className="border-amber-500 text-amber-600 cursor-help text-xs">
-                      N/A
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="font-semibold mb-1">KM/L não pode ser calculado</p>
-                    <p className="text-xs">Possíveis motivos: primeiro abastecimento; KM igual ou menor que o anterior; múltiplos abastecimentos no mesmo dia.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            <Badge variant="outline" className="text-xs whitespace-nowrap">
+              {valorExibir.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/l
+            </Badge>
           </div>
         );
       },

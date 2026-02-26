@@ -278,12 +278,12 @@ const AbastecimentoPage = () => {
     {
       key: 'litros',
       label: 'Litros',
-      render: (value) => value ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '0'
+      render: (value) => value ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '0'
     },
     {
       key: 'km_por_litro',
       label: 'KM/L',
-      render: (value) => value ? `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} km/l` : 'N/A'
+      render: (value) => value != null ? `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} km/l` : '0,00 km/l'
     },
     { key: 'produto', label: 'Produto' },
     {
@@ -349,7 +349,7 @@ const AbastecimentoPage = () => {
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L
+                  {totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} L
                 </p>
                 <p className="text-xs text-gray-400 mt-1">combustível consumido</p>
               </CardContent>
@@ -366,7 +366,7 @@ const AbastecimentoPage = () => {
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {mediaConsumo > 0
                     ? `${mediaConsumo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/l`
-                    : 'N/A'}
+                    : '0,00 km/l'}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
                   {abastecimentosComKmPorLitro.length > 0
