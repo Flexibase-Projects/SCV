@@ -2,34 +2,31 @@ import * as React from "react";
 import CurrencyInputField from "react-currency-input-field";
 import { cn } from "@/lib/utils";
 
-interface CurrencyInputProps {
+interface QuantityInputProps {
   value?: number | string;
   onValueChange?: (value: number | undefined) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
-  prefix?: string;
   decimalsLimit?: number;
 }
 
-const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
-  ({ className, value, onValueChange, placeholder = "0,00", prefix = "", decimalsLimit = 2, disabled, ...props }, ref) => {
-    // Usa estado local para permitir digitação livre sem sobrescrever valores parciais
+const QuantityInput = React.forwardRef<HTMLInputElement, QuantityInputProps>(
+  ({ className, value, onValueChange, placeholder = "0", decimalsLimit = 4, disabled, ...props }, ref) => {
     const [localValue, setLocalValue] = React.useState<string>('');
     const isUserTyping = React.useRef(false);
     const isFocused = React.useRef(false);
 
-    // Sincroniza valor externo quando:
-    // 1. O campo está desabilitado (valor calculado)
-    // 2. O usuário não está digitando
-    // 3. O campo não está focado
     React.useEffect(() => {
       const shouldSync = disabled || (!isUserTyping.current && !isFocused.current);
-      
+
       if (shouldSync && value !== undefined && value !== null) {
-        // Verifica se é um número válido antes de formatar
         if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
-          const formatted = value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: decimalsLimit });
+          const formatted = value.toLocaleString('pt-BR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: decimalsLimit,
+            useGrouping: false,
+          });
           setLocalValue(formatted);
         } else if (typeof value === 'string' && value !== 'NaN') {
           setLocalValue(value);
@@ -55,66 +52,59 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
         }}
         onValueChange={(stringValue, _, values) => {
           if (disabled) return;
-          
+
           isUserTyping.current = true;
-          
-          // Atualiza o valor local imediatamente (permite digitar vírgula)
           setLocalValue(stringValue || '');
-          
-          // Se o valor está vazio, retorna undefined
+
           if (!stringValue || stringValue.trim() === '') {
             onValueChange?.(undefined);
-            // Reset typing flag após um pequeno delay
             setTimeout(() => { isUserTyping.current = false; }, 100);
             return;
           }
-          
-          // Verifica se o usuário ainda está digitando (valor termina com vírgula)
+
           if (stringValue.endsWith(',') || stringValue.endsWith('.')) {
-            // Não atualiza o form ainda - deixa o usuário continuar digitando
             setTimeout(() => { isUserTyping.current = false; }, 100);
             return;
           }
-          
-          // Usa o floatValue da biblioteca
+
           const floatValue = values?.float;
-          
           if (floatValue !== undefined && floatValue !== null && !isNaN(floatValue)) {
             onValueChange?.(floatValue);
           }
-          
-          // Reset typing flag após um pequeno delay
+
           setTimeout(() => { isUserTyping.current = false; }, 100);
         }}
         onBlur={() => {
-          // Quando perde o foco, garante que o valor é sincronizado
           isUserTyping.current = false;
           isFocused.current = false;
-          
-          // Força a sincronização com o valor externo
+
           if (value !== undefined && value !== null) {
             if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
-              const formatted = value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: decimalsLimit });
+              const formatted = value.toLocaleString('pt-BR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: decimalsLimit,
+                useGrouping: false,
+              });
               setLocalValue(formatted);
             } else if (typeof value === 'string' && value !== 'NaN') {
-              setLocalValue(value);
+              setLocalValue(value as string);
             } else {
               setLocalValue('');
             }
           }
         }}
         placeholder={placeholder}
-        prefix={prefix}
         decimalsLimit={decimalsLimit}
         decimalSeparator=","
-        groupSeparator="."
+        disableGroupSeparators={true}
         allowNegativeValue={false}
+        transformRawValue={(raw) => (raw || '').replace('.', ',')}
         {...props}
       />
     );
   }
 );
 
-CurrencyInput.displayName = "CurrencyInput";
+QuantityInput.displayName = "QuantityInput";
 
-export { CurrencyInput };
+export { QuantityInput };

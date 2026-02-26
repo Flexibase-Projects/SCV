@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { QuantityInput } from '@/components/ui/quantity-input';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -29,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { Abastecimento, PRODUTOS_ABASTECIMENTO, ESTADOS_BRASILEIROS, AbastecimentoFormData } from '@/types/abastecimento';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import { useCondutores } from '@/hooks/useCondutores';
+import { computeSafeValorTotal } from '@/utils/abastecimentoFormUtils';
 
 const formSchema = z.object({
   data: z.date({ required_error: 'Data é obrigatória' }),
@@ -112,29 +114,12 @@ export function AbastecimentoFormModal({
     }
   }, [abastecimento, form]);
 
-  // Auto-cálculo de valor_total baseado em valor_unitario e litros
   const valorUnitario = form.watch('valor_unitario');
   const litros = form.watch('litros');
 
-  // Calcula valor_total automaticamente quando valor_unitario ou litros mudam
   useEffect(() => {
-    // Só calcula se ambos os valores são válidos
-    if (valorUnitario === undefined || litros === undefined) {
-      return;
-    }
-    
-    const numValorUnitario = typeof valorUnitario === 'number' && !isNaN(valorUnitario) && isFinite(valorUnitario) ? valorUnitario : 0;
-    const numLitros = typeof litros === 'number' && !isNaN(litros) && isFinite(litros) ? litros : 0;
-    
-    // Calcula o total
-    const total = numValorUnitario * numLitros;
-    
-    // Só atualiza se o resultado for um número válido
-    if (!isNaN(total) && isFinite(total)) {
-      form.setValue('valor_total', Number(total.toFixed(2)), { shouldValidate: false });
-    } else {
-      form.setValue('valor_total', 0, { shouldValidate: false });
-    }
+    const safeTotal = computeSafeValorTotal(valorUnitario, litros);
+    form.setValue('valor_total', safeTotal, { shouldValidate: false });
   }, [valorUnitario, litros, form]);
 
   const handleSubmit = (data: FormData) => {
@@ -149,7 +134,7 @@ export function AbastecimentoFormModal({
       litros: data.litros,
       produto: data.produto,
       valor_unitario: data.valor_unitario,
-      valor_total: data.valor_total,
+      valor_total: (Number.isFinite(Number(data.valor_total)) ? Number(data.valor_total) : 0),
     };
     
     onSubmit(formattedData);
@@ -350,11 +335,11 @@ export function AbastecimentoFormModal({
                   <FormItem>
                     <FormLabel>Litros *</FormLabel>
                     <FormControl>
-                      <CurrencyInput
+                      <QuantityInput
                         value={field.value}
                         onValueChange={field.onChange}
                         className="bg-background border-border"
-                        placeholder="0,00"
+                        placeholder="0,0000"
                         decimalsLimit={4}
                       />
                     </FormControl>

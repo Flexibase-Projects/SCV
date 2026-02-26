@@ -202,11 +202,15 @@ export function getAbastecimentoColumns(
       enableSorting: true,
       enableColumnFilter: false,
       meta: { width: '108px', align: 'right', hideOnMobile: true } as VirtualDataTableColumnMeta,
-      cell: ({ getValue }) => (
-        <span className="text-sm text-foreground whitespace-nowrap block">
-          R$ {(getValue() as number)?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0,00'}
-        </span>
-      ),
+      cell: ({ getValue }) => {
+        const v = getValue() as number;
+        const valorExibir = typeof v === 'number' && Number.isFinite(v) ? v : 0;
+        return (
+          <span className="text-sm text-foreground whitespace-nowrap block">
+            R$ {valorExibir.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        );
+      },
     },
     {
       id: 'valor_total',
@@ -215,11 +219,15 @@ export function getAbastecimentoColumns(
       enableSorting: true,
       enableColumnFilter: false,
       meta: { width: '108px', align: 'right', hideOnMobile: false } as VirtualDataTableColumnMeta,
-      cell: ({ getValue }) => (
-        <span className="text-sm font-medium text-foreground whitespace-nowrap block">
-          R$ {(getValue() as number)?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0,00'}
-        </span>
-      ),
+      cell: ({ getValue }) => {
+        const v = getValue() as number;
+        const valorExibir = typeof v === 'number' && Number.isFinite(v) ? v : 0;
+        return (
+          <span className="text-sm font-medium text-foreground whitespace-nowrap block">
+            R$ {valorExibir.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        );
+      },
     },
     {
       id: 'acoes',
