@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { getUltimoAbastecimento, calcularKmPorLitro, atualizarKmAtualVeiculo } from '@/hooks/useAbastecimentos';
+import { atualizarKmAtualVeiculo } from '@/hooks/useAbastecimentos';
 import { ValidationWarning } from './validators';
 import { Veiculo } from '@/types/veiculo';
 
@@ -862,7 +862,7 @@ export async function importAbastecimentos(
   });
 
   // ============================================================================
-  // STEP 7: IMPORTAR ABASTECIMENTOS COM CÁLCULO DE KM/L
+  // STEP 7: IMPORTAR ABASTECIMENTOS (KM/L calculado no banco pelo trigger)
   // ============================================================================
 
   onProgress({
@@ -875,45 +875,12 @@ export async function importAbastecimentos(
     message: 'Importando abastecimentos...',
   });
 
-  const ultimoKmPorVeiculo = new Map<string, number | null>();
-
   for (let i = 0; i < abastecimentosParaImportar.length; i += BATCH_SIZE) {
     const batch = abastecimentosParaImportar.slice(i, i + BATCH_SIZE);
-    const abastecimentosToInsert = [];
-
-    for (const abastecimento of batch) {
-      // Se não tem veiculo_id (registro com erro), não calcula KM/L
-      if (!abastecimento.veiculo_id) {
-        abastecimentosToInsert.push({
-          ...abastecimento,
-          km_por_litro: null,
-        });
-        continue;
-      }
-
-      if (!ultimoKmPorVeiculo.has(abastecimento.veiculo_id)) {
-        const ultimoAbastecimento = await getUltimoAbastecimento(abastecimento.veiculo_id);
-        ultimoKmPorVeiculo.set(
-          abastecimento.veiculo_id,
-          ultimoAbastecimento?.km_inicial || null
-        );
-      }
-
-      const kmAnterior = ultimoKmPorVeiculo.get(abastecimento.veiculo_id) || null;
-      const kmPorLitro = calcularKmPorLitro(
-        abastecimento.km_inicial,
-        kmAnterior,
-        abastecimento.litros,
-        false
-      );
-
-      abastecimentosToInsert.push({
-        ...abastecimento,
-        km_por_litro: kmPorLitro,
-      });
-
-      ultimoKmPorVeiculo.set(abastecimento.veiculo_id, abastecimento.km_inicial);
-    }
+    const abastecimentosToInsert = batch.map((abastecimento) => ({
+      ...abastecimento,
+      km_por_litro: null,
+    }));
 
     if (abastecimentosToInsert.length === 0) continue;
 

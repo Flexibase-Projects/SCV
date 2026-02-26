@@ -144,14 +144,14 @@ export function useCreateAbastecimento() {
 
   return useMutation({
     mutationFn: async (abastecimento: AbastecimentoFormData) => {
-      // Buscar último abastecimento do veículo para calcular KM/L
+      // Validação UX: avisar se KM é menor ou igual ao anterior (o cálculo em si é feito no banco pelo trigger)
       const ultimoAbastecimento = await getUltimoAbastecimento(abastecimento.veiculo_id);
-      const kmAnterior = ultimoAbastecimento?.km_inicial || null;
-      const kmPorLitro = calcularKmPorLitro(abastecimento.km_inicial, kmAnterior, abastecimento.litros);
+      const kmAnterior = ultimoAbastecimento?.km_inicial ?? null;
+      calcularKmPorLitro(abastecimento.km_inicial, kmAnterior, abastecimento.litros);
 
       const { data, error } = await supabase
         .from('abastecimentos')
-        .insert([{ ...abastecimento, km_por_litro: kmPorLitro }])
+        .insert([{ ...abastecimento, km_por_litro: null }])
         .select()
         .single();
 
@@ -186,14 +186,14 @@ export function useUpdateAbastecimento() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: AbastecimentoFormData }) => {
-      // Buscar último abastecimento do veículo (excluindo o atual) para calcular KM/L
+      // Validação UX: avisar se KM é menor ou igual ao anterior (o cálculo em si é feito no banco pelo trigger)
       const ultimoAbastecimento = await getUltimoAbastecimento(data.veiculo_id, id);
-      const kmAnterior = ultimoAbastecimento?.km_inicial || null;
-      const kmPorLitro = calcularKmPorLitro(data.km_inicial, kmAnterior, data.litros);
+      const kmAnterior = ultimoAbastecimento?.km_inicial ?? null;
+      calcularKmPorLitro(data.km_inicial, kmAnterior, data.litros);
 
       const { data: result, error } = await supabase
         .from('abastecimentos')
-        .update({ ...data, km_por_litro: kmPorLitro })
+        .update({ ...data, km_por_litro: null })
         .eq('id', id)
         .select()
         .single();
