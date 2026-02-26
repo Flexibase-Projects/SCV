@@ -55,10 +55,10 @@ export function TablePrintModal<T extends Record<string, any>>({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0 rounded-xl">
-        <DialogHeader className="p-6 pb-4 border-b shrink-0">
-          <DialogTitle className="flex items-center justify-between">
-            <span>Visualizar / Imprimir {title}</span>
-            <Button onClick={handlePrint} className="gap-2 rounded-xl">
+        <DialogHeader className="p-6 pb-4 pr-12 border-b shrink-0">
+          <DialogTitle className="flex items-center justify-between gap-4">
+            <span className="min-w-0 truncate">Visualizar / Imprimir {title}</span>
+            <Button onClick={handlePrint} className="gap-2 rounded-xl shrink-0">
               <Printer className="h-4 w-4" />
               Imprimir / PDF
             </Button>

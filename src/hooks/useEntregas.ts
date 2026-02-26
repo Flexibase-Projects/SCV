@@ -135,6 +135,40 @@ export function useEntregasPaginated({
   });
 }
 
+const PAGE_SIZE_YEAR = 1000;
+
+/** Busca todas as entregas de um ano por data_saida (paginação em loop para evitar limite do Supabase) */
+export function useEntregasByYear(year: number | null) {
+  return useQuery({
+    queryKey: ['entregas-by-year', year],
+    queryFn: async (): Promise<Entrega[]> => {
+      if (year == null) return [];
+      const dateFrom = `${year}-01-01`;
+      const dateTo = `${year}-12-31`;
+      const all: Entrega[] = [];
+      let from = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const to = from + PAGE_SIZE_YEAR - 1;
+        const { data, error } = await supabase
+          .from('controle_entregas')
+          .select(ENTREGA_SELECT)
+          .gte('data_saida', dateFrom)
+          .lte('data_saida', dateTo)
+          .order('data_saida', { ascending: true })
+          .range(from, to);
+        if (error) throw error;
+        const chunk = (data ?? []) as Entrega[];
+        all.push(...chunk);
+        hasMore = chunk.length === PAGE_SIZE_YEAR;
+        from += PAGE_SIZE_YEAR;
+      }
+      return all;
+    },
+    enabled: year != null && year >= 2000 && year <= 2100,
+  });
+}
+
 export function useEntregasStats({
   searchTerm,
   dateFrom,

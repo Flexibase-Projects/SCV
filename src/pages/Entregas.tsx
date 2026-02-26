@@ -7,10 +7,12 @@ import { solidCard } from '@/lib/cardStyles';
 import { EntregaTable } from '@/components/dashboard/EntregaTable';
 import { EntregaFormModal } from '@/components/dashboard/EntregaFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
-import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
+import { TablePrintModal } from '@/components/shared/TablePrintModal';
+import { EntregasAnoPrintModal } from '@/components/dashboard/EntregasAnoPrintModal';
+import { ENTREGAS_PRINT_COLUMNS } from '@/components/dashboard/entregasPrintColumns';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { useEntregasPaginated, useEntregasStats, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useDeleteEntregasBulk, useClearDataMontagemBulk, useMotoristasEntregas, useVeiculosEntregas, type DateFieldFilter } from '@/hooks/useEntregas';
-import { Entrega, EntregaFormData, StatusEntrega, TIPO_TRANSPORTE_LABELS, STATUS_MONTAGEM_LABELS } from '@/types/entrega';
+import { useEntregasPaginated, useEntregasStats, useEntregasByYear, useCreateEntrega, useUpdateEntrega, useDeleteEntrega, useDeleteEntregasBulk, useClearDataMontagemBulk, useMotoristasEntregas, useVeiculosEntregas, type DateFieldFilter } from '@/hooks/useEntregas';
+import { Entrega, EntregaFormData, StatusEntrega } from '@/types/entrega';
 import { format } from 'date-fns';
 import { formatDateLocal } from '@/utils/dateUtils';
 import { SharedFilter } from '@/components/shared/SharedFilter';
@@ -20,6 +22,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 const Entregas = () => {
@@ -106,6 +120,19 @@ const Entregas = () => {
   const [isClearDataMontagemDialogOpen, setIsClearDataMontagemDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isExportYearDialogOpen, setIsExportYearDialogOpen] = useState(false);
+  const [anoForExport, setAnoForExport] = useState<number | null>(null);
+  const [isAnoPrintModalOpen, setIsAnoPrintModalOpen] = useState(false);
+  const [exportYearSelect, setExportYearSelect] = useState(() => new Date().getFullYear());
+
+  const yearsForSelect = useMemo(() => {
+    const y = new Date().getFullYear();
+    return Array.from({ length: 10 }, (_, i) => y - i);
+  }, []);
+
+  const { data: entregasAno = [], isLoading: isLoadingAno } = useEntregasByYear(
+    isAnoPrintModalOpen ? anoForExport : null
+  );
 
   // Limpar filtros e seleção ao mudar de aba
   useEffect(() => {
@@ -130,97 +157,7 @@ const Entregas = () => {
   // Dados já filtrados no servidor
   const filteredEntregas = entregas;
 
-  // Configuração de colunas para impressão - TODOS os campos cadastrados
-  const printColumns: TableColumn<Entrega>[] = useMemo(() => [
-    // Dados do Pedido
-    { key: 'pv_foco', label: 'PV Foco' },
-    { key: 'nf', label: 'NF' },
-    { key: 'cliente', label: 'Cliente' },
-    { key: 'uf', label: 'UF' },
-    {
-      key: 'valor',
-      label: 'Valor',
-      render: (value) => value ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-',
-      className: 'text-right'
-    },
-    { key: 'status', label: 'Status' },
-    // Dados do Transporte
-    {
-      key: 'data_saida',
-      label: 'Data Saída',
-      render: (value) => {
-        if (!value) return '-';
-        // Parse string ISO (YYYY-MM-DD) diretamente sem conversão de timezone
-        const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (match) {
-          const [, year, month, day] = match;
-          return `${day}/${month}/${year}`;
-        }
-        return format(new Date(value + 'T12:00:00'), 'dd/MM/yyyy');
-      }
-    },
-    { key: 'motorista', label: 'Motorista' },
-    { key: 'carro', label: 'Veículo' },
-    {
-      key: 'tipo_transporte',
-      label: 'Tipo Transporte',
-      render: (value) => (value && TIPO_TRANSPORTE_LABELS[value]) ? TIPO_TRANSPORTE_LABELS[value] : (value || '-')
-    },
-    // Montagem
-    {
-      key: 'precisa_montagem',
-      label: 'Precisa Montagem',
-      render: (value) => value ? 'SIM' : 'NÃO'
-    },
-    {
-      key: 'status_montagem',
-      label: 'Status Montagem',
-      render: (value) => (value && STATUS_MONTAGEM_LABELS[value as keyof typeof STATUS_MONTAGEM_LABELS]) ? STATUS_MONTAGEM_LABELS[value as keyof typeof STATUS_MONTAGEM_LABELS] : (value || '-')
-    },
-    {
-      key: 'data_montagem',
-      label: 'Data Montagem',
-      render: (value) => {
-        if (!value) return '-';
-        // Parse string ISO (YYYY-MM-DD) diretamente sem conversão de timezone
-        const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
-        if (match) {
-          const [, year, month, day] = match;
-          return `${day}/${month}/${year}`;
-        }
-        return format(new Date(value + 'T12:00:00'), 'dd/MM/yyyy');
-      }
-    },
-    { key: 'montador_1', label: 'Montador 1' },
-    { key: 'montador_2', label: 'Montador 2' },
-    // Custos
-    {
-      key: 'gastos_entrega',
-      label: 'Gastos Entrega',
-      render: (value) => value ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-',
-      className: 'text-right'
-    },
-    {
-      key: 'gastos_montagem',
-      label: 'Gastos Montagem',
-      render: (value) => value ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '-',
-      className: 'text-right'
-    },
-    {
-      key: 'produtividade',
-      label: 'Produtividade',
-      render: (value) => value ? value.toString() : '-'
-    },
-    {
-      key: 'percentual_gastos',
-      label: '% Gastos',
-      render: (value) => value ? `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}%` : '-',
-      className: 'text-right'
-    },
-    // Observações
-    { key: 'erros', label: 'Erros' },
-    { key: 'descricao_erros', label: 'Descrição dos Erros' },
-  ], []);
+  const printColumns = ENTREGAS_PRINT_COLUMNS;
 
   // Texto descritivo dos filtros aplicados
   const filtersText = useMemo(() => {
@@ -461,14 +398,32 @@ const Entregas = () => {
                           </Button>
                         </>
                       )}
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsPrintModalOpen(true)}
-                        className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
-                      >
-                        <Printer className="h-4 w-4" />
-                        Imprimir / PDF
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                          >
+                            <Printer className="h-4 w-4" />
+                            Imprimir / PDF
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuItem
+                            onSelect={() => setIsPrintModalOpen(true)}
+                          >
+                            Imprimir página atual
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              setIsExportYearDialogOpen(true);
+                            }}
+                          >
+                            Exportar por ano
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </CardContent>
@@ -557,14 +512,32 @@ const Entregas = () => {
                       </Button>
                     )}
 
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsPrintModalOpen(true)}
-                      className="gap-2 ml-auto rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Imprimir / PDF
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="gap-2 ml-auto rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                        >
+                          <Printer className="h-4 w-4" />
+                          Imprimir / PDF
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem
+                          onSelect={() => setIsPrintModalOpen(true)}
+                        >
+                          Imprimir página atual
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setIsExportYearDialogOpen(true);
+                          }}
+                        >
+                          Exportar por ano
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
@@ -661,14 +634,32 @@ const Entregas = () => {
                       </Button>
                     )}
 
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsPrintModalOpen(true)}
-                      className="gap-2 ml-auto rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Imprimir / PDF
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="gap-2 ml-auto rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                        >
+                          <Printer className="h-4 w-4" />
+                          Imprimir / PDF
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem
+                          onSelect={() => setIsPrintModalOpen(true)}
+                        >
+                          Imprimir página atual
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            setIsExportYearDialogOpen(true);
+                          }}
+                        >
+                          Exportar por ano
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
@@ -766,6 +757,57 @@ const Entregas = () => {
           columns={printColumns}
           filters={filtersText}
         />
+
+        <Dialog open={isExportYearDialogOpen} onOpenChange={setIsExportYearDialogOpen}>
+          <DialogContent className="rounded-xl sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Exportar PDF por ano</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4 py-2">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Selecione o ano (por data de saída) e gere o PDF com todas as entregas agrupadas por mês.
+              </p>
+              <Select
+                value={String(exportYearSelect)}
+                onValueChange={(v) => setExportYearSelect(Number(v))}
+              >
+                <SelectTrigger className="w-full rounded-lg">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearsForSelect.map((y) => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                className="w-full rounded-lg bg-emerald-500 hover:bg-emerald-600"
+                onClick={() => {
+                  setAnoForExport(exportYearSelect);
+                  setIsAnoPrintModalOpen(true);
+                  setIsExportYearDialogOpen(false);
+                }}
+              >
+                Gerar PDF
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {anoForExport != null && (
+          <EntregasAnoPrintModal
+            isOpen={isAnoPrintModalOpen}
+            onClose={() => {
+              setIsAnoPrintModalOpen(false);
+              setAnoForExport(null);
+            }}
+            year={anoForExport}
+            entregas={entregasAno}
+            isLoading={isLoadingAno}
+          />
+        )}
         </div>
       </div>
     </ModuleLayout>
