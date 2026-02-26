@@ -1,4 +1,4 @@
-import { Search } from '@mui/icons-material';
+import { SearchOutlined as Search } from '@mui/icons-material';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { STATUS_OPTIONS } from '@/types/entrega';

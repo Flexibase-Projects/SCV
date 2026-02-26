@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Print as Printer } from '@mui/icons-material';
+import { PrintOutlined as Printer } from '@mui/icons-material';
 import { format } from 'date-fns';
 
 export interface TableColumn<T = any> {

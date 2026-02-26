@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Edit as Pencil, Delete as Trash2 } from '@mui/icons-material';
+import { EditOutlined as Pencil, DeleteOutlined as Trash2 } from '@mui/icons-material';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

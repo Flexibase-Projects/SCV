@@ -1,6 +1,6 @@
 import * as React from "react";
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react";
-import { ArrowBack as ArrowLeft, ArrowForward as ArrowRight } from "@mui/icons-material";
+import { ArrowBackOutlined as ArrowLeft, ArrowForwardOutlined as ArrowRight } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

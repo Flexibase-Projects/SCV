@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";
-import { ExpandMore as ChevronDown } from "@mui/icons-material";
+import { ExpandMoreOutlined as ChevronDown } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 

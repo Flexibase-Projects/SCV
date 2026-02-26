@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { ChevronLeftOutlined as ChevronLeft, ChevronRightOutlined as ChevronRight } from "@mui/icons-material";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";

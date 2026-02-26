@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  LocalShipping as Truck,
-  LocalGasStation as Fuel,
-  Build as Wrench,
-  Dashboard as LayoutDashboard,
-  AccountBalanceWallet as Wallet,
-  People as Users,
-  CloudUpload as Upload,
-  Assessment as FileBarChart,
-  Help as LifeBuoy,
-  Logout as LogOut,
-  ChevronLeft,
-  ChevronRight,
-  LightMode as Sun,
-  DarkMode as Moon
+  LocalShippingOutlined as Truck,
+  LocalGasStationOutlined as Fuel,
+  BuildOutlined as Wrench,
+  DashboardOutlined as LayoutDashboard,
+  AccountBalanceWalletOutlined as Wallet,
+  PeopleOutlined as Users,
+  CloudUploadOutlined as Upload,
+  AssessmentOutlined as FileBarChart,
+  HelpOutlined as LifeBuoy,
+  LogoutOutlined as LogOut,
+  ChevronLeftOutlined as ChevronLeft,
+  ChevronRightOutlined as ChevronRight,
+  LightModeOutlined as Sun,
+  DarkModeOutlined as Moon
 } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import {

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Add as Plus, Search, Description as FileText, Print as Printer } from '@mui/icons-material';
+import { AddOutlined as Plus, SearchOutlined as Search, DescriptionOutlined as FileText, PrintOutlined as Printer } from '@mui/icons-material';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -152,12 +152,9 @@ function sanitizeQuantity(value: any): number | null {
 
     let strValue = String(value).trim();
 
-    // Detectar formato brasileiro
-    if (/,\d{1,2}$/.test(strValue)) {
-        // Remove pontos de milhar (se existirem)
-        strValue = strValue.replace(/\./g, '');
-        // Substitui vírgula por ponto
-        strValue = strValue.replace(',', '.');
+    // Se contém vírgula, assumir formato brasileiro (vírgula = decimal, ponto = milhar)
+    if (strValue.includes(',')) {
+        strValue = strValue.replace(/\./g, '').replace(',', '.');
     }
 
     // Remover caracteres não numéricos exceto ponto e sinal negativo

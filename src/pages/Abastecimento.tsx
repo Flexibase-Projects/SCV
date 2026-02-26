@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Add as Plus, Speed as Gauge, Print as Printer, Description as FileText, WaterDrop as Droplet, AttachMoney as DollarSign, Person as User, DirectionsCar } from '@mui/icons-material';
+import { AddOutlined as Plus, SpeedOutlined as Gauge, PrintOutlined as Printer, DescriptionOutlined as FileText, WaterDropOutlined as Droplet, AttachMoneyOutlined as DollarSign, PersonOutlined as User, DirectionsCarOutlined as DirectionsCar } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,7 +25,7 @@ import {
 import { useMotoristas } from '@/hooks/useMotoristas';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import type { Abastecimento as AbastecimentoType, AbastecimentoFormData } from '@/types/abastecimento';
-import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
+import { CalendarMonthOutlined as CalendarIcon } from '@mui/icons-material';
 
 
 const ROWS_PER_PAGE = 100;

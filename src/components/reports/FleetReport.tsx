@@ -1,4 +1,4 @@
-import { LocalGasStation as Fuel, Build as Wrench, DirectionsCar as Car, LocationOn as MapPin } from '@mui/icons-material';
+import { LocalGasStationOutlined as Fuel, BuildOutlined as Wrench, DirectionsCarOutlined as Car, LocationOnOutlined as MapPin } from '@mui/icons-material';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { Check, ChevronRight, FiberManualRecord as Circle } from "@mui/icons-material";
+import { CheckOutlined as Check, ChevronRightOutlined, FiberManualRecordOutlined as Circle } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 

@@ -1,4 +1,4 @@
-import { LocalShipping as Truck, AttachMoney as DollarSign, TrendingUp, AccountBalanceWallet as Wallet } from '@mui/icons-material';
+import { LocalShippingOutlined as Truck, AttachMoneyOutlined as DollarSign, TrendingUpOutlined as TrendingUp, AccountBalanceWalletOutlined as Wallet } from '@mui/icons-material';
 import { Card, CardContent } from '@/components/ui/card';
 import { glassCard } from '@/lib/cardStyles';
 import { Entrega } from '@/types/entrega';

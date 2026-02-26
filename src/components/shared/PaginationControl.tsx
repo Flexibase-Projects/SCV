@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from '@mui/icons-material';
+import { ChevronLeftOutlined as ChevronLeft, ChevronRightOutlined as ChevronRight } from '@mui/icons-material';
 
 interface PaginationControlProps {
     currentPage: number;

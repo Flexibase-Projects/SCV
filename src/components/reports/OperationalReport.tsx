@@ -1,4 +1,4 @@
-import { Inventory2 as Package, LocationOn as MapPin } from '@mui/icons-material';
+import { Inventory2Outlined as Package, LocationOnOutlined as MapPin } from '@mui/icons-material';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Table,

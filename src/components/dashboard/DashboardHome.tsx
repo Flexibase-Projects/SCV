@@ -1,17 +1,17 @@
 import { useState, useMemo } from 'react';
 import {
-    LocalShipping as Truck,
-    Build as Wrench,
-    AttachMoney as DollarSign,
-    TrendingUp,
-    LocalGasStation as Fuel,
-    ArrowForward as ArrowRight,
-    CalendarToday as Calendar,
-    Add as Plus,
-    PersonAdd as UserPlus,
-    DirectionsCar as CarFront,
-    People as Users,
-    Timeline as Activity
+    LocalShippingOutlined as Truck,
+    BuildOutlined as Wrench,
+    AttachMoneyOutlined as DollarSign,
+    TrendingUpOutlined as TrendingUp,
+    LocalGasStationOutlined as Fuel,
+    ArrowForwardOutlined as ArrowRight,
+    CalendarTodayOutlined as Calendar,
+    AddOutlined as Plus,
+    PersonAddOutlined as UserPlus,
+    DirectionsCarOutlined as CarFront,
+    PeopleOutlined as Users,
+    TimelineOutlined as Activity
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -252,7 +252,8 @@ export function DashboardHome() {
         const totalValue = pending.reduce((acc, curr) => acc + (Number(curr.valor_adiantamento || 0)), 0);
         return {
             count: pending.length,
-            totalValue: totalValue
+            totalValue: totalValue,
+            items: pending
         };
     }, [acertosViagem]);
 
@@ -598,6 +599,26 @@ export function DashboardHome() {
                                     <p className="text-4xl font-bold mb-1">{formatCurrency(financialPending.totalValue)}</p>
                                     <p className="text-sm opacity-80">{financialPending.count} solicitações aguardando</p>
                                 </div>
+                                {financialPending.items.length > 0 && (
+                                    <div className="mb-4 space-y-2 max-h-[200px] overflow-y-auto">
+                                        {financialPending.items.map((a) => (
+                                            <div
+                                                key={a.id}
+                                                className="flex items-center justify-between gap-2 py-2 px-3 rounded-lg bg-white/10 text-left"
+                                            >
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium truncate">{a.destino ?? '—'}</p>
+                                                    <p className="text-xs opacity-80 truncate">
+                                                        {a.motorista_nome ?? a.montador_nome ?? '—'} · {formatDate(a.data_saida)}
+                                                    </p>
+                                                </div>
+                                                <span className="text-sm font-medium shrink-0">
+                                                    {formatCurrency(Number(a.valor_adiantamento || 0))}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                                 <Link to="/acerto-viagem">
                                     <Button className="w-full bg-white hover:bg-gray-100 text-brand-green font-medium transition-colors shadow-sm">
                                         Revisar Pendências

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Add as Plus, PersonAdd as UserCheck, PersonRemove as UserX, WarningAmber as AlertTriangle, FilterList as Filter } from '@mui/icons-material';
+import { AddOutlined as Plus, PersonAddOutlined as UserCheck, PersonRemoveOutlined as UserX, WarningAmberOutlined as AlertTriangle, FilterListOutlined as Filter } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {

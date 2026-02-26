@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { WarningAmber as AlertTriangle, CheckCircle as CheckCircle2, CloudUpload as Upload, TableChart as FileSpreadsheet, Close as X, Loop as Loader2 } from '@mui/icons-material';
+import { WarningAmberOutlined as AlertTriangle, CheckCircleOutlined as CheckCircle2, CloudUploadOutlined as Upload, TableChartOutlined as FileSpreadsheet, CloseOutlined as X, LoopOutlined as Loader2 } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import {
     Table,

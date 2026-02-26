@@ -1,4 +1,4 @@
-import { LocalShipping as Truck, People as Users, DirectionsCar as Car, Build as Wrench } from '@mui/icons-material';
+import { LocalShippingOutlined as Truck, PeopleOutlined as Users, DirectionsCarOutlined as Car, BuildOutlined as Wrench } from '@mui/icons-material';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MotoristasTab } from '@/components/cadastros/MotoristasTab';
 import { VeiculosTab } from '@/components/cadastros/VeiculosTab';

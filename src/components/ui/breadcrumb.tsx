@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { ChevronRight, MoreHoriz as MoreHorizontal } from "@mui/icons-material";
+import { ChevronRightOutlined as ChevronRight, MoreHorizOutlined as MoreHorizontal } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 

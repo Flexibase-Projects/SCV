@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeft, ChevronRight, MoreHoriz as MoreHorizontal } from "@mui/icons-material";
+import { ChevronLeftOutlined as ChevronLeft, ChevronRightOutlined as ChevronRight, MoreHorizOutlined as MoreHorizontal } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 import { ButtonProps, buttonVariants } from "@/components/ui/button";

@@ -9,7 +9,7 @@ import { FinancialOverview } from '@/components/reports/FinancialOverview';
 import { OperationalReport } from '@/components/reports/OperationalReport';
 import { FleetReport } from '@/components/reports/FleetReport';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dashboard as LayoutDashboard, LocalShipping as Truck, Build as Wrench } from '@mui/icons-material';
+import { DashboardOutlined as LayoutDashboard, LocalShippingOutlined as Truck, BuildOutlined as Wrench } from '@mui/icons-material';
 
 const ResumoGeral = () => {
   const currentDate = new Date();

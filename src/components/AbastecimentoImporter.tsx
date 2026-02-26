@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { WarningAmber as AlertTriangle, CheckCircle as CheckCircle2, CloudUpload as Upload, TableChart as FileSpreadsheet, Close as X } from '@mui/icons-material';
+import { WarningAmberOutlined as AlertTriangle, CheckCircleOutlined as CheckCircle2, CloudUploadOutlined as Upload, TableChartOutlined as FileSpreadsheet, CloseOutlined as X } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -484,7 +484,7 @@ export function AbastecimentoImporter({ onImportComplete }: AbastecimentoImporte
                         </TableCell>
                         <TableCell>
                           {row.litros !== null && row.litros !== undefined
-                            ? row.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            ? row.litros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
                             : <span className="text-gray-300">—</span>}
                         </TableCell>
                         <TableCell className="max-w-[120px] truncate">

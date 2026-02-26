@@ -1,6 +1,6 @@
 import * as React from "react";
 import { OTPInput, OTPInputContext } from "input-otp";
-import { FiberManualRecord as Dot } from "@mui/icons-material";
+import { FiberManualRecordOutlined as Dot } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 

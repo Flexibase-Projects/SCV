@@ -32,7 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Search, LocalGasStation as Fuel, Link, Warning as AlertTriangle } from '@mui/icons-material';
+import { SearchOutlined, LocalGasStationOutlined as Fuel, LinkOutlined as Link, WarningOutlined as AlertTriangle } from '@mui/icons-material';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import { useMotoristas } from '@/hooks/useMotoristas';
 import { 

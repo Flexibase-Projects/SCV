@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Add as Plus, DirectionsCar as Car, Cancel as XCircle } from '@mui/icons-material';
+import { AddOutlined as Plus, DirectionsCarOutlined as Car, CancelOutlined as XCircle } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {

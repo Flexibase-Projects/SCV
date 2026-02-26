@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
-import { ExpandMore as ChevronDown } from "@mui/icons-material";
+import { ExpandMoreOutlined as ChevronDown } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 

@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { WarningAmber as AlertTriangle, CheckCircle as CheckCircle2, CloudUpload as Upload, TableChart as FileSpreadsheet, Close as X, Loop as Loader2 } from '@mui/icons-material';
+import { WarningAmberOutlined as AlertTriangle, CheckCircleOutlined as CheckCircle2, CloudUploadOutlined as Upload, TableChartOutlined as FileSpreadsheet, CloseOutlined as X, LoopOutlined as Loader2 } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -460,7 +460,7 @@ export function AbastecimentoUnifiedImporter({ onImportComplete }: Abastecimento
                                                     {row.uf || <span className="text-gray-300">—</span>}
                                                 </TableCell>
                                                 <TableCell>{formatNumber(row.km_inicial, 0)}</TableCell>
-                                                <TableCell>{formatNumber(row.litros)}</TableCell>
+                                                <TableCell>{formatNumber(row.litros, 4)}</TableCell>
                                                 <TableCell className="max-w-[120px] truncate">
                                                     {row.produto || <span className="text-gray-300">—</span>}
                                                 </TableCell>

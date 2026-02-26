@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Edit, Delete as Trash2, Print as Printer, MoreHoriz as MoreHorizontal } from '@mui/icons-material';
+import { EditOutlined as Edit, DeleteOutlined as Trash2, PrintOutlined as Printer, MoreHorizOutlined as MoreHorizontal } from '@mui/icons-material';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

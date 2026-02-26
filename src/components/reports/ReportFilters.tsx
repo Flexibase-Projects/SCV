@@ -1,4 +1,4 @@
-import { Print as Printer, CalendarToday as Calendar } from '@mui/icons-material';
+import { PrintOutlined as Printer, CalendarTodayOutlined as Calendar } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {

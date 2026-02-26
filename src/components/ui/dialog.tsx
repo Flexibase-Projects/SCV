@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Close as X } from "@mui/icons-material";
+import { CloseOutlined as X } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 

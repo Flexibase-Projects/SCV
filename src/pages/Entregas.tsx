@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Add as Plus, Print as Printer, Delete as TrashIcon, Description as FileText, Person as User, DirectionsCar, CalendarMonth as CalendarIcon } from '@mui/icons-material';
+import { AddOutlined as Plus, PrintOutlined as Printer, DeleteOutlined as TrashIcon, DescriptionOutlined as FileText, PersonOutlined as User, DirectionsCarOutlined as DirectionsCar, CalendarMonthOutlined as CalendarIcon } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { KPICards } from '@/components/dashboard/KPICards';

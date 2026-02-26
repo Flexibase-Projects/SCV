@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { Search, LocalGasStation as Fuel } from '@mui/icons-material';
+import { SearchOutlined, LocalGasStationOutlined as Fuel } from '@mui/icons-material';
 import { formatDateLocal } from '@/utils/dateUtils';
 
 interface Abastecimento {
@@ -117,7 +117,7 @@ export function AbastecimentoSelectionModal({
         </DialogHeader>
 
         <div className="flex items-center gap-2 py-4">
-          <Search className="h-4 w-4 text-gray-500" />
+          <SearchOutlined className="h-4 w-4 text-gray-500" />
           <Input
             placeholder="Buscar por posto ou data..."
             value={searchTerm}
@@ -167,7 +167,7 @@ export function AbastecimentoSelectionModal({
                     </TableCell>
                     <TableCell>{abastecimento.posto}</TableCell>
                     <TableCell className="text-right">
-                      {abastecimento.litros?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} L
+                      {abastecimento.litros?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} L
                     </TableCell>
                     <TableCell className="text-right font-medium">
                       {abastecimento.valor_total?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}

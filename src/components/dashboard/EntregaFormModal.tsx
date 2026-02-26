@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { parseDateLocal } from '@/utils/dateUtils';
-import { CalendarMonth as CalendarIcon, Close as X, Add as Plus } from '@mui/icons-material';
+import { CalendarMonthOutlined as CalendarIcon, CloseOutlined as X, AddOutlined as Plus } from '@mui/icons-material';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,

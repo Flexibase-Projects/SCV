@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { WarningAmber as AlertTriangle, ErrorOutline as AlertCircle, Info, CheckCircle as CheckCircle2, FilterList as Filter, Download } from '@mui/icons-material';
+import { WarningAmberOutlined as AlertTriangle, ErrorOutline as AlertCircle, InfoOutlined as Info, CheckCircleOutlined as CheckCircle2, FilterListOutlined as Filter, DownloadOutlined as Download } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {

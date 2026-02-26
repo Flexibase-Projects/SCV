@@ -1,4 +1,4 @@
-import { AttachMoney as DollarSign, Build as Wrench, SwapVert as ArrowUpDown, BarChart as BarChart3, TrendingUp, TrendingDown } from '@mui/icons-material';
+import { AttachMoneyOutlined as DollarSign, BuildOutlined as Wrench, SwapVertOutlined as ArrowUpDown, BarChartOutlined as BarChart3, TrendingUpOutlined as TrendingUp, TrendingDownOutlined as TrendingDown } from '@mui/icons-material';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReportKPI } from './ReportKPI';
 import { Badge } from '@/components/ui/badge';

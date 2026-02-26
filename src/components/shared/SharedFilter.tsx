@@ -1,4 +1,4 @@
-import { Search, CalendarMonth as CalendarIcon, Close as X } from '@mui/icons-material';
+import { SearchOutlined as Search, CalendarMonthOutlined as CalendarIcon, CloseOutlined as X } from '@mui/icons-material';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

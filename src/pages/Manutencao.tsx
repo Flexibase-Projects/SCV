@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Add as Plus, Build as Wrench, AttachMoney as DollarSign, DirectionsCar as Car, CalendarToday as Calendar, Print as Printer, Description as FileText } from '@mui/icons-material';
+import { AddOutlined as Plus, BuildOutlined as Wrench, AttachMoneyOutlined as DollarSign, DirectionsCarOutlined as Car, CalendarTodayOutlined as Calendar, PrintOutlined as Printer, DescriptionOutlined as FileText } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { glassCard, solidCard } from '@/lib/cardStyles';

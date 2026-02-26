@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { FiberManualRecord as Circle } from "@mui/icons-material";
+import { FiberManualRecordOutlined as Circle } from "@mui/icons-material";
 
 import { cn } from "@/lib/utils";
 

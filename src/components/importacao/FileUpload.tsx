@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { CloudUpload as Upload, TableChart as FileSpreadsheet, Close as X } from '@mui/icons-material';
+import { CloudUploadOutlined as Upload, TableChartOutlined as FileSpreadsheet, CloseOutlined as X } from '@mui/icons-material';
 import { cn } from '@/lib/utils';
 
 interface FileUploadProps {
