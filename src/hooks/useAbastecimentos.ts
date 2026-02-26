@@ -25,14 +25,14 @@ type AbastecimentoComRelacionamentos = {
   motoristas: { nome: string } | null;
 };
 
-// Função auxiliar para buscar o último abastecimento do veículo
+// Função auxiliar para buscar o último abastecimento do veículo (maior data/km)
 export async function getUltimoAbastecimento(veiculoId: string, excludeId?: string): Promise<{ km_inicial: number } | null> {
   let query = supabase
     .from('abastecimentos')
     .select('km_inicial')
     .eq('veiculo_id', veiculoId)
     .order('data', { ascending: false })
-    .order('km_inicial', { ascending: false })  // Ordenar por KM decrescente para pegar o maior KM primeiro
+    .order('km_inicial', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(1);
 
@@ -47,6 +47,42 @@ export async function getUltimoAbastecimento(veiculoId: string, excludeId?: stri
   }
 
   return data[0];
+}
+
+/**
+ * Retorna o abastecimento cronologicamente anterior ao par (data, km_inicial).
+ * Usado para validar KM em abastecimento retroativo: o anterior na linha do tempo
+ * é o que tem data menor, ou mesma data e km_inicial menor.
+ */
+export async function getAbastecimentoAnteriorCronologico(
+  veiculoId: string,
+  data: string,
+  kmInicial: number,
+  excludeId?: string
+): Promise<{ km_inicial: number } | null> {
+  // (data < dataNova) OR (data = dataNova AND km_inicial < kmInicial)
+  const orFilter = `data.lt.${data},and(data.eq.${data},km_inicial.lt.${kmInicial})`;
+  let query = supabase
+    .from('abastecimentos')
+    .select('km_inicial')
+    .eq('veiculo_id', veiculoId)
+    .or(orFilter)
+    .order('data', { ascending: false })
+    .order('km_inicial', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+
+  const { data: rows, error } = await query;
+
+  if (error || !rows || rows.length === 0) {
+    return null;
+  }
+
+  return rows[0];
 }
 
 // Função para calcular KM/L
@@ -144,9 +180,13 @@ export function useCreateAbastecimento() {
 
   return useMutation({
     mutationFn: async (abastecimento: AbastecimentoFormData) => {
-      // Validação UX: avisar se KM é menor ou igual ao anterior (o cálculo em si é feito no banco pelo trigger)
-      const ultimoAbastecimento = await getUltimoAbastecimento(abastecimento.veiculo_id);
-      const kmAnterior = ultimoAbastecimento?.km_inicial ?? null;
+      // Validação UX: anterior cronológico (permite abastecimento retroativo; cálculo no banco pelo trigger)
+      const anteriorCronologico = await getAbastecimentoAnteriorCronologico(
+        abastecimento.veiculo_id,
+        abastecimento.data,
+        abastecimento.km_inicial
+      );
+      const kmAnterior = anteriorCronologico?.km_inicial ?? null;
       calcularKmPorLitro(abastecimento.km_inicial, kmAnterior, abastecimento.litros);
 
       const { data, error } = await supabase
@@ -186,9 +226,14 @@ export function useUpdateAbastecimento() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: AbastecimentoFormData }) => {
-      // Validação UX: avisar se KM é menor ou igual ao anterior (o cálculo em si é feito no banco pelo trigger)
-      const ultimoAbastecimento = await getUltimoAbastecimento(data.veiculo_id, id);
-      const kmAnterior = ultimoAbastecimento?.km_inicial ?? null;
+      // Validação UX: anterior cronológico (permite abastecimento retroativo; cálculo no banco pelo trigger)
+      const anteriorCronologico = await getAbastecimentoAnteriorCronologico(
+        data.veiculo_id,
+        data.data,
+        data.km_inicial,
+        id
+      );
+      const kmAnterior = anteriorCronologico?.km_inicial ?? null;
       calcularKmPorLitro(data.km_inicial, kmAnterior, data.litros);
 
       const { data: result, error } = await supabase
