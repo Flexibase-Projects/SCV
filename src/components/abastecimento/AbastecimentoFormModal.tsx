@@ -8,6 +8,7 @@ import { CalendarMonthOutlined as CalendarIcon } from '@mui/icons-material';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -151,6 +152,9 @@ export function AbastecimentoFormModal({
           <DialogTitle className="text-foreground">
             {abastecimento ? 'Editar Abastecimento' : 'Novo Abastecimento'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {abastecimento ? 'Editar dados do abastecimento' : 'Preencha os dados para cadastrar um novo abastecimento'}
+          </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>

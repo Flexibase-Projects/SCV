@@ -160,15 +160,35 @@ export function useAbastecimentos() {
         .order('data', { ascending: false })
         .range(0, 9999);
 
-      if (error) throw error;
+      if (!error && data) {
+        const typedData = data as unknown as AbastecimentoComRelacionamentos[];
+        return typedData.map((item) => ({
+          ...item,
+          veiculo_placa: item.veiculos?.placa || '',
+          veiculo_modelo: item.veiculos?.modelo || '',
+          condutor_nome: item.motoristas?.nome || '',
+        })) as Abastecimento[];
+      }
 
-      // Formatar dados para incluir informações do veículo e condutor
-      const typedData = data as unknown as AbastecimentoComRelacionamentos[];
-      return typedData.map((item) => ({
+      // Fallback sem joins (evita 500 quando o join falha no servidor)
+      const { data: rows, error: err2 } = await supabase
+        .from('abastecimentos')
+        .select('*')
+        .order('data', { ascending: false })
+        .range(0, 9999);
+
+      if (err2) throw err2;
+
+      const { data: veiculosList } = await supabase.from('veiculos').select('id, placa, modelo');
+      const { data: motoristasList } = await supabase.from('motoristas').select('id, nome');
+      const veiculoMap = new Map((veiculosList ?? []).map((v) => [v.id, v]));
+      const motoristaMap = new Map((motoristasList ?? []).map((m) => [m.id, m]));
+
+      return (rows ?? []).map((item) => ({
         ...item,
-        veiculo_placa: item.veiculos?.placa || '',
-        veiculo_modelo: item.veiculos?.modelo || '',
-        condutor_nome: item.motoristas?.nome || '',
+        veiculo_placa: veiculoMap.get(item.veiculo_id)?.placa ?? '',
+        veiculo_modelo: veiculoMap.get(item.veiculo_id)?.modelo ?? '',
+        condutor_nome: motoristaMap.get(item.condutor_id)?.nome ?? '',
       })) as Abastecimento[];
     },
   });
