@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { EditOutlined as Edit, DeleteOutlined as Trash2, PrintOutlined as Printer, MoreHorizOutlined as MoreHorizontal } from '@mui/icons-material';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
 import { useDeleteAcertoViagem } from '@/hooks/useAcertosViagem';
-import { VirtualizedTableBody, VIRTUAL_SCROLL_MAX_HEIGHT, VIRTUAL_SCROLL_ROW_HEIGHT } from '@/components/shared/VirtualizedTableBody';
 import { AcertoViagem, calcularTotalDespesas, calcularSaldo, calcularDiasViagem } from '@/types/acertoViagem';
-
-const ACERTO_COL_WIDTHS = ['12%', '14%', '12%', '14%', '8%', '10%', '10%', '12%', '8%', '8%'];
 
 interface AcertoViagemTableProps {
   acertos: AcertoViagem[];
@@ -46,9 +43,10 @@ function getResponsavel(acerto: AcertoViagem) {
   return acerto.motorista_nome || acerto.montador_nome || '-';
 }
 
+const ACERTO_COL_WIDTHS = ['12%', '14%', '12%', '14%', '8%', '10%', '10%', '12%', '8%', '8%'];
+
 function renderAcertoRow(
   acerto: AcertoViagem,
-  _index: number,
   onEdit: (a: AcertoViagem) => void,
   onPrint: (a: AcertoViagem) => void,
   onDeleteRequest: (id: string) => void
@@ -58,7 +56,7 @@ function renderAcertoRow(
   const dias = calcularDiasViagem(acerto.data_saida, acerto.data_chegada);
 
   return (
-    <>
+    <TableRow key={acerto.id}>
       <TableCell className="font-medium">{acerto.destino}</TableCell>
       <TableCell>{getResponsavel(acerto)}</TableCell>
       <TableCell>
@@ -116,13 +114,12 @@ function renderAcertoRow(
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>
-    </>
+    </TableRow>
   );
 }
 
 export function AcertoViagemTable({ acertos, isLoading, onEdit, onPrint }: AcertoViagemTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const parentRef = useRef<HTMLDivElement>(null);
   const deleteAcerto = useDeleteAcertoViagem();
 
   const handleDelete = () => {
@@ -150,11 +147,7 @@ export function AcertoViagemTable({ acertos, isLoading, onEdit, onPrint }: Acert
 
   return (
     <>
-      <div
-        ref={parentRef}
-        className="overflow-auto rounded-lg border"
-        style={{ maxHeight: VIRTUAL_SCROLL_MAX_HEIGHT }}
-      >
+      <div className="overflow-auto rounded-lg border">
         <table className="w-full caption-bottom text-sm table-fixed">
           <colgroup>
             {ACERTO_COL_WIDTHS.map((w, i) => (
@@ -175,15 +168,10 @@ export function AcertoViagemTable({ acertos, isLoading, onEdit, onPrint }: Acert
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
+          <TableBody>
+            {acertos.map((acerto) => renderAcertoRow(acerto, onEdit, onPrint, setDeleteId))}
+          </TableBody>
         </table>
-        <VirtualizedTableBody
-          parentRef={parentRef}
-          data={acertos}
-          rowHeight={VIRTUAL_SCROLL_ROW_HEIGHT}
-          getRowKey={(a) => a.id}
-          renderRow={(item, index) => renderAcertoRow(item, index, onEdit, onPrint, setDeleteId)}
-          colWidths={ACERTO_COL_WIDTHS}
-        />
       </div>
 
       <DeleteConfirmDialog
