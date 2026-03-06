@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { glassCard, solidCard } from '@/lib/cardStyles';
 import { ManutencaoTable } from '@/components/manutencao/ManutencaoTable';
+import { ManutencaoDetailModal } from '@/components/manutencao/ManutencaoDetailModal';
 import { ManutencaoFormModal } from '@/components/manutencao/ManutencaoFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
-import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
+import { TablePrintModal, TableColumn, type KpiPrintItem } from '@/components/shared/TablePrintModal';
 import { PaginationControl } from '@/components/shared/PaginationControl';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
@@ -32,6 +33,7 @@ const Manutencao = () => {
   const [selectedManutencao, setSelectedManutencao] = useState<ManutencaoType | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [manutencaoToDelete, setManutencaoToDelete] = useState<ManutencaoType | null>(null);
+  const [detailManutencao, setDetailManutencao] = useState<ManutencaoType | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -184,6 +186,30 @@ const Manutencao = () => {
     return filters.length > 0 ? filters.join(' | ') : 'Todos os registros';
   }, [searchTerm, dateFrom, dateTo]);
 
+  // KPIs para o PDF (mesmos indicadores da tela, calculados sobre os dados filtrados da impressão)
+  const printKpiItems = useMemo((): KpiPrintItem[] => [
+    {
+      title: 'Total Manutenções',
+      value: String(totalManutencoes),
+      description: 'registros encontrados',
+    },
+    {
+      title: 'Custo Total',
+      value: formatCurrency(custoTotalGeral),
+      description: 'custo acumulado',
+    },
+    {
+      title: 'Custo no Período',
+      value: formatCurrency(custoPeriodo),
+      description: 'custo filtrado',
+    },
+    {
+      title: 'Veículos Atendidos',
+      value: String(veiculosUnicos),
+      description: 'veículos distintos',
+    },
+  ], [totalManutencoes, custoTotalGeral, custoPeriodo, veiculosUnicos]);
+
   const slicedManutencoes = useMemo(() => {
     if (filteredManutencoes.length <= ROWS_PER_PAGE) return filteredManutencoes;
     return filteredManutencoes.slice((tablePage - 1) * ROWS_PER_PAGE, tablePage * ROWS_PER_PAGE);
@@ -311,6 +337,7 @@ const Manutencao = () => {
               onEdit={handleOpenForm}
               onDelete={handleOpenDeleteDialog}
               isLoading={isLoading}
+              onRowClick={setDetailManutencao}
             />
             {showTablePagination && (
               <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
@@ -340,6 +367,16 @@ const Manutencao = () => {
           defaultTipoServico={defaultFormValues.tipoServico}
         />
 
+        <ManutencaoDetailModal
+          open={!!detailManutencao}
+          onOpenChange={(open) => !open && setDetailManutencao(null)}
+          manutencao={detailManutencao}
+          onEdit={(m) => {
+            handleOpenForm(m);
+            setDetailManutencao(null);
+          }}
+        />
+
         {/* Dialog de confirmação de exclusão */}
         <DeleteConfirmDialog
           open={isDeleteDialogOpen}
@@ -358,6 +395,7 @@ const Manutencao = () => {
           data={filteredManutencoes}
           columns={printColumns}
           filters={filtersText}
+          kpiItems={printKpiItems}
         />
         </div>
       </div>

@@ -12,6 +12,13 @@ export interface TableColumn<T = any> {
   className?: string;
 }
 
+/** Indicador KPI para exibir no topo do PDF (ex.: Total de Entregas, Valor Total, Taxa de Conclusão, Gastos Totais) */
+export interface KpiPrintItem {
+  title: string;
+  value: string;
+  description: string;
+}
+
 interface TablePrintModalProps<T = any> {
   isOpen: boolean;
   onClose: () => void;
@@ -20,6 +27,8 @@ interface TablePrintModalProps<T = any> {
   columns: TableColumn<T>[];
   filters?: string;
   subtitle?: string;
+  /** Indicadores KPI exibidos acima da tabela no PDF, respeitando os mesmos filtros dos dados */
+  kpiItems?: KpiPrintItem[];
 }
 
 export function TablePrintModal<T extends Record<string, any>>({
@@ -29,7 +38,8 @@ export function TablePrintModal<T extends Record<string, any>>({
   data,
   columns,
   filters,
-  subtitle
+  subtitle,
+  kpiItems,
 }: TablePrintModalProps<T>) {
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +105,22 @@ export function TablePrintModal<T extends Record<string, any>>({
                 </div>
               </div>
             </div>
+
+            {/* Indicadores KPI (quando informados) */}
+            {kpiItems && kpiItems.length > 0 && (
+              <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 page-break-inside-avoid">
+                {kpiItems.map((kpi) => (
+                  <div
+                    key={kpi.title}
+                    className="border border-black p-3 rounded"
+                  >
+                    <p className="text-xs text-gray-600 mb-1">{kpi.title}</p>
+                    <p className="text-lg font-bold text-slate-900">{kpi.value}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{kpi.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Informações do Relatório */}
             <div className="mb-4 text-sm space-y-1">

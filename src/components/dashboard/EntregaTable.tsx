@@ -11,9 +11,11 @@ interface EntregaTableProps {
   onEdit: (entrega: Entrega) => void;
   onDelete: (entrega: Entrega) => void;
   selection?: EntregaSelectionProps;
+  /** Ao clicar na linha, exibe detalhes da entrega (não dispara ao clicar em checkbox ou botões de ação). */
+  onRowClick?: (entrega: Entrega) => void;
 }
 
-export function EntregaTable({ entregas, onEdit, onDelete, selection }: EntregaTableProps) {
+export function EntregaTable({ entregas, onEdit, onDelete, selection, onRowClick }: EntregaTableProps) {
   if (entregas.length === 0) {
     return (
       <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
@@ -35,6 +37,7 @@ export function EntregaTable({ entregas, onEdit, onDelete, selection }: EntregaT
         getRowId={(e) => e.id}
         maxHeight={VIRTUAL_SCROLL_MAX_HEIGHT}
         minTableWidth={ENTREGA_TABLE_MIN_WIDTH}
+        onRowClick={onRowClick}
         />
       </CardContent>
     </Card>

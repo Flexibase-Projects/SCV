@@ -194,7 +194,7 @@ export function getManutencaoColumns(
       enableColumnFilter: false,
       meta: { width: '80px', align: 'right', hideOnMobile: false } as VirtualDataTableColumnMeta,
       cell: ({ row }) => (
-        <div className="flex justify-end gap-1 w-full">
+        <div className="flex justify-end gap-1 w-full" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="icon" onClick={() => onEdit(row.original)} title="Editar" className="h-8 w-8">
             <Pencil className="h-4 w-4" />
           </Button>

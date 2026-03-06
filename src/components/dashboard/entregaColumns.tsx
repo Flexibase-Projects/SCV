@@ -59,12 +59,14 @@ export function getEntregaColumns(
             enableColumnFilter: false,
             meta: { width: '44px', align: 'center', hideOnMobile: true } as VirtualDataTableColumnMeta,
             cell: ({ row }) => (
-              <Checkbox
-                checked={selection.selectedIds.has(row.original.id)}
-                onCheckedChange={() => selection.onToggle(row.original.id)}
-                aria-label={`Selecionar ${row.original.cliente || row.original.id}`}
-                className="translate-y-0"
-              />
+              <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+                <Checkbox
+                  checked={selection.selectedIds.has(row.original.id)}
+                  onCheckedChange={() => selection.onToggle(row.original.id)}
+                  aria-label={`Selecionar ${row.original.cliente || row.original.id}`}
+                  className="translate-y-0"
+                />
+              </div>
             ),
           } as ColumnDef<Entrega, unknown>,
         ]
@@ -237,7 +239,7 @@ export function getEntregaColumns(
       enableColumnFilter: false,
       meta: { width: '80px', align: 'right', hideOnMobile: false } as VirtualDataTableColumnMeta,
       cell: ({ row }) => (
-        <div className="flex justify-end gap-1 w-full">
+        <div className="flex justify-end gap-1 w-full" onClick={(e) => e.stopPropagation()}>
           <Button variant="ghost" size="icon" onClick={() => onEdit(row.original)} title="Editar" className="h-8 w-8">
             <Pencil className="h-4 w-4" />
           </Button>

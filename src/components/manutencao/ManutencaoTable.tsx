@@ -11,9 +11,11 @@ interface ManutencaoTableProps {
   onEdit: (manutencao: Manutencao) => void;
   onDelete: (manutencao: Manutencao) => void;
   isLoading: boolean;
+  /** Ao clicar na linha, exibe detalhes da manutenção (não dispara ao clicar nos botões de ação). */
+  onRowClick?: (manutencao: Manutencao) => void;
 }
 
-export function ManutencaoTable({ manutencoes, onEdit, onDelete, isLoading }: ManutencaoTableProps) {
+export function ManutencaoTable({ manutencoes, onEdit, onDelete, isLoading, onRowClick }: ManutencaoTableProps) {
   if (isLoading) {
     return (
       <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
@@ -45,6 +47,7 @@ export function ManutencaoTable({ manutencoes, onEdit, onDelete, isLoading }: Ma
           getRowId={(m) => m.id}
           maxHeight={VIRTUAL_SCROLL_MAX_HEIGHT}
           minTableWidth={MANUTENCAO_TABLE_MIN_WIDTH}
+          onRowClick={onRowClick}
         />
       </CardContent>
     </Card>

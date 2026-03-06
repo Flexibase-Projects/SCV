@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AbastecimentoTable } from '@/components/abastecimento/AbastecimentoTable';
+import { AbastecimentoDetailModal } from '@/components/abastecimento/AbastecimentoDetailModal';
 import { AbastecimentoFormModal } from '@/components/abastecimento/AbastecimentoFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
-import { TablePrintModal, TableColumn } from '@/components/shared/TablePrintModal';
+import { TablePrintModal, TableColumn, type KpiPrintItem } from '@/components/shared/TablePrintModal';
 import { PaginationControl } from '@/components/shared/PaginationControl';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay, isSameDay } from 'date-fns';
@@ -73,6 +74,7 @@ const AbastecimentoPage = () => {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [abastecimentoToDelete, setAbastecimentoToDelete] = useState<AbastecimentoType | null>(null);
+  const [detailAbastecimento, setDetailAbastecimento] = useState<AbastecimentoType | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   const handleOpenForm = (abastecimento?: AbastecimentoType) => {
@@ -309,6 +311,44 @@ const AbastecimentoPage = () => {
     return filters.length > 0 ? filters.join(' | ') : 'Todos os registros';
   }, [searchTerm, dateFrom, dateTo]);
 
+  // KPIs para o PDF (mesmos indicadores da tela, calculados sobre os dados filtrados da impressão)
+  const printKpiItems = useMemo((): KpiPrintItem[] => {
+    const mediaDesc =
+      abastecimentosComKmPorLitro.length > 0
+        ? `baseado em ${abastecimentosComKmPorLitro.length} registros`
+        : 'sem dados suficientes';
+    return [
+      {
+        title: 'Total de Registros',
+        value: String(filteredAbastecimentos.length),
+        description: 'abastecimentos listados',
+      },
+      {
+        title: 'Total de Litros',
+        value: `${totalLitros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} L`,
+        description: 'combustível consumido',
+      },
+      {
+        title: 'Média de Consumo',
+        value:
+          mediaConsumo > 0
+            ? `${mediaConsumo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km/l`
+            : '0,00 km/l',
+        description: mediaDesc,
+      },
+      {
+        title: 'Valor Total',
+        value: `R$ ${totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        description: 'custo total no período',
+      },
+    ];
+  }, [
+    filteredAbastecimentos.length,
+    totalLitros,
+    mediaConsumo,
+    abastecimentosComKmPorLitro.length,
+    totalValor,
+  ]);
 
   return (
     <ModuleLayout>
@@ -458,6 +498,7 @@ const AbastecimentoPage = () => {
                 onEdit={handleOpenForm}
                 onDelete={handleOpenDeleteDialog}
                 isLoading={isLoading}
+                onRowClick={setDetailAbastecimento}
               />
               {showTablePagination && (
                 <PaginationControl
@@ -555,6 +596,7 @@ const AbastecimentoPage = () => {
                     onEdit={handleOpenForm}
                     onDelete={handleOpenDeleteDialog}
                     isLoading={isLoading}
+                    onRowClick={setDetailAbastecimento}
                   />
                   {showTablePagination && (
                     <PaginationControl
@@ -662,6 +704,7 @@ const AbastecimentoPage = () => {
                     onEdit={handleOpenForm}
                     onDelete={handleOpenDeleteDialog}
                     isLoading={isLoading}
+                    onRowClick={setDetailAbastecimento}
                   />
                   {showTablePagination && (
                     <PaginationControl
@@ -686,6 +729,16 @@ const AbastecimentoPage = () => {
           isLoading={createAbastecimento.isPending || updateAbastecimento.isPending}
         />
 
+        <AbastecimentoDetailModal
+          open={!!detailAbastecimento}
+          onOpenChange={(open) => !open && setDetailAbastecimento(null)}
+          abastecimento={detailAbastecimento}
+          onEdit={(a) => {
+            handleOpenForm(a);
+            setDetailAbastecimento(null);
+          }}
+        />
+
         <DeleteConfirmDialog
           open={isDeleteDialogOpen}
           onOpenChange={setIsDeleteDialogOpen}
@@ -703,6 +756,7 @@ const AbastecimentoPage = () => {
           data={filteredAbastecimentos}
           columns={printColumns}
           filters={filtersText}
+          kpiItems={printKpiItems}
         />
         </div>
       </div>

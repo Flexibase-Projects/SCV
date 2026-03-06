@@ -5,9 +5,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { KPICards } from '@/components/dashboard/KPICards';
 import { solidCard } from '@/lib/cardStyles';
 import { EntregaTable } from '@/components/dashboard/EntregaTable';
+import { EntregaDetailModal } from '@/components/dashboard/EntregaDetailModal';
 import { EntregaFormModal } from '@/components/dashboard/EntregaFormModal';
 import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
-import { TablePrintModal } from '@/components/shared/TablePrintModal';
+import { TablePrintModal, type KpiPrintItem } from '@/components/shared/TablePrintModal';
 import { EntregasAnoPrintModal } from '@/components/dashboard/EntregasAnoPrintModal';
 import { ENTREGAS_PRINT_COLUMNS } from '@/components/dashboard/entregasPrintColumns';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
@@ -120,6 +121,7 @@ const Entregas = () => {
   const [isClearDataMontagemDialogOpen, setIsClearDataMontagemDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [detailEntrega, setDetailEntrega] = useState<Entrega | null>(null);
   const [isExportYearDialogOpen, setIsExportYearDialogOpen] = useState(false);
   const [anoForExport, setAnoForExport] = useState<number | null>(null);
   const [isAnoPrintModalOpen, setIsAnoPrintModalOpen] = useState(false);
@@ -168,6 +170,36 @@ const Entregas = () => {
     if (dateTo) filters.push(`Até: ${format(dateTo, 'dd/MM/yyyy')}`);
     return filters.length > 0 ? filters.join(' | ') : 'Todos os registros';
   }, [searchTerm, dateField, dateFrom, dateTo]);
+
+  // KPIs para o PDF (mesmos indicadores da tela, calculados sobre os dados filtrados da impressão)
+  const printKpiItems = useMemo((): KpiPrintItem[] => {
+    const total = filteredEntregas.length;
+    const valorTotal = filteredEntregas.reduce((acc, e) => acc + (e.valor || 0), 0);
+    const concluidas = filteredEntregas.filter(
+      (e) => e.status === 'ENTREGUE' || e.status === 'CONCLUIDO'
+    ).length;
+    const taxa = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+    const gastosTotais = filteredEntregas.reduce(
+      (acc, e) => acc + (e.gastos_entrega || 0) + (e.gastos_montagem || 0),
+      0
+    );
+    const formatCurrency = (v: number) =>
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    return [
+      { title: 'Total de Entregas', value: String(total), description: 'entregas no período' },
+      { title: 'Valor Total', value: formatCurrency(valorTotal), description: 'em entregas' },
+      {
+        title: 'Taxa de Conclusão',
+        value: `${taxa}%`,
+        description: `${concluidas} de ${total} concluídas`,
+      },
+      {
+        title: 'Gastos Totais',
+        value: formatCurrency(gastosTotais),
+        description: 'gastos operacionais',
+      },
+    ];
+  }, [filteredEntregas]);
 
   const handleOpenForm = (entrega?: Entrega) => {
     setSelectedEntrega(entrega || null);
@@ -439,6 +471,7 @@ const Entregas = () => {
                   onSelectAll: handleSelectAll,
                   allIds: filteredEntregas.map((e) => e.id),
                 }}
+                onRowClick={setDetailEntrega}
               />
               {totalPages > 1 && (
                 <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
@@ -558,6 +591,7 @@ const Entregas = () => {
                     entregas={filteredEntregas}
                     onEdit={handleOpenForm}
                     onDelete={handleOpenDeleteDialog}
+                    onRowClick={setDetailEntrega}
                   />
 
                   {totalPages > 1 && (
@@ -680,6 +714,7 @@ const Entregas = () => {
                     entregas={filteredEntregas}
                     onEdit={handleOpenForm}
                     onDelete={handleOpenDeleteDialog}
+                    onRowClick={setDetailEntrega}
                   />
 
                   {totalPages > 1 && (
@@ -708,6 +743,16 @@ const Entregas = () => {
           entrega={selectedEntrega}
           onSubmit={handleSubmit}
           isLoading={createEntrega.isPending || updateEntrega.isPending}
+        />
+
+        <EntregaDetailModal
+          open={!!detailEntrega}
+          onOpenChange={(open) => !open && setDetailEntrega(null)}
+          entrega={detailEntrega}
+          onEdit={(e) => {
+            handleOpenForm(e);
+            setDetailEntrega(null);
+          }}
         />
 
         <DeleteConfirmDialog
@@ -756,6 +801,7 @@ const Entregas = () => {
           data={filteredEntregas}
           columns={printColumns}
           filters={filtersText}
+          kpiItems={printKpiItems}
         />
 
         <Dialog open={isExportYearDialogOpen} onOpenChange={setIsExportYearDialogOpen}>

@@ -24,6 +24,8 @@ export interface VirtualDataTableProps<T> {
   rowHeight?: number;
   estimatedSize?: number;
   minTableWidth?: number;
+  /** Se definido, clicar na linha chama este callback (evite clicar em botões/checkbox que devem fazer stopPropagation). */
+  onRowClick?: (row: T) => void;
 }
 
 function getColumnMeta<T>(column: { columnDef?: { meta?: VirtualDataTableColumnMeta } }): VirtualDataTableColumnMeta | undefined {
@@ -58,6 +60,7 @@ export function VirtualDataTable<T>({
   rowHeight = ROW_HEIGHT_DEFAULT,
   estimatedSize = ROW_HEIGHT_DEFAULT,
   minTableWidth,
+  onRowClick,
 }: VirtualDataTableProps<T>) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [scrollReady, setScrollReady] = useState(false);
@@ -182,7 +185,11 @@ export function VirtualDataTable<T>({
                       alignItems: 'center',
                       borderBottom: '1px solid hsl(var(--border))',
                     }}
-                    className="hover:bg-muted/50 transition-colors bg-card"
+                    className={cn(
+                      'transition-colors bg-card',
+                      onRowClick ? 'cursor-pointer hover:bg-muted/60' : 'hover:bg-muted/50'
+                    )}
+                    onClick={onRowClick ? () => onRowClick(row.original as T) : undefined}
                   >
                     {cells.map((cell) => {
                       const meta = getColumnMeta(cell.column);

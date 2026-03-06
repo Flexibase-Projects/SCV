@@ -11,6 +11,8 @@ interface AbastecimentoTableProps {
   onEdit: (abastecimento: Abastecimento) => void;
   onDelete: (abastecimento: Abastecimento) => void;
   isLoading: boolean;
+  /** Ao clicar na linha, exibe detalhes do abastecimento (não dispara ao clicar nos botões de ação). */
+  onRowClick?: (abastecimento: Abastecimento) => void;
 }
 
 export function AbastecimentoTable({
@@ -18,6 +20,7 @@ export function AbastecimentoTable({
   onEdit,
   onDelete,
   isLoading,
+  onRowClick,
 }: AbastecimentoTableProps) {
   if (isLoading) {
     return (
@@ -50,6 +53,7 @@ export function AbastecimentoTable({
           getRowId={(r) => r.id}
           maxHeight={VIRTUAL_SCROLL_MAX_HEIGHT}
           minTableWidth={ABASTECIMENTO_TABLE_MIN_WIDTH}
+          onRowClick={onRowClick}
         />
       </CardContent>
     </Card>
