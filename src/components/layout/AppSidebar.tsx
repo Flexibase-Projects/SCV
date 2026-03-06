@@ -77,8 +77,8 @@ export function AppSidebar() {
           transition-all duration-200 group
           ${isCollapsed ? 'justify-center' : ''}
           ${isActive
-            ? 'bg-brand-blue text-brand-green dark:bg-brand-green/10 dark:text-brand-green shadow-sm'
-            : 'text-gray-600 dark:text-gray-400 hover:text-brand-green dark:hover:text-brand-green hover:bg-brand-blue dark:hover:bg-brand-white/5'
+            ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 shadow-sm'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:bg-emerald-500/15 dark:hover:text-emerald-300'
           }
         `}
       >
@@ -96,7 +96,7 @@ export function AppSidebar() {
 
         {/* Active dot indicator */}
         {isActive && !isCollapsed && (
-          <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-green dark:bg-brand-green" />
+          <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
         )}
       </Link>
     );

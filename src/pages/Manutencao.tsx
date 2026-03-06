@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { AddOutlined as Plus, BuildOutlined as Wrench, AttachMoneyOutlined as DollarSign, DirectionsCarOutlined as Car, CalendarTodayOutlined as Calendar, PrintOutlined as Printer, DescriptionOutlined as FileText } from '@mui/icons-material';
+import { AddOutlined as Plus, BuildOutlined as Wrench, AttachMoneyOutlined as DollarSign, DirectionsCarOutlined as Car, CalendarTodayOutlined as CalendarIconKpi, PrintOutlined as Printer, DescriptionOutlined as FileText } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { glassCard, solidCard } from '@/lib/cardStyles';
@@ -10,8 +10,16 @@ import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog'
 import { TablePrintModal, TableColumn, type KpiPrintItem } from '@/components/shared/TablePrintModal';
 import { PaginationControl } from '@/components/shared/PaginationControl';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
-import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { format, isWithinInterval, parseISO, startOfDay, endOfDay, isSameDay } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SharedFilter } from '@/components/shared/SharedFilter';
+import { useVeiculos } from '@/hooks/useVeiculos';
+import { cn } from '@/lib/utils';
+import { CalendarMonthOutlined as CalendarIcon } from '@mui/icons-material';
+import { DirectionsCarOutlined as DirectionsCar } from '@mui/icons-material';
 import {
   useManutencoes,
   useCreateManutencao,
@@ -24,10 +32,12 @@ const ROWS_PER_PAGE = 100;
 
 const Manutencao = () => {
   const { data: manutencoes = [], isLoading } = useManutencoes();
+  const { data: veiculos = [] } = useVeiculos(false);
   const createManutencao = useCreateManutencao();
   const updateManutencao = useUpdateManutencao();
   const deleteManutencao = useDeleteManutencao();
 
+  const [activeTab, setActiveTab] = useState('todos');
   const [tablePage, setTablePage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedManutencao, setSelectedManutencao] = useState<ManutencaoType | null>(null);
@@ -40,9 +50,26 @@ const Manutencao = () => {
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
 
+  const [selectedVeiculoId, setSelectedVeiculoId] = useState<string | null>(null);
+  const [selectedDateVeiculo, setSelectedDateVeiculo] = useState<Date | null>(null);
+  const [selectedServico, setSelectedServico] = useState<string | null>(null);
+  const [selectedDateServico, setSelectedDateServico] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (activeTab !== 'por-veiculo') {
+      setSelectedVeiculoId(null);
+      setSelectedDateVeiculo(null);
+    }
+    if (activeTab !== 'por-servico') {
+      setSelectedServico(null);
+      setSelectedDateServico(null);
+    }
+    setTablePage(1);
+  }, [activeTab]);
+
   useEffect(() => {
     setTablePage(1);
-  }, [searchTerm, dateFrom, dateTo]);
+  }, [searchTerm, dateFrom, dateTo, selectedVeiculoId, selectedDateVeiculo, selectedServico, selectedDateServico]);
 
   // Valores padrão para o formulário
   const [defaultFormValues, setDefaultFormValues] = useState<{
@@ -92,33 +119,95 @@ const Manutencao = () => {
   };
 
   const filteredManutencoes = useMemo(() => {
-    return manutencoes.filter(m => {
-      const matchesSearch =
-        searchTerm === '' ||
-        m.veiculo_placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.tipo_servico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.estabelecimento?.toLowerCase().includes(searchTerm.toLowerCase());
+    let filtered = manutencoes;
 
-      let matchesDate = true;
-      if (m.data) {
-        const date = parseISO(m.data);
-        if (dateFrom && dateTo) {
-          matchesDate = isWithinInterval(date, {
-            start: startOfDay(dateFrom),
-            end: endOfDay(dateTo)
-          });
-        } else if (dateFrom) {
-          matchesDate = date >= startOfDay(dateFrom);
-        } else if (dateTo) {
-          matchesDate = date <= endOfDay(dateTo);
-        }
-      } else if (dateFrom || dateTo) {
-        matchesDate = false;
+    if (activeTab === 'por-veiculo') {
+      if (selectedVeiculoId) {
+        filtered = filtered.filter(m => m.veiculo_id === selectedVeiculoId);
       }
+      if (selectedDateVeiculo) {
+        filtered = filtered.filter(m => {
+          if (!m.data) return false;
+          const date = parseISO(m.data);
+          return isSameDay(date, selectedDateVeiculo);
+        });
+      }
+      filtered = [...filtered].sort((a, b) => {
+        if (!a.data && !b.data) return 0;
+        if (!a.data) return 1;
+        if (!b.data) return -1;
+        const dateA = parseISO(a.data);
+        const dateB = parseISO(b.data);
+        const d = dateB.getTime() - dateA.getTime();
+        if (d !== 0) return d;
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return 0;
+      });
+    }
 
-      return matchesSearch && matchesDate;
-    });
-  }, [manutencoes, searchTerm, dateFrom, dateTo]);
+    if (activeTab === 'por-servico') {
+      if (selectedServico) {
+        filtered = filtered.filter(m => m.tipo_servico === selectedServico);
+      }
+      if (selectedDateServico) {
+        filtered = filtered.filter(m => {
+          if (!m.data) return false;
+          const date = parseISO(m.data);
+          return isSameDay(date, selectedDateServico);
+        });
+      }
+      filtered = [...filtered].sort((a, b) => {
+        if (!a.data && !b.data) return 0;
+        if (!a.data) return 1;
+        if (!b.data) return -1;
+        const dateA = parseISO(a.data);
+        const dateB = parseISO(b.data);
+        const d = dateB.getTime() - dateA.getTime();
+        if (d !== 0) return d;
+        if (a.created_at && b.created_at) {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        }
+        return 0;
+      });
+    }
+
+    if (activeTab === 'todos') {
+      filtered = filtered.filter(m => {
+        const matchesSearch =
+          searchTerm === '' ||
+          m.veiculo_placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          m.tipo_servico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          m.estabelecimento?.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!matchesSearch) return false;
+        let matchesDate = true;
+        if (m.data) {
+          const date = parseISO(m.data);
+          if (dateFrom && dateTo) {
+            matchesDate = isWithinInterval(date, {
+              start: startOfDay(dateFrom),
+              end: endOfDay(dateTo),
+            });
+          } else if (dateFrom) {
+            matchesDate = date >= startOfDay(dateFrom);
+          } else if (dateTo) {
+            matchesDate = date <= endOfDay(dateTo);
+          }
+        } else if (dateFrom || dateTo) {
+          matchesDate = false;
+        }
+        return matchesDate;
+      });
+    }
+
+    return filtered;
+  }, [manutencoes, activeTab, searchTerm, dateFrom, dateTo, selectedVeiculoId, selectedDateVeiculo, selectedServico, selectedDateServico]);
+
+  const servicosUnicos = useMemo(() => {
+    const set = new Set(manutencoes.map(m => m.tipo_servico).filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [manutencoes]);
 
   // Cálculos para os cards de resumo usando dados filtrados
   const totalManutencoes = filteredManutencoes.length;
@@ -267,7 +356,7 @@ const Manutencao = () => {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Custo no Período</span>
                   <div className="h-10 w-10 bg-amber-50 dark:bg-amber-500/10 rounded-xl flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    <CalendarIconKpi className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -291,68 +380,284 @@ const Manutencao = () => {
             </Card>
           </div>
 
-          {/* Barra de ação - mesma estrutura de Entregas/Abastecimento (linha com "aba" à esquerda e botão à direita) */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 border-b-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 px-0 py-3 text-sm font-medium">
-              <FileText className="h-4 w-4" />
-              Listagem
+          {/* Abas e Tabela - mesmo padrão de Abastecimento */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="flex items-center justify-between">
+              <TabsList className="bg-transparent border-b-0 w-auto justify-start h-auto p-0 gap-6">
+                <TabsTrigger
+                  value="todos"
+                  className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-3 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all rounded-none"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Todos
+                </TabsTrigger>
+                <TabsTrigger
+                  value="por-veiculo"
+                  className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-3 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all rounded-none"
+                >
+                  <DirectionsCar className="h-4 w-4 mr-2" />
+                  Por Veículo
+                </TabsTrigger>
+                <TabsTrigger
+                  value="por-servico"
+                  className="border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-transparent px-3 py-3 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all rounded-none"
+                >
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Por Serviço
+                </TabsTrigger>
+              </TabsList>
+              <Button
+                onClick={() => handleOpenForm()}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg h-10 px-4 font-semibold shadow-sm shadow-emerald-500/20 transition-all duration-200"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Manutenção
+              </Button>
             </div>
-            <Button
-              onClick={() => handleOpenForm()}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg h-10 px-4 font-semibold shadow-sm shadow-emerald-500/20 transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Manutenção
-            </Button>
-          </div>
 
-          {/* Filtros em Card sólido (padrão Entregas/Abastecimento) */}
-          <div className="space-y-4">
-            <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <SharedFilter
-                    searchTerm={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    dateFrom={dateFrom}
-                    onDateFromChange={setDateFrom}
-                    dateTo={dateTo}
-                    onDateToChange={setDateTo}
-                    placeholder="Buscar por placa, serviço ou estabelecimento..."
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsPrintModalOpen(true)}
-                    className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
-                  >
-                    <Printer className="h-4 w-4" />
-                    Imprimir / PDF
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <ManutencaoTable
-              manutencoes={slicedManutencoes}
-              onEdit={handleOpenForm}
-              onDelete={handleOpenDeleteDialog}
-              isLoading={isLoading}
-              onRowClick={setDetailManutencao}
-            />
-            {showTablePagination && (
+            <TabsContent value="todos" className="space-y-4 animate-in fade-in-50 duration-300">
               <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
-                <CardContent className="px-4 py-3">
-                  <PaginationControl
-                    currentPage={tablePage}
-                    totalPages={totalTablePages}
-                    onPageChange={setTablePage}
-                    totalRecords={filteredManutencoes.length}
-                    itemsPerPage={ROWS_PER_PAGE}
-                  />
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <SharedFilter
+                      searchTerm={searchTerm}
+                      onSearchChange={setSearchTerm}
+                      dateFrom={dateFrom}
+                      onDateFromChange={setDateFrom}
+                      dateTo={dateTo}
+                      onDateToChange={setDateTo}
+                      placeholder="Buscar por placa, serviço ou estabelecimento..."
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsPrintModalOpen(true)}
+                      className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Imprimir / PDF
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            )}
-          </div>
+
+              <ManutencaoTable
+                manutencoes={slicedManutencoes}
+                onEdit={handleOpenForm}
+                onDelete={handleOpenDeleteDialog}
+                isLoading={isLoading}
+                onRowClick={setDetailManutencao}
+              />
+              {showTablePagination && (
+                <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                  <CardContent className="px-4 py-3">
+                    <PaginationControl
+                      currentPage={tablePage}
+                      totalPages={totalTablePages}
+                      onPageChange={setTablePage}
+                      totalRecords={filteredManutencoes.length}
+                      itemsPerPage={ROWS_PER_PAGE}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="por-veiculo" className="space-y-4 animate-in fade-in-50 duration-300">
+              <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 max-w-md">
+                      <Select value={selectedVeiculoId || ''} onValueChange={(v) => setSelectedVeiculoId(v || null)}>
+                        <SelectTrigger className="rounded-lg border-slate-200 dark:border-slate-800 focus:ring-0 focus:border-emerald-500 h-10">
+                          <SelectValue placeholder="Selecione um veículo..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg border-slate-200 dark:border-slate-800">
+                          {veiculos.map((v) => (
+                            <SelectItem key={v.id} value={v.id}>
+                              {v.modelo ? `${v.placa} - ${v.modelo}` : v.fabricante ? `${v.placa} - ${v.fabricante}` : v.placa}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-[220px] justify-start text-left font-normal rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 h-10',
+                            !selectedDateVeiculo && 'text-slate-400'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                          {selectedDateVeiculo ? format(selectedDateVeiculo, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-lg border-slate-200 dark:border-slate-800" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDateVeiculo || undefined}
+                          onSelect={(d) => setSelectedDateVeiculo(d || null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {(selectedVeiculoId || selectedDateVeiculo) && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedVeiculoId(null);
+                          setSelectedDateVeiculo(null);
+                        }}
+                      >
+                        Limpar Filtros
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsPrintModalOpen(true)}
+                      className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10 ml-auto"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Imprimir / PDF
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              {!selectedVeiculoId ? (
+                <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                  <CardContent className="text-center py-16">
+                    <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <DirectionsCar className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">Selecione um veículo</p>
+                    <p className="text-sm text-slate-500 mt-1">Utilize os filtros acima para visualizar os dados</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <ManutencaoTable
+                    manutencoes={slicedManutencoes}
+                    onEdit={handleOpenForm}
+                    onDelete={handleOpenDeleteDialog}
+                    isLoading={isLoading}
+                    onRowClick={setDetailManutencao}
+                  />
+                  {showTablePagination && (
+                    <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                      <CardContent className="px-4 py-3">
+                        <PaginationControl
+                          currentPage={tablePage}
+                          totalPages={totalTablePages}
+                          onPageChange={setTablePage}
+                          totalRecords={filteredManutencoes.length}
+                          itemsPerPage={ROWS_PER_PAGE}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </TabsContent>
+
+            <TabsContent value="por-servico" className="space-y-4 animate-in fade-in-50 duration-300">
+              <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 max-w-md">
+                      <Select value={selectedServico || ''} onValueChange={(v) => setSelectedServico(v || null)}>
+                        <SelectTrigger className="rounded-lg border-slate-200 dark:border-slate-800 focus:ring-0 focus:border-emerald-500 h-10">
+                          <SelectValue placeholder="Selecione um serviço..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-lg border-slate-200 dark:border-slate-800">
+                          {servicosUnicos.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-[220px] justify-start text-left font-normal rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 h-10',
+                            !selectedDateServico && 'text-slate-400'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 text-slate-500" />
+                          {selectedDateServico ? format(selectedDateServico, 'dd/MM/yyyy') : 'Filtrar por data...'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 rounded-lg border-slate-200 dark:border-slate-800" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDateServico || undefined}
+                          onSelect={(d) => setSelectedDateServico(d || null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {(selectedServico || selectedDateServico) && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedServico(null);
+                          setSelectedDateServico(null);
+                        }}
+                      >
+                        Limpar Filtros
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsPrintModalOpen(true)}
+                      className="gap-2 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm h-10 ml-auto"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Imprimir / PDF
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              {!selectedServico ? (
+                <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                  <CardContent className="text-center py-16">
+                    <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Wrench className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">Selecione um serviço</p>
+                    <p className="text-sm text-slate-500 mt-1">Utilize os filtros acima para visualizar os dados</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <ManutencaoTable
+                    manutencoes={slicedManutencoes}
+                    onEdit={handleOpenForm}
+                    onDelete={handleOpenDeleteDialog}
+                    isLoading={isLoading}
+                    onRowClick={setDetailManutencao}
+                  />
+                  {showTablePagination && (
+                    <Card className={`${solidCard} rounded-2xl overflow-hidden`}>
+                      <CardContent className="px-4 py-3">
+                        <PaginationControl
+                          currentPage={tablePage}
+                          totalPages={totalTablePages}
+                          onPageChange={setTablePage}
+                          totalRecords={filteredManutencoes.length}
+                          itemsPerPage={ROWS_PER_PAGE}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Modal de formulário */}
