@@ -21,7 +21,9 @@ export interface Entrega {
   montador_2: string | null;
   gastos_entrega: number | null;
   gastos_montagem: number | null;
+  tipo_servico_id: string | null;
   produtividade: number | null;
+  produtividade_por_montador: number | null;
   erros: string | null;
   percentual_gastos: number | null;
   descricao_erros: string | null;
@@ -47,7 +49,9 @@ export interface EntregaFormData {
   montador_2: string;
   gastos_entrega: number;
   gastos_montagem: number;
+  tipo_servico_id?: string;
   produtividade: number;
+  produtividade_por_montador?: number;
   erros: string;
   percentual_gastos: number;
   descricao_erros: string;

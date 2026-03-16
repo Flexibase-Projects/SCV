@@ -58,6 +58,7 @@ export interface AcertoViagem {
   montador_nome?: string;
   entregas?: AcertoViagemEntrega[];
   abastecimentos?: AbastecimentoVinculado[];
+  abastecimentos_requisicao?: AbastecimentoVinculado[];
 }
 
 export interface AcertoViagemEntrega {
@@ -74,8 +75,33 @@ export interface AcertoViagemEntrega {
     cliente: string | null;
     uf: string | null;
     valor: number | null;
+    gastos_entrega?: number | null;
+    percentual_gastos?: number | null;
   };
 }
+
+export interface RateioEntregaPreview {
+  id: string;
+  valor: number;
+  percentual: number;
+  gastoAnterior: number;
+  gastoNovo: number;
+  delta: number;
+  temValorZero: boolean;
+}
+
+export interface RateioResumo {
+  totalDespesas: number;
+  baseValor: number;
+  totalDistribuido: number;
+  diferencaArredondamento: number;
+  temBaseZero: boolean;
+  temEntregaValorZero: boolean;
+  entregas: RateioEntregaPreview[];
+}
+
+export type AcertoRemovedEntregasAction = 'zero' | 'keep';
+export type AcertoDeleteCleanupMode = 'zero' | 'keep';
 
 export interface AcertoViagemFormData {
   veiculo_id: string;
@@ -110,6 +136,8 @@ export interface AcertoViagemFormData {
   entregas_ids: string[];
   // IDs dos abastecimentos vinculados
   abastecimentos_ids: string[];
+  // IDs dos abastecimentos por requisição (já pagos)
+  abastecimentos_requisicao_ids: string[];
 }
 
 // Categorias de despesas para o formulário

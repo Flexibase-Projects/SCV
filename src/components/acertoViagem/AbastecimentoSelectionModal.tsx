@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,8 @@ interface AbastecimentoSelectionModalProps {
   selectedIds: string[];
   onConfirm: (ids: string[]) => void;
   motoristaNome?: string | null;
+  title?: string;
+  helperText?: string;
 }
 
 export function AbastecimentoSelectionModal({
@@ -45,6 +47,8 @@ export function AbastecimentoSelectionModal({
   selectedIds,
   onConfirm,
   motoristaNome,
+  title,
+  helperText,
 }: AbastecimentoSelectionModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedIds);
@@ -59,7 +63,7 @@ export function AbastecimentoSelectionModal({
   // Mas se o usuário estiver editando, não queremos sobrescrever. 
   // Vamos usar um useEffect que atualiza localSelectedIds apenas quando o modal ABRE.
   
-  useMemo(() => {
+  useEffect(() => {
     if (isOpen) {
       setLocalSelectedIds(selectedIds);
     }
@@ -107,13 +111,16 @@ export function AbastecimentoSelectionModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Fuel className="h-5 w-5" />
-            Selecionar Abastecimentos
+            {title || 'Selecionar Abastecimentos'}
             {motoristaNome && (
               <span className="text-sm font-normal text-muted-foreground">
                 - {motoristaNome}
               </span>
             )}
           </DialogTitle>
+          {helperText && (
+            <p className="pt-1 text-xs text-muted-foreground">{helperText}</p>
+          )}
         </DialogHeader>
 
         <div className="flex items-center gap-2 py-4">

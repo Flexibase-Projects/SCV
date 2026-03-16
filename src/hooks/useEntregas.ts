@@ -3,9 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Entrega, EntregaFormData, StatusMontagem } from '@/types/entrega';
 import { toast } from '@/hooks/use-toast';
 
-// Select inclui status_montagem quando a migration 20260203 (e a de novos status) estiver aplicada.
 const ENTREGA_SELECT =
-  'id, pv_foco, nf, valor, cliente, uf, data_saida, motorista, carro, tipo_transporte, status, precisa_montagem, status_montagem, data_montagem, gastos_entrega, gastos_montagem, produtividade, erros, descricao_erros, montador_1, montador_2, percentual_gastos, created_at';
+  'id, pv_foco, nf, valor, cliente, uf, data_saida, motorista, carro, tipo_transporte, status, precisa_montagem, status_montagem, data_montagem, gastos_entrega, gastos_montagem, tipo_servico_id, produtividade, produtividade_por_montador, erros, descricao_erros, montador_1, montador_2, percentual_gastos, created_at';
 
 // Envia payload; status_montagem é persistido quando a migration estiver aplicada.
 function sanitizeEntregaPayload(data: Partial<EntregaFormData>) {
@@ -19,11 +18,12 @@ export function useEntregas() {
       const { data, error } = await supabase
         .from('controle_entregas')
         .select(ENTREGA_SELECT)
-        .order('created_at', { ascending: false })
         .limit(10000);
 
       if (error) throw error;
-      return data as Entrega[];
+      const list = (data || []) as Entrega[];
+      list.sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
+      return list;
     }
   });
 }
@@ -105,8 +105,6 @@ export function useEntregasPaginated({
       }
       if (statusMontagem) query = query.eq('status_montagem', statusMontagem);
 
-      query = query.order(field, { ascending: false });
-
       const { data: pageData, error: pageError } = await query.range(from, to);
 
       if (pageError) throw pageError;
@@ -126,8 +124,11 @@ export function useEntregasPaginated({
 
       if (!countError && exactCount != null) totalCount = exactCount;
 
+      const list = (pageData ?? []) as Entrega[];
+      const key = field === 'created_at' ? 'created_at' : 'data_saida';
+      list.sort((a, b) => (b[key as keyof Entrega] ?? '').toString().localeCompare((a[key as keyof Entrega] ?? '').toString()));
       return {
-        data: (pageData ?? []) as Entrega[],
+        data: list,
         count: totalCount
       };
     },
@@ -155,10 +156,10 @@ export function useEntregasByYear(year: number | null) {
           .select(ENTREGA_SELECT)
           .gte('data_saida', dateFrom)
           .lte('data_saida', dateTo)
-          .order('data_saida', { ascending: true })
           .range(from, to);
         if (error) throw error;
         const chunk = (data ?? []) as Entrega[];
+        chunk.sort((a, b) => (a.data_saida ?? '').localeCompare(b.data_saida ?? ''));
         all.push(...chunk);
         hasMore = chunk.length === PAGE_SIZE_YEAR;
         from += PAGE_SIZE_YEAR;

@@ -14,7 +14,8 @@ import {
   ChevronLeftOutlined as ChevronLeft,
   ChevronRightOutlined as ChevronRight,
   LightModeOutlined as Sun,
-  DarkModeOutlined as Moon
+  DarkModeOutlined as Moon,
+  BarChartOutlined as BarChart3,
 } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +42,7 @@ const operationItems: NavItem[] = [
 
 const financeItems: NavItem[] = [
   { icon: Wallet, label: 'Acerto de Viagem', to: '/acerto-viagem' },
+  { icon: BarChart3, label: 'Produtividade', to: '/produtividade' },
 ];
 
 const getManagementItems = (): NavItem[] => {

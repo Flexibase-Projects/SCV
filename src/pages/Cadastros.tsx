@@ -1,7 +1,8 @@
-import { LocalShippingOutlined as Truck, PeopleOutlined as Users, DirectionsCarOutlined as Car, BuildOutlined as Wrench } from '@mui/icons-material';
+import { PeopleOutlined as Users, DirectionsCarOutlined as Car, BuildOutlined as Wrench, PercentOutlined as Percent } from '@mui/icons-material';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MotoristasTab } from '@/components/cadastros/MotoristasTab';
 import { VeiculosTab } from '@/components/cadastros/VeiculosTab';
+import { TiposServicoTab } from '@/components/cadastros/TiposServicoTab';
 import { ModuleLayout } from '@/components/layout/ModuleLayout';
 import { useMotoristas } from '@/hooks/useMotoristas';
 import { useState } from 'react';
@@ -38,6 +39,10 @@ const Cadastros = () => {
               <Wrench className="h-4 w-4" />
               Montadores ({montadores.length})
             </TabsTrigger>
+            <TabsTrigger value="tipos-servico" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900">
+              <Percent className="h-4 w-4" />
+              Tipos de Serviço
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="motoristas" className="mt-6">
@@ -46,6 +51,10 @@ const Cadastros = () => {
 
           <TabsContent value="veiculos" className="mt-6">
             <VeiculosTab />
+          </TabsContent>
+
+          <TabsContent value="tipos-servico" className="mt-6">
+            <TiposServicoTab />
           </TabsContent>
 
           <TabsContent value="montadores" className="mt-6">

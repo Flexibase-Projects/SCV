@@ -74,13 +74,21 @@ interface EntregaDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entrega: Entrega | null;
-  onEdit: (entrega: Entrega) => void;
+  onEdit?: (entrega: Entrega) => void;
+  showEditButton?: boolean;
 }
 
-export function EntregaDetailModal({ open, onOpenChange, entrega, onEdit }: EntregaDetailModalProps) {
+export function EntregaDetailModal({
+  open,
+  onOpenChange,
+  entrega,
+  onEdit,
+  showEditButton = true,
+}: EntregaDetailModalProps) {
   if (!entrega) return null;
 
   const handleEdit = () => {
+    if (!onEdit) return;
     onEdit(entrega);
     onOpenChange(false);
   };
@@ -217,15 +225,17 @@ export function EntregaDetailModal({ open, onOpenChange, entrega, onEdit }: Entr
         </ScrollArea>
 
         {/* Botão Editar flutuante no canto inferior direito */}
-        <div className="absolute bottom-0 left-0 right-0 pointer-events-none flex justify-end p-4">
-          <Button
-            onClick={handleEdit}
-            className="pointer-events-auto gap-2 rounded-xl shadow-lg border-emerald-200 dark:border-emerald-500/30 bg-emerald-500 hover:bg-emerald-600 text-white"
-          >
-            <Pencil className="h-4 w-4" />
-            Editar
-          </Button>
-        </div>
+        {showEditButton && onEdit && (
+          <div className="absolute bottom-0 left-0 right-0 pointer-events-none flex justify-end p-4">
+            <Button
+              onClick={handleEdit}
+              className="pointer-events-auto gap-2 rounded-xl shadow-lg border-emerald-200 dark:border-emerald-500/30 bg-emerald-500 hover:bg-emerald-600 text-white"
+            >
+              <Pencil className="h-4 w-4" />
+              Editar
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

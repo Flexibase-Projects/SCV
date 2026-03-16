@@ -112,6 +112,10 @@ export function AcertoViagemDetailModal({
   const saldo = calcularSaldo(acerto);
   const dias = calcularDiasViagem(acerto.data_saida, acerto.data_chegada);
   const kmRodado = calcularKmRodado(acerto.km_saida, acerto.km_chegada);
+  const totalRequisicao = (acerto.abastecimentos_requisicao || []).reduce(
+    (acc, item) => acc + (item.valor_total || 0),
+    0
+  );
 
   const responsavel =
     acerto.motorista_nome && acerto.montador_nome
@@ -248,7 +252,7 @@ export function AcertoViagemDetailModal({
           <Separator className="my-3 bg-border dark:bg-white/10" />
 
           {/* Entregas, Abastecimentos, Observações */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             {acerto.entregas && acerto.entregas.length > 0 ? (
               <DetailCard title="Entregas vinculadas" icon={Truck}>
                 <ul className="text-xs space-y-1">
@@ -293,6 +297,35 @@ export function AcertoViagemDetailModal({
             ) : (
               <DetailCard title="Abastecimentos vinculados" icon={Gas}>
                 <p className="text-xs text-muted-foreground">Nenhum abastecimento vinculado</p>
+              </DetailCard>
+            )}
+            {acerto.abastecimentos_requisicao && acerto.abastecimentos_requisicao.length > 0 ? (
+              <DetailCard title="Abastecimento por requisicao" icon={Gas}>
+                <div className="space-y-2">
+                  <p className="text-[11px] text-muted-foreground">
+                    Ja pago pela empresa. Nao entra no total de despesas.
+                  </p>
+                  <p className="text-xs font-semibold">Total: {formatCurrency(totalRequisicao)}</p>
+                  <ul className="text-xs space-y-1">
+                    {acerto.abastecimentos_requisicao.slice(0, 5).map((item) => (
+                      <li key={item.id} className="flex justify-between gap-2">
+                        <span className="text-muted-foreground">{formatDate(item.data)}</span>
+                        <span className="text-foreground">{formatCurrency(item.valor_total)}</span>
+                      </li>
+                    ))}
+                    {acerto.abastecimentos_requisicao.length > 5 && (
+                      <li className="text-muted-foreground pt-1">
+                        + {acerto.abastecimentos_requisicao.length - 5} mais
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </DetailCard>
+            ) : (
+              <DetailCard title="Abastecimento por requisicao" icon={Gas}>
+                <p className="text-xs text-muted-foreground">
+                  Nenhum abastecimento por requisicao vinculado
+                </p>
               </DetailCard>
             )}
             <DetailCard title="Observações" icon={Notes}>

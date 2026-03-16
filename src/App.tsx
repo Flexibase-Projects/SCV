@@ -10,6 +10,7 @@ import Manutencao from "./pages/Manutencao";
 import Cadastros from "./pages/Cadastros";
 import ResumoGeral from "./pages/ResumoGeral";
 import AcertoViagem from "./pages/AcertoViagem";
+import Produtividade from "./pages/Produtividade";
 import Importacao from "./pages/Importacao";
 import Ajuda from "./pages/Ajuda";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => {
             <Route path="/cadastros" element={<Cadastros />} />
             <Route path="/resumo-geral" element={<ResumoGeral />} />
             <Route path="/acerto-viagem" element={<AcertoViagem />} />
+            <Route path="/produtividade" element={<Produtividade />} />
             {isImportEnabled() && <Route path="/importacao" element={<Importacao />} />}
             <Route path="/ajuda" element={<Ajuda />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

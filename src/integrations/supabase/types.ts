@@ -33,8 +33,11 @@ export type Database = {
           percentual_gastos: number | null
           precisa_montagem: boolean | null
           produtividade: number | null
+          produtividade_por_montador: number | null
           pv_foco: string | null
           status: string | null
+          status_montagem: string | null
+          tipo_servico_id: string | null
           tipo_transporte: string | null
           uf: string | null
           updated_at: string
@@ -58,8 +61,11 @@ export type Database = {
           percentual_gastos?: number | null
           precisa_montagem?: boolean | null
           produtividade?: number | null
+          produtividade_por_montador?: number | null
           pv_foco?: string | null
           status?: string | null
+          status_montagem?: string | null
+          tipo_servico_id?: string | null
           tipo_transporte?: string | null
           uf?: string | null
           updated_at?: string
@@ -83,12 +89,47 @@ export type Database = {
           percentual_gastos?: number | null
           precisa_montagem?: boolean | null
           produtividade?: number | null
+          produtividade_por_montador?: number | null
           pv_foco?: string | null
           status?: string | null
+          status_montagem?: string | null
+          tipo_servico_id?: string | null
           tipo_transporte?: string | null
           uf?: string | null
           updated_at?: string
           valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "controle_entregas_tipo_servico_id_fkey"
+            columns: ["tipo_servico_id"]
+            isOneToOne: false
+            referencedRelation: "tipos_servico_montagem"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      tipos_servico_montagem: {
+        Row: {
+          id: string
+          nome: string
+          percentual: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+          percentual: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          percentual?: number
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -202,6 +243,48 @@ export type Database = {
           id?: string
           acerto_id?: string
           entrega_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      acerto_viagem_abastecimentos: {
+        Row: {
+          id: string
+          acerto_id: string
+          abastecimento_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          acerto_id: string
+          abastecimento_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          acerto_id?: string
+          abastecimento_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      acerto_viagem_abastecimentos_requisicao: {
+        Row: {
+          id: string
+          acerto_id: string
+          abastecimento_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          acerto_id: string
+          abastecimento_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          acerto_id?: string
+          abastecimento_id?: string
           created_at?: string
         }
         Relationships: []

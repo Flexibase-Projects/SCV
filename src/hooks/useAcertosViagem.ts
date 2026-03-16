@@ -1,9 +1,18 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { AcertoViagem, AcertoViagemFormData, AcertoViagemEntrega, AbastecimentoVinculado } from '@/types/acertoViagem';
+import type {
+  AbastecimentoVinculado,
+  AcertoDeleteCleanupMode,
+  AcertoRemovedEntregasAction,
+  AcertoViagem,
+  AcertoViagemEntrega,
+  AcertoViagemFormData,
+  RateioResumo,
+} from '@/types/acertoViagem';
+import { calcularTotalDespesas } from '@/types/acertoViagem';
+import { calcularRateioEntregas, gerarAtualizacoesEntrega } from '@/utils/acertoRateio';
 
-// Tipos auxiliares para os relacionamentos nas queries
 type AcertoComRelacionamentos = {
   id: string;
   veiculo_id: string | null;
@@ -50,55 +59,191 @@ type EntregaComRelacionamento = {
     cliente: string | null;
     uf: string | null;
     valor: number | null;
+    gastos_entrega: number | null;
+    percentual_gastos: number | null;
   } | null;
 };
 
-// ==================== QUERIES ====================
+type CreateAcertoPayload = {
+  formData: AcertoViagemFormData;
+};
+
+type UpdateAcertoPayload = {
+  id: string;
+  formData: AcertoViagemFormData;
+  removedEntregasAction?: AcertoRemovedEntregasAction;
+};
+
+type DeleteAcertoPayload = {
+  id: string;
+  cleanupMode: AcertoDeleteCleanupMode;
+};
+
+type ResumoRateioAplicado = {
+  quantidadeAtualizada: number;
+  totalDistribuido: number;
+  diferencaArredondamento: number;
+  baseValor: number;
+  temBaseZero: boolean;
+  temEntregaValorZero: boolean;
+};
+
+type AcertoMutationResult = {
+  acertoId: string;
+  rateio: ResumoRateioAplicado;
+  removidasZeradas: number;
+};
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') return message;
+  }
+  return 'Verifique os dados e tente novamente.';
+}
+
+function mapRateioResumo(rateio: RateioResumo): ResumoRateioAplicado {
+  return {
+    quantidadeAtualizada: rateio.entregas.length,
+    totalDistribuido: rateio.totalDistribuido,
+    diferencaArredondamento: rateio.diferencaArredondamento,
+    baseValor: rateio.baseValor,
+    temBaseZero: rateio.temBaseZero,
+    temEntregaValorZero: rateio.temEntregaValorZero,
+  };
+}
+
+async function fetchEntregasByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from('controle_entregas')
+    .select('id, valor, gastos_entrega')
+    .in('id', ids);
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function applyRateioToEntregas(entregaIds: string[], totalDespesas: number): Promise<ResumoRateioAplicado> {
+  const entregasDb = await fetchEntregasByIds(entregaIds);
+
+  const rateio = calcularRateioEntregas(
+    totalDespesas,
+    entregaIds.map((id) => {
+      const entrega = entregasDb.find((item) => item.id === id);
+      return {
+        id,
+        valor: entrega?.valor ?? 0,
+        gastoAtual: entrega?.gastos_entrega ?? 0,
+      };
+    })
+  );
+
+  const updates = gerarAtualizacoesEntrega(rateio);
+  if (updates.length > 0) {
+    await Promise.all(
+      updates.map(async (update) => {
+        const { error } = await supabase
+          .from('controle_entregas')
+          .update({
+            gastos_entrega: update.gastos_entrega,
+            percentual_gastos: update.percentual_gastos,
+          })
+          .eq('id', update.id);
+
+        if (error) throw error;
+      })
+    );
+  }
+
+  return mapRateioResumo(rateio);
+}
+
+async function filterEntregasSemOutrosAcertos(entregaIds: string[], acertoIdAtual: string): Promise<string[]> {
+  if (entregaIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('acerto_viagem_entregas')
+    .select('entrega_id')
+    .in('entrega_id', entregaIds)
+    .neq('acerto_id', acertoIdAtual);
+
+  if (error) throw error;
+
+  const idsComOutrosAcertos = new Set((data || []).map((item) => item.entrega_id));
+  return entregaIds.filter((id) => !idsComOutrosAcertos.has(id));
+}
+
+async function zeroEntregas(entregaIds: string[]): Promise<number> {
+  if (entregaIds.length === 0) return 0;
+
+  const { error } = await supabase
+    .from('controle_entregas')
+    .update({ gastos_entrega: 0, percentual_gastos: 0 })
+    .in('id', entregaIds);
+
+  if (error) throw error;
+  return entregaIds.length;
+}
+
+async function invalidateAcertoQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['acertos_viagem'] }),
+    queryClient.invalidateQueries({ queryKey: ['entregas_disponiveis_acerto'] }),
+    queryClient.invalidateQueries({ queryKey: ['abastecimentos_disponiveis_acerto'] }),
+    queryClient.invalidateQueries({ queryKey: ['entregas'] }),
+    queryClient.invalidateQueries({ queryKey: ['entregas-paginated'] }),
+    queryClient.invalidateQueries({ queryKey: ['entregas-stats'] }),
+    queryClient.invalidateQueries({ queryKey: ['entregas-by-year'] }),
+  ]);
+}
 
 export function useAcertosViagem() {
   return useQuery({
     queryKey: ['acertos_viagem'],
     queryFn: async () => {
-      // Buscar acertos sem join com montadores (causa erro no Supabase)
       const { data, error } = await supabase
         .from('acertos_viagem')
-        .select(`
+        .select(
+          `
           *,
           veiculos:veiculo_id (placa, modelo),
           motoristas:motorista_id (nome)
-        `)
+        `
+        )
         .order('data_saida', { ascending: false });
 
       if (error) throw error;
 
-      // Buscar nomes dos montadores separadamente se houver montador_id
       const typedData = data as unknown as AcertoComRelacionamentos[];
-      const montadorIds = [...new Set(typedData.filter(item => item.montador_id).map(item => item.montador_id))] as string[];
-      
+      const montadorIds = [...new Set(typedData.filter((item) => item.montador_id).map((item) => item.montador_id))] as string[];
+
       let montadoresMap: Record<string, string> = {};
       if (montadorIds.length > 0) {
         const { data: montadores, error: montadoresError } = await supabase
           .from('montadores')
           .select('id, nome')
           .in('id', montadorIds);
-        
+
         if (!montadoresError && montadores) {
-          montadoresMap = montadores.reduce((acc, m) => {
-            acc[m.id] = m.nome;
-            return acc;
-          }, {} as Record<string, string>);
+          montadoresMap = montadores.reduce(
+            (acc, montador) => {
+              acc[montador.id] = montador.nome;
+              return acc;
+            },
+            {} as Record<string, string>
+          );
         }
       }
 
-      const result = (typedData || []).map((item) => ({
+      return (typedData || []).map((item) => ({
         ...item,
         veiculo_placa: item.veiculos?.placa,
         veiculo_modelo: item.veiculos?.modelo,
         motorista_nome: item.motoristas?.nome,
         montador_nome: item.montador_id ? montadoresMap[item.montador_id] : undefined,
       })) as AcertoViagem[];
-
-      return result;
     },
   });
 }
@@ -111,79 +256,118 @@ export function useAcertoViagem(id: string | null) {
 
       const { data: acerto, error: acertoError } = await supabase
         .from('acertos_viagem')
-        .select(`
+        .select(
+          `
           *,
           veiculos:veiculo_id (placa, modelo),
           motoristas:motorista_id (nome, eh_montador)
-        `)
+        `
+        )
         .eq('id', id)
         .single();
 
       if (acertoError) throw acertoError;
 
-      // Buscar Entregas
       const { data: entregas, error: entregasError } = await supabase
         .from('acerto_viagem_entregas')
-        .select(`
+        .select(
+          `
           *,
           controle_entregas:entrega_id (
-            id, pv_foco, nf, cliente, uf, valor
+            id, pv_foco, nf, cliente, uf, valor, gastos_entrega, percentual_gastos
           )
-        `)
+        `
+        )
         .eq('acerto_id', id);
 
       if (entregasError) throw entregasError;
 
-      // Buscar Abastecimentos Vinculados
       const { data: abastecimentosVinculados, error: absError } = await supabase
         .from('acerto_viagem_abastecimentos')
-        .select(`
+        .select(
+          `
           abastecimento_id,
           abastecimentos (
             id, data, valor_total, posto, litros
           )
-        `)
+        `
+        )
         .eq('acerto_id', id);
 
       if (absError) throw absError;
 
+      const { data: abastecimentosRequisicaoVinculados, error: requisicaoError } = await supabase
+        .from('acerto_viagem_abastecimentos_requisicao')
+        .select(
+          `
+          abastecimento_id,
+          abastecimentos (
+            id, data, valor_total, posto, litros
+          )
+        `
+        )
+        .eq('acerto_id', id);
+
+      if (requisicaoError) throw requisicaoError;
+
       const typedAcerto = acerto as unknown as AcertoComRelacionamentos;
       const typedEntregas = entregas as unknown as EntregaComRelacionamento[];
-      
-      // Mapeamento seguro para abastecimentos
       const abastecimentos = (abastecimentosVinculados || [])
-        .map(item => item.abastecimentos)
-        .filter(item => item !== null) as unknown as AbastecimentoVinculado[];
+        .map((item) => item.abastecimentos)
+        .filter((item) => item !== null) as unknown as AbastecimentoVinculado[];
+      const abastecimentosRequisicao = (abastecimentosRequisicaoVinculados || [])
+        .map((item) => item.abastecimentos)
+        .filter((item) => item !== null) as unknown as AbastecimentoVinculado[];
 
       return {
         ...typedAcerto,
         veiculo_placa: typedAcerto.veiculos?.placa,
         veiculo_modelo: typedAcerto.veiculos?.modelo,
         motorista_nome: typedAcerto.motoristas?.nome,
-        entregas: typedEntregas?.map((e): AcertoViagemEntrega => ({
-          id: e.id,
-          acerto_id: e.acerto_id,
-          entrega_id: e.entrega_id,
-          created_at: e.created_at,
-          entrega: e.controle_entregas ? {
-            id: e.controle_entregas.id,
-            pv_foco: e.controle_entregas.pv_foco,
-            nota_fiscal: e.controle_entregas.nf || null,
-            cliente: e.controle_entregas.cliente,
-            uf: e.controle_entregas.uf,
-            valor: e.controle_entregas.valor,
-          } : undefined,
+        entregas: typedEntregas?.map((entrega): AcertoViagemEntrega => ({
+          id: entrega.id,
+          acerto_id: entrega.acerto_id,
+          entrega_id: entrega.entrega_id,
+          created_at: entrega.created_at,
+          entrega: entrega.controle_entregas
+            ? {
+                id: entrega.controle_entregas.id,
+                pv_foco: entrega.controle_entregas.pv_foco,
+                nota_fiscal: entrega.controle_entregas.nf || null,
+                cliente: entrega.controle_entregas.cliente,
+                uf: entrega.controle_entregas.uf,
+                valor: entrega.controle_entregas.valor,
+                gastos_entrega: entrega.controle_entregas.gastos_entrega,
+                percentual_gastos: entrega.controle_entregas.percentual_gastos,
+              }
+            : undefined,
         })),
-        abastecimentos: abastecimentos,
+        abastecimentos,
+        abastecimentos_requisicao: abastecimentosRequisicao,
       } as AcertoViagem;
     },
     enabled: !!id,
   });
 }
 
-export function useEntregasDisponiveis() {
+export function useEntregasDisponiveis(options?: {
+  searchTerm?: string;
+  includeIds?: string[];
+  enabled?: boolean;
+  limit?: number;
+}) {
+  const searchTerm = options?.searchTerm?.trim() || '';
+  const includeIds = options?.includeIds || [];
+  const enabled = options?.enabled ?? true;
+  const limit = options?.limit ?? 50;
+  const includeKey = [...includeIds].sort().join(',');
+
   return useQuery({
-    queryKey: ['entregas_disponiveis_acerto'],
+    queryKey: ['entregas_disponiveis_acerto', searchTerm, includeKey, limit],
+    enabled,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data: vinculadas, error: vinculadasError } = await supabase
         .from('acerto_viagem_entregas')
@@ -191,75 +375,114 @@ export function useEntregasDisponiveis() {
 
       if (vinculadasError) throw vinculadasError;
 
-      const idsVinculados = (vinculadas || []).map((v) => v.entrega_id) || [];
-      const idsVinculadosSet = new Set(idsVinculados);
+      const idsVinculadosSet = new Set((vinculadas || []).map((item) => item.entrega_id));
+      const includeIdsSet = new Set(includeIds);
+      const sanitizedTerm = searchTerm.replace(/[(),]/g, ' ');
 
-      // Buscar todas as entregas e filtrar no JavaScript (mais seguro que usar .not com múltiplos IDs)
-      // Adicionado filtro para evitar entregas vazias/fantasmas
-      const { data: todasEntregas, error } = await supabase
+      let query = supabase
         .from('controle_entregas')
-        .select('id, pv_foco, nf, cliente, uf, valor, data_saida, motorista, carro')
-        .not('pv_foco', 'is', null)
-        .neq('pv_foco', '')
-        .order('data_saida', { ascending: false });
+        .select('id, pv_foco, nf, cliente, uf, valor, gastos_entrega, percentual_gastos, data_saida, motorista, carro')
+        .order('data_saida', { ascending: false })
+        .limit(limit);
 
+      if (sanitizedTerm) {
+        query = query.or(`pv_foco.ilike.%${sanitizedTerm}%,cliente.ilike.%${sanitizedTerm}%,nf.ilike.%${sanitizedTerm}%`);
+      }
+
+      const { data: entregasBuscadas, error } = await query;
       if (error) throw error;
 
-      // Filtrar entregas não vinculadas e mapear nf para nota_fiscal
-      const data = (todasEntregas || []).filter(entrega => !idsVinculadosSet.has(entrega.id)).map(entrega => ({
-        ...entrega,
-        nota_fiscal: entrega.nf || null,
-      }));
+      const fetchedIdsSet = new Set((entregasBuscadas || []).map((entrega) => entrega.id));
+      const missingIncludeIds = includeIds.filter((id) => !fetchedIdsSet.has(id));
 
-      return data || [];
+      let entregasIncluidas: typeof entregasBuscadas = [];
+      if (missingIncludeIds.length > 0) {
+        const { data: includedData, error: includedError } = await supabase
+          .from('controle_entregas')
+          .select('id, pv_foco, nf, cliente, uf, valor, gastos_entrega, percentual_gastos, data_saida, motorista, carro')
+          .in('id', missingIncludeIds);
+
+        if (includedError) throw includedError;
+        entregasIncluidas = includedData || [];
+      }
+
+      const allEntregas = [...(entregasBuscadas || []), ...(entregasIncluidas || [])];
+      const uniqueEntregas = allEntregas.filter(
+        (entrega, index, self) => self.findIndex((item) => item.id === entrega.id) === index
+      );
+
+      return uniqueEntregas
+        .filter((entrega) => !idsVinculadosSet.has(entrega.id) || includeIdsSet.has(entrega.id))
+        .map((entrega) => ({
+          ...entrega,
+          nota_fiscal: entrega.nf || null,
+        }));
     },
   });
 }
 
-export function useAbastecimentosDisponiveis(veiculoId?: string | null, motoristaId?: string | null) {
+export function useAbastecimentosDisponiveis(options?: {
+  veiculoId?: string | null;
+  motoristaId?: string | null;
+  includeIds?: string[];
+  mode?: 'combustivel' | 'requisicao';
+  enabled?: boolean;
+}) {
+  const veiculoId = options?.veiculoId ?? null;
+  const motoristaId = options?.motoristaId ?? null;
+  const includeIds = options?.includeIds || [];
+  const includeKey = [...includeIds].sort().join(',');
+  const mode = options?.mode || 'combustivel';
+  const enabled = options?.enabled ?? !!motoristaId;
+
   return useQuery({
-    queryKey: ['abastecimentos_disponiveis_acerto', veiculoId, motoristaId],
+    queryKey: ['abastecimentos_disponiveis_acerto', veiculoId, motoristaId, mode, includeKey],
     queryFn: async () => {
-       // Buscar IDs já vinculados a QUALQUER acerto para excluí-los da lista de disponíveis
-       const { data: vinculados, error: vinculadosError } = await supabase
+      const { data: vinculadosCombustivel, error: vinculadosCombustivelError } = await supabase
         .from('acerto_viagem_abastecimentos')
         .select('abastecimento_id');
 
-       if (vinculadosError) throw vinculadosError;
-       const idsVinculadosSet = new Set((vinculados || []).map(v => v.abastecimento_id));
+      if (vinculadosCombustivelError) throw vinculadosCombustivelError;
 
-       let query = supabase
+      const { data: vinculadosRequisicao, error: vinculadosRequisicaoError } = await supabase
+        .from('acerto_viagem_abastecimentos_requisicao')
+        .select('abastecimento_id');
+
+      if (vinculadosRequisicaoError) throw vinculadosRequisicaoError;
+
+      const idsVinculadosSet = new Set([
+        ...(vinculadosCombustivel || []).map((item) => item.abastecimento_id),
+        ...(vinculadosRequisicao || []).map((item) => item.abastecimento_id),
+      ]);
+      const includeIdsSet = new Set(includeIds);
+
+      let query = supabase
         .from('abastecimentos')
         .select('id, data, valor_total, posto, litros, veiculo_id, condutor_id')
         .order('data', { ascending: false });
 
-       // Filtros opcionais de contexto
-       if (veiculoId) query = query.eq('veiculo_id', veiculoId);
-       if (motoristaId) query = query.eq('condutor_id', motoristaId);
+      if (veiculoId) query = query.eq('veiculo_id', veiculoId);
+      if (motoristaId) query = query.eq('condutor_id', motoristaId);
 
-       const { data: abastecimentos, error } = await query;
-       if (error) throw error;
+      const { data: abastecimentos, error } = await query;
+      if (error) throw error;
 
-       // Filtrar os que já estão vinculados
-       return (abastecimentos || []).filter(a => !idsVinculadosSet.has(a.id));
+      return (abastecimentos || []).filter((item) => !idsVinculadosSet.has(item.id) || includeIdsSet.has(item.id));
     },
-    // Obrigatório ter motorista selecionado para filtrar abastecimentos
-    // Isso evita mostrar todos os abastecimentos e melhora a UX
-    enabled: !!motoristaId 
+    enabled,
   });
 }
-
-// ==================== MUTATIONS ====================
 
 export function useCreateAcertoViagem() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (formData: AcertoViagemFormData) => {
-      const { entregas_ids, abastecimentos_ids, ...acertoData } = formData;
+    mutationFn: async (input: CreateAcertoPayload | AcertoViagemFormData): Promise<AcertoMutationResult> => {
+      const formData = 'formData' in input ? input.formData : input;
+      const { entregas_ids, abastecimentos_ids, abastecimentos_requisicao_ids, ...acertoData } = formData;
+      const totalDespesas = calcularTotalDespesas(formData);
 
-      // Sanitização de dados - converter strings vazias para null
       const payload = {
         ...acertoData,
         motorista_id: acertoData.motorista_id || null,
@@ -274,50 +497,49 @@ export function useCreateAcertoViagem() {
 
       if (acertoError) throw acertoError;
 
-      // Vincular Entregas
-      if (entregas_ids && entregas_ids.length > 0) {
-        const entregasVinculos = entregas_ids.map(entrega_id => ({
-          acerto_id: acerto.id,
-          entrega_id,
-        }));
-
+      if (entregas_ids.length > 0) {
+        const vinculos = entregas_ids.map((entrega_id) => ({ acerto_id: acerto.id, entrega_id }));
         const { error: entregasError } = await supabase
           .from('acerto_viagem_entregas')
-          .insert(entregasVinculos);
-
+          .insert(vinculos);
         if (entregasError) throw entregasError;
       }
 
-      // Vincular Abastecimentos
-      if (abastecimentos_ids && abastecimentos_ids.length > 0) {
-        const abastecimentosVinculos = abastecimentos_ids.map(abastecimento_id => ({
-          acerto_id: acerto.id,
-          abastecimento_id,
-        }));
-
+      if (abastecimentos_ids.length > 0) {
+        const vinculos = abastecimentos_ids.map((abastecimento_id) => ({ acerto_id: acerto.id, abastecimento_id }));
         const { error: absError } = await supabase
           .from('acerto_viagem_abastecimentos')
-          .insert(abastecimentosVinculos);
-
+          .insert(vinculos);
         if (absError) throw absError;
       }
 
-      return acerto;
+      if (abastecimentos_requisicao_ids.length > 0) {
+        const vinculos = abastecimentos_requisicao_ids.map((abastecimento_id) => ({ acerto_id: acerto.id, abastecimento_id }));
+        const { error: reqError } = await supabase
+          .from('acerto_viagem_abastecimentos_requisicao')
+          .insert(vinculos);
+        if (reqError) throw reqError;
+      }
+
+      const rateio = await applyRateioToEntregas(entregas_ids, totalDespesas);
+      return {
+        acertoId: acerto.id,
+        rateio,
+        removidasZeradas: 0,
+      };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['acertos_viagem'] });
-      queryClient.invalidateQueries({ queryKey: ['entregas_disponiveis_acerto'] });
-      queryClient.invalidateQueries({ queryKey: ['abastecimentos_disponiveis_acerto'] });
+    onSuccess: async (result) => {
+      await invalidateAcertoQueries(queryClient);
       toast({
         title: 'Sucesso!',
-        description: 'Acerto de viagem criado com sucesso.',
+        description: `Acerto criado. Rateio aplicado em ${result.rateio.quantidadeAtualizada} entrega(s).`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Erro ao criar acerto:', error);
       toast({
         title: 'Erro ao criar',
-        description: error.message || 'Verifique os dados e tente novamente.',
+        description: getErrorMessage(error),
         variant: 'destructive',
       });
     },
@@ -329,10 +551,20 @@ export function useUpdateAcertoViagem() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, formData }: { id: string; formData: AcertoViagemFormData }) => {
-      const { entregas_ids, abastecimentos_ids, ...acertoData } = formData;
+    mutationFn: async ({ id, formData, removedEntregasAction = 'keep' }: UpdateAcertoPayload): Promise<AcertoMutationResult> => {
+      const { entregas_ids, abastecimentos_ids, abastecimentos_requisicao_ids, ...acertoData } = formData;
+      const totalDespesas = calcularTotalDespesas(formData);
 
-      // Sanitização de dados - converter strings vazias para null
+      const { data: oldLinks, error: oldLinksError } = await supabase
+        .from('acerto_viagem_entregas')
+        .select('entrega_id')
+        .eq('acerto_id', id);
+
+      if (oldLinksError) throw oldLinksError;
+
+      const oldIds = (oldLinks || []).map((item) => item.entrega_id);
+      const removedIds = oldIds.filter((oldId) => !entregas_ids.includes(oldId));
+
       const payload = {
         ...acertoData,
         motorista_id: acertoData.motorista_id || null,
@@ -346,7 +578,6 @@ export function useUpdateAcertoViagem() {
 
       if (acertoError) throw acertoError;
 
-      // Atualizar Entregas (Remove tudo e insere novos)
       const { error: deleteEntregasError } = await supabase
         .from('acerto_viagem_entregas')
         .delete()
@@ -354,20 +585,14 @@ export function useUpdateAcertoViagem() {
 
       if (deleteEntregasError) throw deleteEntregasError;
 
-      if (entregas_ids && entregas_ids.length > 0) {
-        const entregasVinculos = entregas_ids.map(entrega_id => ({
-          acerto_id: id,
-          entrega_id,
-        }));
-
+      if (entregas_ids.length > 0) {
+        const vinculos = entregas_ids.map((entrega_id) => ({ acerto_id: id, entrega_id }));
         const { error: entregasError } = await supabase
           .from('acerto_viagem_entregas')
-          .insert(entregasVinculos);
-
+          .insert(vinculos);
         if (entregasError) throw entregasError;
       }
 
-      // Atualizar Abastecimentos (Remove tudo e insere novos)
       const { error: deleteAbsError } = await supabase
         .from('acerto_viagem_abastecimentos')
         .delete()
@@ -375,33 +600,57 @@ export function useUpdateAcertoViagem() {
 
       if (deleteAbsError) throw deleteAbsError;
 
-      if (abastecimentos_ids && abastecimentos_ids.length > 0) {
-        const abastecimentosVinculos = abastecimentos_ids.map(abastecimento_id => ({
-          acerto_id: id,
-          abastecimento_id,
-        }));
-
+      if (abastecimentos_ids.length > 0) {
+        const vinculos = abastecimentos_ids.map((abastecimento_id) => ({ acerto_id: id, abastecimento_id }));
         const { error: absError } = await supabase
           .from('acerto_viagem_abastecimentos')
-          .insert(abastecimentosVinculos);
-
+          .insert(vinculos);
         if (absError) throw absError;
       }
+
+      const { error: deleteReqError } = await supabase
+        .from('acerto_viagem_abastecimentos_requisicao')
+        .delete()
+        .eq('acerto_id', id);
+
+      if (deleteReqError) throw deleteReqError;
+
+      if (abastecimentos_requisicao_ids.length > 0) {
+        const vinculos = abastecimentos_requisicao_ids.map((abastecimento_id) => ({ acerto_id: id, abastecimento_id }));
+        const { error: reqError } = await supabase
+          .from('acerto_viagem_abastecimentos_requisicao')
+          .insert(vinculos);
+        if (reqError) throw reqError;
+      }
+
+      const rateio = await applyRateioToEntregas(entregas_ids, totalDespesas);
+
+      let removidasZeradas = 0;
+      if (removedEntregasAction === 'zero' && removedIds.length > 0) {
+        const elegiveisParaZerar = await filterEntregasSemOutrosAcertos(removedIds, id);
+        removidasZeradas = await zeroEntregas(elegiveisParaZerar);
+      }
+
+      return {
+        acertoId: id,
+        rateio,
+        removidasZeradas,
+      };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['acertos_viagem'] });
-      queryClient.invalidateQueries({ queryKey: ['entregas_disponiveis_acerto'] });
-      queryClient.invalidateQueries({ queryKey: ['abastecimentos_disponiveis_acerto'] });
+    onSuccess: async (result) => {
+      await invalidateAcertoQueries(queryClient);
+      const complemento =
+        result.removidasZeradas > 0 ? ` ${result.removidasZeradas} removida(s) zerada(s).` : '';
       toast({
         title: 'Sucesso!',
-        description: 'Acerto de viagem atualizado com sucesso.',
+        description: `Acerto atualizado. Rateio aplicado em ${result.rateio.quantidadeAtualizada} entrega(s).${complemento}`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Erro ao atualizar acerto:', error);
       toast({
         title: 'Erro ao atualizar',
-        description: error.message || 'Verifique os dados e tente novamente.',
+        description: getErrorMessage(error),
         variant: 'destructive',
       });
     },
@@ -413,27 +662,53 @@ export function useDeleteAcertoViagem() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (input: DeleteAcertoPayload | string) => {
+      const payload = typeof input === 'string' ? { id: input, cleanupMode: 'keep' as const } : input;
+
+      const { data: links, error: linksError } = await supabase
+        .from('acerto_viagem_entregas')
+        .select('entrega_id')
+        .eq('acerto_id', payload.id);
+
+      if (linksError) throw linksError;
+
+      const entregaIds = (links || []).map((item) => item.entrega_id);
+
+      let elegiveisParaZerar: string[] = [];
+      if (payload.cleanupMode === 'zero' && entregaIds.length > 0) {
+        elegiveisParaZerar = await filterEntregasSemOutrosAcertos(entregaIds, payload.id);
+      }
+
       const { error } = await supabase
         .from('acertos_viagem')
         .delete()
-        .eq('id', id);
+        .eq('id', payload.id);
 
       if (error) throw error;
+
+      if (payload.cleanupMode === 'zero' && elegiveisParaZerar.length > 0) {
+        await zeroEntregas(elegiveisParaZerar);
+      }
+
+      return {
+        cleanupMode: payload.cleanupMode,
+        entregasZeradas: elegiveisParaZerar.length,
+      };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['acertos_viagem'] });
-      queryClient.invalidateQueries({ queryKey: ['entregas_disponiveis_acerto'] });
-      queryClient.invalidateQueries({ queryKey: ['abastecimentos_disponiveis_acerto'] });
+    onSuccess: async (result) => {
+      await invalidateAcertoQueries(queryClient);
       toast({
         title: 'Sucesso!',
-        description: 'Acerto de viagem excluido com sucesso.',
+        description:
+          result.cleanupMode === 'zero'
+            ? `Acerto excluido e ${result.entregasZeradas} entrega(s) zerada(s).`
+            : 'Acerto excluido com sucesso.',
       });
     },
-    onError: () => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro',
-        description: 'Não foi possível excluir o acerto de viagem.',
+        description: getErrorMessage(error),
         variant: 'destructive',
       });
     },

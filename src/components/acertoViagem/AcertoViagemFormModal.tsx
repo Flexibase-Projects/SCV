@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -30,9 +29,14 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { SearchOutlined, LocalGasStationOutlined as Fuel, LinkOutlined as Link, WarningOutlined as AlertTriangle } from '@mui/icons-material';
+import {
+  AddOutlined as Plus,
+  LocalGasStationOutlined as Fuel,
+  LinkOutlined as Link,
+  CloseOutlined as X,
+  InfoOutlined as Info,
+} from '@mui/icons-material';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import { useMotoristas } from '@/hooks/useMotoristas';
 import { 
@@ -45,8 +49,10 @@ import {
 import { 
   AcertoViagem, 
   AcertoViagemFormData,
+  AcertoRemovedEntregasAction,
   CATEGORIAS_DESPESAS,
   STATUS_ACERTO_OPTIONS,
+  RateioResumo,
   calcularTotalDespesas,
   calcularSaldo,
   calcularDiasViagem,
@@ -54,23 +60,15 @@ import {
   AbastecimentoVinculado
 } from '@/types/acertoViagem';
 import { AbastecimentoSelectionModal } from './AbastecimentoSelectionModal';
-import { formatDateLocal } from '@/utils/dateUtils';
+import { EntregaSelectionModal, type EntregaDisponivel } from './EntregaSelectionModal';
+import { RemovedEntregasDecisionModal } from './RemovedEntregasDecisionModal';
+import { RateioConfirmModal } from './RateioConfirmModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
+import { useDebounce } from '@/hooks/use-debounce';
+import { calcularRateioEntregas } from '@/utils/acertoRateio';
 
 // Tipo para entrega disponível (retorno simplificado do hook)
-type EntregaDisponivel = {
-  id: string;
-  pv_foco: string | null;
-  nota_fiscal?: string | null;
-  cliente: string | null;
-  uf: string | null;
-  valor: number | null;
-  data_saida?: string | null;
-  motorista?: string | null;
-  carro?: string | null;
-};
-
 const formSchema = z.object({
   veiculo_id: z.string().min(1, 'Selecione um veículo'),
   motorista_id: z.string().min(1, 'Selecione um motorista'),
@@ -101,6 +99,7 @@ const formSchema = z.object({
   status: z.enum(['PENDENTE', 'ACERTADO']),
   entregas_ids: z.array(z.string()),
   abastecimentos_ids: z.array(z.string()),
+  abastecimentos_requisicao_ids: z.array(z.string()),
 });
 
 interface AcertoViagemFormModalProps {
@@ -109,17 +108,30 @@ interface AcertoViagemFormModalProps {
   acerto: AcertoViagem | null;
 }
 
+function formatCurrency(value: number | null | undefined) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+}
+
 export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemFormModalProps) {
   const { data: veiculos = [] } = useVeiculos();
   const { data: motoristas = [] } = useMotoristas(true);
-  const { data: entregasDisponiveis = [] } = useEntregasDisponiveis();
   const { data: acertoCompleto } = useAcertoViagem(acerto?.id || null);
   const [buscaEntrega, setBuscaEntrega] = useState('');
+  const [isEntregaModalOpen, setIsEntregaModalOpen] = useState(false);
   const [isAbastecimentoModalOpen, setIsAbastecimentoModalOpen] = useState(false);
+  const [isRequisicaoModalOpen, setIsRequisicaoModalOpen] = useState(false);
+  const [isRateioConfirmOpen, setIsRateioConfirmOpen] = useState(false);
+  const [isRemovedDecisionOpen, setIsRemovedDecisionOpen] = useState(false);
+  const [submitDraft, setSubmitDraft] = useState<AcertoViagemFormData | null>(null);
+  const [submitRemovedAction, setSubmitRemovedAction] = useState<AcertoRemovedEntregasAction>('keep');
+  const [pendingRateio, setPendingRateio] = useState<RateioResumo | null>(null);
+  const [pendingRemovedIds, setPendingRemovedIds] = useState<string[]>([]);
   const { toast } = useToast();
   
   const createAcerto = useCreateAcertoViagem();
   const updateAcerto = useUpdateAcertoViagem();
+
+  const isSubmitting = createAcerto.isPending || updateAcerto.isPending;
 
   const form = useForm<AcertoViagemFormData>({
     resolver: zodResolver(formSchema),
@@ -150,23 +162,53 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
       status: 'PENDENTE',
       entregas_ids: [],
       abastecimentos_ids: [],
+      abastecimentos_requisicao_ids: [],
     },
   });
 
   const selectedVeiculoId = form.watch('veiculo_id');
   const selectedMotoristaId = form.watch('motorista_id');
+  const entregasIds = form.watch('entregas_ids');
+  const abastecimentosIds = form.watch('abastecimentos_ids');
+  const abastecimentosRequisicaoIds = form.watch('abastecimentos_requisicao_ids');
+  const debouncedBuscaEntrega = useDebounce(buscaEntrega, 300);
 
-  // Buscar abastecimentos disponíveis com base nos filtros
-  const { data: abastecimentosDisponiveis = [] } = useAbastecimentosDisponiveis(
-    selectedVeiculoId || null, 
-    selectedMotoristaId || null
-  );
+  const { data: entregasDisponiveis = [], isLoading: isLoadingEntregas } = useEntregasDisponiveis({
+    searchTerm: debouncedBuscaEntrega,
+    includeIds: entregasIds,
+    enabled: isOpen && isEntregaModalOpen,
+    limit: 60,
+  });
+
+  const { data: abastecimentosDisponiveis = [] } = useAbastecimentosDisponiveis({
+    veiculoId: selectedVeiculoId || null,
+    motoristaId: selectedMotoristaId || null,
+    includeIds: abastecimentosIds,
+    mode: 'combustivel',
+    enabled: isOpen && isAbastecimentoModalOpen,
+  });
+
+  const { data: abastecimentosRequisicaoDisponiveis = [] } = useAbastecimentosDisponiveis({
+    veiculoId: selectedVeiculoId || null,
+    motoristaId: selectedMotoristaId || null,
+    includeIds: abastecimentosRequisicaoIds,
+    mode: 'requisicao',
+    enabled: isOpen && isRequisicaoModalOpen,
+  });
 
   // Resetar busca quando modal abrir/fechar
   useEffect(() => {
     if (!isOpen) {
       setBuscaEntrega('');
+      setIsEntregaModalOpen(false);
       setIsAbastecimentoModalOpen(false);
+      setIsRequisicaoModalOpen(false);
+      setIsRateioConfirmOpen(false);
+      setIsRemovedDecisionOpen(false);
+      setSubmitDraft(null);
+      setPendingRateio(null);
+      setPendingRemovedIds([]);
+      setSubmitRemovedAction('keep');
     }
   }, [isOpen]);
 
@@ -200,6 +242,7 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
         status: acertoCompleto.status,
         entregas_ids: acertoCompleto.entregas?.map(e => e.entrega_id) || [],
         abastecimentos_ids: acertoCompleto.abastecimentos?.map(a => a.id) || [],
+        abastecimentos_requisicao_ids: acertoCompleto.abastecimentos_requisicao?.map(a => a.id) || [],
       });
     } else if (!acerto) {
       form.reset();
@@ -219,31 +262,73 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
   }, [veiculos, formValues.veiculo_id]);
 
   // Entregas para exibição (disponíveis + já vinculadas ao acerto)
-  const entregasParaExibir = useMemo((): EntregaDisponivel[] => {
-    const entregasJaVinculadas = acertoCompleto?.entregas?.map(e => e.entrega) || [];
-    const idsJaVinculados = entregasJaVinculadas.map(e => e?.id);
+  const entregasMap = useMemo(() => {
+    const map = new Map<string, EntregaDisponivel>();
     
     // Combinar disponíveis + já vinculadas (sem duplicatas)
-    const todas: EntregaDisponivel[] = [
-      ...entregasDisponiveis.filter((e) => !idsJaVinculados.includes(e.id)),
-      ...(entregasJaVinculadas.filter(Boolean) as EntregaDisponivel[]),
-    ];
-    
-    return todas;
-  }, [entregasDisponiveis, acertoCompleto]);
-
-  // Filtrar entregas por busca (PV FOCO, cliente, etc)
-  const entregasFiltradas = useMemo(() => {
-    if (!buscaEntrega.trim()) return entregasParaExibir;
-    
-    const buscaLower = buscaEntrega.toLowerCase();
-    return entregasParaExibir.filter(entrega => {
-      const pvFoco = entrega.pv_foco?.toLowerCase() || '';
-      const cliente = entrega.cliente?.toLowerCase() || '';
-      const notaFiscal = entrega.nota_fiscal?.toLowerCase() || '';
-      return pvFoco.includes(buscaLower) || cliente.includes(buscaLower) || notaFiscal.includes(buscaLower);
+    (acertoCompleto?.entregas || []).forEach((item) => {
+      if (!item.entrega?.id) return;
+      map.set(item.entrega.id, {
+        id: item.entrega.id,
+        pv_foco: item.entrega.pv_foco,
+        nota_fiscal: item.entrega.nota_fiscal,
+        cliente: item.entrega.cliente,
+        uf: item.entrega.uf,
+        valor: item.entrega.valor,
+        gastos_entrega: item.entrega.gastos_entrega ?? 0,
+        percentual_gastos: item.entrega.percentual_gastos ?? 0,
+      });
     });
-  }, [entregasParaExibir, buscaEntrega]);
+
+    entregasDisponiveis.forEach((entrega) => {
+      map.set(entrega.id, entrega);
+    });
+
+    return map;
+  }, [acertoCompleto, entregasDisponiveis]);
+
+  const entregasSelecionadas = useMemo(() => {
+    return entregasIds.map((id) => {
+      const entrega = entregasMap.get(id);
+      return (
+        entrega || {
+          id,
+          pv_foco: null,
+          nota_fiscal: null,
+          cliente: 'Entrega não carregada',
+          uf: null,
+          valor: 0,
+          gastos_entrega: 0,
+          percentual_gastos: 0,
+        }
+      );
+    });
+  }, [entregasIds, entregasMap]);
+
+  const entregasOriginaisIds = useMemo(
+    () => acertoCompleto?.entregas?.map((item) => item.entrega_id) || [],
+    [acertoCompleto]
+  );
+
+  const buildRateioPreview = useCallback(
+    (data: AcertoViagemFormData): RateioResumo => {
+      const total = calcularTotalDespesas(data);
+      const inputs = data.entregas_ids.map((id) => {
+        const entrega = entregasMap.get(id);
+        return {
+          id,
+          valor: entrega?.valor ?? 0,
+          gastoAtual: entrega?.gastos_entrega ?? 0,
+        };
+      });
+      return calcularRateioEntregas(total, inputs);
+    },
+    [entregasMap]
+  );
+
+  const rateioPreviewRealtime = useMemo(() => {
+    return buildRateioPreview(formValues as AcertoViagemFormData);
+  }, [formValues, buildRateioPreview]);
 
   // Abastecimentos para seleção (disponíveis + já vinculados)
   const abastecimentosParaSelecao = useMemo(() => {
@@ -268,6 +353,34 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
     return [...vinculadosAtual, ...disponiveisFormatados];
   }, [abastecimentosDisponiveis, acertoCompleto]);
 
+  const abastecimentosRequisicaoParaSelecao = useMemo(() => {
+    const vinculadosAtual = acertoCompleto?.abastecimentos_requisicao || [];
+    const idsVinculadosAtual = vinculadosAtual.map((abastecimento) => abastecimento.id);
+    const disponiveis = abastecimentosRequisicaoDisponiveis.filter(
+      (abastecimento) => !idsVinculadosAtual.includes(abastecimento.id)
+    );
+    const disponiveisFormatados: AbastecimentoVinculado[] = disponiveis.map((abastecimento) => ({
+      id: abastecimento.id,
+      data: abastecimento.data,
+      valor_total: abastecimento.valor_total,
+      posto: abastecimento.posto || 'NÃ£o informado',
+      litros: abastecimento.litros,
+    }));
+    return [...vinculadosAtual, ...disponiveisFormatados];
+  }, [abastecimentosRequisicaoDisponiveis, acertoCompleto]);
+
+  const handleEntregasConfirm = (ids: string[]) => {
+    form.setValue('entregas_ids', ids, { shouldDirty: true, shouldTouch: true });
+  };
+
+  const handleRemoveEntrega = (entregaId: string) => {
+    form.setValue(
+      'entregas_ids',
+      entregasIds.filter((id) => id !== entregaId),
+      { shouldDirty: true, shouldTouch: true }
+    );
+  };
+
   const handleAbastecimentosConfirm = (ids: string[]) => {
     form.setValue('abastecimentos_ids', ids);
     
@@ -276,12 +389,29 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
     
     if (ids.length > 0) {
         form.setValue('despesa_combustivel', total);
+    } else {
+        form.setValue('despesa_combustivel', 0);
     }
   };
 
-  const abastecimentosIds = form.watch('abastecimentos_ids');
+  const handleRequisicaoConfirm = (ids: string[]) => {
+    form.setValue('abastecimentos_requisicao_ids', ids, { shouldDirty: true, shouldTouch: true });
+  };
+
   const temAbastecimentoVinculado = abastecimentosIds && abastecimentosIds.length > 0;
-  
+  const temRequisicaoVinculada = abastecimentosRequisicaoIds.length > 0;
+  const requisicoesSelecionadas = useMemo(
+    () =>
+      abastecimentosRequisicaoParaSelecao.filter((abastecimento) =>
+        abastecimentosRequisicaoIds.includes(abastecimento.id)
+      ),
+    [abastecimentosRequisicaoParaSelecao, abastecimentosRequisicaoIds]
+  );
+  const totalRequisicaoSelecionado = useMemo(
+    () => requisicoesSelecionadas.reduce((acc, item) => acc + (item.valor_total || 0), 0),
+    [requisicoesSelecionadas]
+  );
+
   // Nomes dos postos vinculados para tooltip
   const nomesPostosVinculados = useMemo(() => {
       return abastecimentosParaSelecao
@@ -289,6 +419,14 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
         .map(a => `${a.posto} (${a.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`)
         .join('\n');
   }, [abastecimentosParaSelecao, abastecimentosIds]);
+
+  const nomesPostosRequisicaoVinculados = useMemo(() => {
+    return requisicoesSelecionadas
+      .map((abastecimento) =>
+        `${abastecimento.posto} (${abastecimento.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`
+      )
+      .join('\n');
+  }, [requisicoesSelecionadas]);
 
   // Nome do motorista selecionado para exibir no modal
   const nomeMotoristaSelecionado = useMemo(() => {
@@ -309,6 +447,18 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
     setIsAbastecimentoModalOpen(true);
   };
 
+  const handleOpenRequisicaoModal = () => {
+    if (!selectedMotoristaId) {
+      toast({
+        title: 'Motorista nÃ£o selecionado',
+        description: 'Por favor, selecione um motorista antes de vincular abastecimentos por requisiÃ§Ã£o.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsRequisicaoModalOpen(true);
+  };
+
   // Limpar abastecimentos vinculados quando motorista mudar (para evitar incompatibilidade)
   const previousMotoristaId = useRef<string | null>(null);
   useEffect(() => {
@@ -316,36 +466,107 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
     if (
       previousMotoristaId.current !== null && 
       previousMotoristaId.current !== selectedMotoristaId &&
-      abastecimentosIds.length > 0
+      (abastecimentosIds.length > 0 || abastecimentosRequisicaoIds.length > 0)
     ) {
       toast({
         title: 'Atenção: Motorista alterado',
-        description: 'Os abastecimentos vinculados foram removidos. Por favor, vincule novamente os abastecimentos do novo motorista.',
+        description: 'Os abastecimentos vinculados (combustível e requisição) foram removidos. Por favor, vincule novamente para o novo motorista.',
         variant: 'destructive',
       });
       form.setValue('abastecimentos_ids', []);
+      form.setValue('abastecimentos_requisicao_ids', []);
       form.setValue('despesa_combustivel', 0);
     }
     previousMotoristaId.current = selectedMotoristaId || null;
-  }, [selectedMotoristaId, abastecimentosIds.length, form, toast]);
+  }, [selectedMotoristaId, abastecimentosIds.length, abastecimentosRequisicaoIds.length, form, toast]);
+
+  const handleSubmitSuccess = () => {
+    setBuscaEntrega('');
+    setIsRateioConfirmOpen(false);
+    setIsRemovedDecisionOpen(false);
+    setSubmitDraft(null);
+    setPendingRemovedIds([]);
+    setPendingRateio(null);
+    setSubmitRemovedAction('keep');
+    onClose();
+  };
+
+  const executePersist = (data: AcertoViagemFormData, removedAction: AcertoRemovedEntregasAction) => {
+    if (acerto) {
+      updateAcerto.mutate(
+        { id: acerto.id, formData: data, removedEntregasAction: removedAction },
+        { onSuccess: handleSubmitSuccess }
+      );
+      return;
+    }
+
+    createAcerto.mutate(
+      { formData: data },
+      { onSuccess: handleSubmitSuccess }
+    );
+  };
+
+  const openRateioConfirmation = (
+    data: AcertoViagemFormData,
+    removedIds: string[],
+    removedAction: AcertoRemovedEntregasAction
+  ) => {
+    setSubmitDraft(data);
+    setPendingRemovedIds(removedIds);
+    setSubmitRemovedAction(removedAction);
+
+    if (data.entregas_ids.length === 0) {
+      executePersist(data, removedAction);
+      return;
+    }
+
+    setPendingRateio(buildRateioPreview(data));
+    setIsRateioConfirmOpen(true);
+  };
 
   const onSubmit = (data: AcertoViagemFormData) => {
-    if (acerto) {
-      updateAcerto.mutate({ id: acerto.id, formData: data }, {
-        onSuccess: () => {
-          setBuscaEntrega('');
-          onClose();
-        },
-      });
-    } else {
-      createAcerto.mutate(data, {
-        onSuccess: () => {
-          setBuscaEntrega('');
-          onClose();
-        },
-      });
+    const removedIds =
+      acerto != null ? entregasOriginaisIds.filter((id) => !data.entregas_ids.includes(id)) : [];
+
+    if (acerto && removedIds.length > 0) {
+      setSubmitDraft(data);
+      setPendingRemovedIds(removedIds);
+      setIsRemovedDecisionOpen(true);
+      return;
     }
+
+    openRateioConfirmation(data, removedIds, 'keep');
   };
+
+  const handleChooseKeepRemoved = () => {
+    if (!submitDraft) return;
+    setIsRemovedDecisionOpen(false);
+    openRateioConfirmation(submitDraft, pendingRemovedIds, 'keep');
+  };
+
+  const handleChooseZeroRemoved = () => {
+    if (!submitDraft) return;
+    setIsRemovedDecisionOpen(false);
+    openRateioConfirmation(submitDraft, pendingRemovedIds, 'zero');
+  };
+
+  const removedEntregasPreview = useMemo(() => {
+    return pendingRemovedIds.map((id) => {
+      const entrega = entregasMap.get(id);
+      return (
+        entrega || {
+          id,
+          pv_foco: null,
+          nota_fiscal: null,
+          cliente: 'Entrega não carregada',
+          uf: null,
+          valor: 0,
+          gastos_entrega: 0,
+          percentual_gastos: 0,
+        }
+      );
+    });
+  }, [pendingRemovedIds, entregasMap]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -657,6 +878,80 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
                     ))}
                   </div>
 
+                  <div className="mt-4 rounded-lg border border-dashed bg-muted/20 p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Abastecimento por Requisicao</p>
+                        <p className="text-xs text-muted-foreground">
+                          Valor ja pago pela empresa antes da viagem. Apenas vinculacao e exibicao.
+                        </p>
+                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="gap-1 disabled:cursor-not-allowed disabled:opacity-50"
+                                onClick={handleOpenRequisicaoModal}
+                                disabled={!selectedMotoristaId}
+                              >
+                                <Link className="h-4 w-4" />
+                                Vincular Requisicao
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {!selectedMotoristaId && (
+                            <TooltipContent>
+                              <p>Selecione um motorista primeiro para vincular requisicoes.</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                      <Badge variant={temRequisicaoVinculada ? 'default' : 'outline'}>
+                        {abastecimentosRequisicaoIds.length} requisicao(oes) vinculada(s)
+                      </Badge>
+                      <Badge variant="outline">
+                        Total requisicao: {formatCurrency(totalRequisicaoSelecionado)}
+                      </Badge>
+                      {temRequisicaoVinculada && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex cursor-help items-center gap-1 text-muted-foreground">
+                                <Fuel className="h-4 w-4" />
+                                Ver itens
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <pre className="max-h-40 whitespace-pre-wrap text-xs">{nomesPostosRequisicaoVinculados}</pre>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+
+                    {requisicoesSelecionadas.length > 0 && (
+                      <div className="mt-3 max-h-32 overflow-auto rounded-md border bg-background p-2">
+                        <ul className="space-y-1 text-xs">
+                          {requisicoesSelecionadas.map((item) => (
+                            <li key={item.id} className="flex items-center justify-between gap-2">
+                              <span className="truncate text-muted-foreground">
+                                {item.posto || 'Posto nao informado'}
+                              </span>
+                              <span className="font-medium">{formatCurrency(item.valor_total)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
                   <Separator className="my-4" />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -735,40 +1030,35 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
                     name="entregas_ids"
                     render={({ field }) => (
                       <FormItem>
-                        <div className="mb-3">
-                          <div className="relative">
-                            <SearchOutlined className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Buscar por PV FOCO, cliente ou nota fiscal..."
-                              value={buscaEntrega}
-                              onChange={(e) => setBuscaEntrega(e.target.value)}
-                              className="pl-9"
-                            />
-                          </div>
+                        <div className="mb-3 flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">
+                            {field.value.length} entrega(s) vinculada(s)
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => {
+                              setBuscaEntrega('');
+                              setIsEntregaModalOpen(true);
+                            }}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Incluir entrega
+                          </Button>
                         </div>
                         <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-2">
-                          {entregasFiltradas.length === 0 ? (
+                          {field.value.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-4">
-                              {buscaEntrega.trim() 
-                                ? 'Nenhuma entrega encontrada com o termo buscado'
-                                : 'Nenhuma entrega disponível para vincular'}
+                              Nenhuma entrega vinculada. Use "Incluir entrega" para buscar por PV, NF ou cliente.
                             </p>
                           ) : (
-                            entregasFiltradas.map((entrega) => (
+                            entregasSelecionadas.map((entrega) => (
                               <div 
                                 key={entrega.id} 
-                                className="flex items-center space-x-3 p-2 rounded hover:bg-muted"
+                                className="flex items-center gap-3 p-2 rounded border bg-muted/20"
                               >
-                                <Checkbox
-                                  checked={field.value.includes(entrega.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      field.onChange([...field.value, entrega.id]);
-                                    } else {
-                                      field.onChange(field.value.filter(id => id !== entrega.id));
-                                    }
-                                  }}
-                                />
                                 <div className="flex-1 text-sm">
                                   <span className="font-medium">
                                     {entrega.pv_foco || entrega.nota_fiscal || 'Sem PV'}
@@ -778,15 +1068,93 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
                                   <span className="text-muted-foreground"> ({entrega.uf || 'N/A'})</span>
                                 </div>
                                 <Badge variant="outline">
-                                  R$ {(entrega.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  {(entrega.valor || 0).toLocaleString('pt-BR', {
+                                    style: 'currency',
+                                    currency: 'BRL',
+                                  })}
                                 </Badge>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveEntrega(entrega.id)}
+                                  aria-label="Remover entrega"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
                               </div>
                             ))
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {field.value.length} entrega(s) selecionada(s)
-                        </p>
+
+                        <div className="mt-4 border rounded-lg p-3 space-y-3">
+                          <div className="flex flex-wrap items-center gap-2 text-xs">
+                            <span className="font-medium">Prévia de rateio</span>
+                            <Badge variant="outline">Base: {formatCurrency(rateioPreviewRealtime.baseValor)}</Badge>
+                            <Badge variant="outline">Despesas: {formatCurrency(rateioPreviewRealtime.totalDespesas)}</Badge>
+                            <Badge variant="outline">Distribuído: {formatCurrency(rateioPreviewRealtime.totalDistribuido)}</Badge>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex items-center gap-1 text-muted-foreground cursor-help">
+                                    <Info className="h-4 w-4" />
+                                    Ajuste de centavos
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  O sistema arredonda para 2 casas decimais e aplica eventual diferença final na última entrega com valor.
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+
+                          {rateioPreviewRealtime.temBaseZero && field.value.length > 0 && (
+                            <p className="text-xs text-amber-600">
+                              Base de valores zerada: os gastos de entrega serão gravados como R$ 0,00 até existir valor de pedido.
+                            </p>
+                          )}
+                          {rateioPreviewRealtime.temEntregaValorZero && (
+                            <p className="text-xs text-amber-600">
+                              Há entrega(s) com valor zero. Elas recebem 0% do rateio.
+                            </p>
+                          )}
+
+                          <div className="max-h-48 overflow-auto rounded-md border">
+                            {field.value.length === 0 ? (
+                              <p className="text-sm text-muted-foreground text-center py-4">
+                                Vincule entregas para visualizar o rateio proporcional.
+                              </p>
+                            ) : (
+                              <table className="w-full text-xs">
+                                <thead className="bg-muted/40 sticky top-0">
+                                  <tr>
+                                    <th className="text-left p-2">Entrega</th>
+                                    <th className="text-right p-2">Valor</th>
+                                    <th className="text-right p-2">%</th>
+                                    <th className="text-right p-2">Atual</th>
+                                    <th className="text-right p-2">Novo</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rateioPreviewRealtime.entregas.map((item) => {
+                                    const entrega = entregasMap.get(item.id);
+                                    const label =
+                                      entrega?.pv_foco || entrega?.nota_fiscal || entrega?.cliente || item.id;
+                                    return (
+                                      <tr key={item.id} className="border-t">
+                                        <td className="p-2">{label}</td>
+                                        <td className="p-2 text-right">{formatCurrency(item.valor)}</td>
+                                        <td className="p-2 text-right">{item.percentual.toFixed(2)}%</td>
+                                        <td className="p-2 text-right">{formatCurrency(item.gastoAnterior)}</td>
+                                        <td className="p-2 text-right font-medium">{formatCurrency(item.gastoNovo)}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -851,15 +1219,29 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={createAcerto.isPending || updateAcerto.isPending}
+                  disabled={isSubmitting}
                 >
-                  {createAcerto.isPending || updateAcerto.isPending ? 'Salvando...' : 'Salvar'}
+                  {isSubmitting ? 'Salvando...' : 'Salvar'}
                 </Button>
               </div>
             </form>
           </Form>
         </div>
       </DialogContent>
+
+      <EntregaSelectionModal
+        isOpen={isEntregaModalOpen}
+        onClose={() => {
+          setIsEntregaModalOpen(false);
+          setBuscaEntrega('');
+        }}
+        entregas={entregasDisponiveis}
+        selectedIds={entregasIds}
+        onConfirm={handleEntregasConfirm}
+        searchTerm={buscaEntrega}
+        onSearchTermChange={setBuscaEntrega}
+        isLoading={isLoadingEntregas}
+      />
 
       <AbastecimentoSelectionModal 
         isOpen={isAbastecimentoModalOpen}
@@ -868,6 +1250,46 @@ export function AcertoViagemFormModal({ isOpen, onClose, acerto }: AcertoViagemF
         selectedIds={abastecimentosIds}
         onConfirm={handleAbastecimentosConfirm}
         motoristaNome={nomeMotoristaSelecionado}
+      />
+
+      <AbastecimentoSelectionModal
+        isOpen={isRequisicaoModalOpen}
+        onClose={() => setIsRequisicaoModalOpen(false)}
+        abastecimentos={abastecimentosRequisicaoParaSelecao}
+        selectedIds={abastecimentosRequisicaoIds}
+        onConfirm={handleRequisicaoConfirm}
+        motoristaNome={nomeMotoristaSelecionado}
+        title="Selecionar Abastecimentos por Requisicao"
+        helperText="Esses abastecimentos sao exibidos no acerto, mas nao entram no total de despesas."
+      />
+
+      <RemovedEntregasDecisionModal
+        isOpen={isRemovedDecisionOpen}
+        onClose={() => {
+          setIsRemovedDecisionOpen(false);
+          setSubmitDraft(null);
+          setPendingRemovedIds([]);
+        }}
+        onChooseKeep={handleChooseKeepRemoved}
+        onChooseZero={handleChooseZeroRemoved}
+        removedEntregas={removedEntregasPreview}
+      />
+
+      <RateioConfirmModal
+        isOpen={isRateioConfirmOpen}
+        onClose={() => {
+          setIsRateioConfirmOpen(false);
+          setPendingRateio(null);
+          setSubmitDraft(null);
+          setPendingRemovedIds([]);
+        }}
+        onConfirm={() => {
+          if (!submitDraft) return;
+          executePersist(submitDraft, submitRemovedAction);
+        }}
+        isSubmitting={isSubmitting}
+        rateio={pendingRateio}
+        entregasMap={entregasMap}
       />
     </Dialog>
   );

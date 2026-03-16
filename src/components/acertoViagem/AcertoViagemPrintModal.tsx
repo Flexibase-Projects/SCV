@@ -50,6 +50,10 @@ export function AcertoViagemPrintModal({ isOpen, onClose, acertoId }: AcertoViag
   const totalDespesas = acerto ? calcularTotalDespesas(acerto) : 0;
   const saldo = acerto ? calcularSaldo(acerto) : { valor: 0, tipo: 'devolver' as const };
   const dias = acerto ? calcularDiasViagem(acerto.data_saida, acerto.data_chegada) : 0;
+  const totalRequisicao = (acerto?.abastecimentos_requisicao || []).reduce(
+    (acc, item) => acc + (item.valor_total || 0),
+    0
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -226,6 +230,45 @@ export function AcertoViagemPrintModal({ isOpen, onClose, acertoId }: AcertoViag
                     <td className="border border-black px-2 py-1 text-right">{formatCurrency(acerto.despesa_outros)}</td>
                     <td className="border border-black px-2 py-1 text-sm italic" colSpan={2}>
                       {acerto.despesa_outros_descricao || ''}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Abastecimento por requisicao (nao soma no total de despesas) */}
+            <table className="w-full border-collapse mb-4 text-sm">
+              <thead>
+                <tr>
+                  <th className="border border-black px-2 py-1 bg-gray-200" colSpan={4}>
+                    ABASTECIMENTO POR REQUISICAO (JA PAGO)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-black px-2 py-1 bg-gray-100 font-bold" colSpan={3}>
+                    Total vinculado (informativo)
+                  </td>
+                  <td className="border border-black px-2 py-1 text-right font-bold">
+                    {formatCurrency(totalRequisicao)}
+                  </td>
+                </tr>
+                {acerto.abastecimentos_requisicao && acerto.abastecimentos_requisicao.length > 0 ? (
+                  acerto.abastecimentos_requisicao.slice(0, 10).map((item, index) => (
+                    <tr key={item.id}>
+                      <td className="border border-black px-2 py-1">{index + 1}</td>
+                      <td className="border border-black px-2 py-1">{formatDate(item.data)}</td>
+                      <td className="border border-black px-2 py-1">{item.posto || '-'}</td>
+                      <td className="border border-black px-2 py-1 text-right">
+                        {formatCurrency(item.valor_total)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="border border-black px-2 py-1 text-center text-gray-600" colSpan={4}>
+                      Nenhum abastecimento por requisicao vinculado.
                     </td>
                   </tr>
                 )}

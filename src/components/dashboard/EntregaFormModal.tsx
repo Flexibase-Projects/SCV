@@ -33,6 +33,7 @@ import { Entrega, ESTADOS_BRASILEIROS, STATUS_OPTIONS, TIPO_TRANSPORTE_OPTIONS, 
 import { useMotoristas } from '@/hooks/useMotoristas';
 import { useVeiculos } from '@/hooks/useVeiculos';
 import { useMontadores } from '@/hooks/useMontadores';
+import { useTiposServicoMontagem } from '@/hooks/useTiposServicoMontagem';
 
 const formSchema = z.object({
   pv_foco: z.string().optional(),
@@ -49,9 +50,11 @@ const formSchema = z.object({
   status_montagem: z.enum(['PENDENTE', 'EM_MONTAGEM', 'MONTAGEM_PARCIAL', 'CONCLUIDO']).optional(),
   data_montagem: z.date().optional(),
   montadores: z.string().optional(),
+  tipo_servico_id: z.string().optional(),
   gastos_entrega: z.coerce.number().min(0).optional(),
   gastos_montagem: z.coerce.number().min(0).optional(),
   produtividade: z.coerce.number().min(0).optional(),
+  produtividade_por_montador: z.coerce.number().min(0).optional(),
   erros: z.string().optional(),
   descricao_erros: z.string().optional(),
 }).refine((data) => {
@@ -70,7 +73,7 @@ interface EntregaFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entrega: Entrega | null;
-  onSubmit: (data: FormData & { montador_1?: string; montador_2?: string }) => void;
+  onSubmit: (data: FormData & { montador_1?: string; montador_2?: string; tipo_servico_id?: string; produtividade?: number; produtividade_por_montador?: number }) => void;
   isLoading: boolean;
 }
 
@@ -84,6 +87,7 @@ export function EntregaFormModal({
   const { data: motoristas = [] } = useMotoristas();
   const { data: veiculos = [] } = useVeiculos();
   const { data: montadoresData = [] } = useMontadores();
+  const { data: tiposServico = [] } = useTiposServicoMontagem();
   
   const [selectedMontadores, setSelectedMontadores] = useState<string[]>([]);
   
@@ -103,9 +107,11 @@ export function EntregaFormModal({
       data_montagem: undefined,
       status_montagem: undefined,
       montadores: '',
+      tipo_servico_id: '',
       gastos_entrega: 0,
       gastos_montagem: 0,
       produtividade: 0,
+      produtividade_por_montador: 0,
       erros: '',
       descricao_erros: '',
     },
@@ -134,9 +140,11 @@ export function EntregaFormModal({
         status_montagem: entrega.status_montagem || undefined,
         data_montagem: entrega.data_montagem ? parseDateLocal(entrega.data_montagem) || undefined : undefined,
         montadores: existingMontadores.join(', '),
+        tipo_servico_id: entrega.tipo_servico_id || '',
         gastos_entrega: entrega.gastos_entrega || 0,
         gastos_montagem: entrega.gastos_montagem || 0,
         produtividade: entrega.produtividade || 0,
+        produtividade_por_montador: entrega.produtividade_por_montador || 0,
         erros: entrega.erros || '',
         descricao_erros: entrega.descricao_erros || '',
       });
@@ -156,9 +164,11 @@ export function EntregaFormModal({
         data_montagem: undefined,
         status_montagem: undefined,
         montadores: '',
+        tipo_servico_id: '',
         gastos_entrega: 0,
         gastos_montagem: 0,
         produtividade: 0,
+        produtividade_por_montador: 0,
         erros: '',
         descricao_erros: '',
       });
@@ -169,6 +179,8 @@ export function EntregaFormModal({
   const precisaMontagem = form.watch('precisa_montagem');
   const dataMontagem = form.watch('data_montagem');
   const statusMontagem = form.watch('status_montagem');
+  const tipoServicoId = form.watch('tipo_servico_id');
+  const valorPedido = form.watch('valor');
 
   useEffect(() => {
     if (!precisaMontagem) {
@@ -186,6 +198,22 @@ export function EntregaFormModal({
       form.setValue('status_montagem', 'PENDENTE');
     }
   }, [precisaMontagem, dataMontagem, form]);
+
+  // Cálculo automático de produtividade ao concluir montagem
+  useEffect(() => {
+    if (statusMontagem !== 'CONCLUIDO') return;
+    if (!tipoServicoId || !valorPedido) return;
+
+    const tipo = tiposServico.find(t => t.id === tipoServicoId);
+    if (!tipo) return;
+
+    const total = valorPedido * (tipo.percentual / 100);
+    const numMontadores = Math.max(selectedMontadores.length, 1);
+    const porMontador = total / numMontadores;
+
+    form.setValue('produtividade', parseFloat(total.toFixed(2)));
+    form.setValue('produtividade_por_montador', parseFloat(porMontador.toFixed(2)));
+  }, [statusMontagem, tipoServicoId, valorPedido, selectedMontadores, tiposServico, form]);
 
   const addMontador = (nome: string) => {
     if (nome && !selectedMontadores.includes(nome)) {
@@ -207,7 +235,6 @@ export function EntregaFormModal({
   );
 
   const handleSubmit = (data: FormData) => {
-    // Converter montadores de volta para montador_1 e montador_2 para compatibilidade
     const submitData = {
       ...data,
       montador_1: selectedMontadores[0] || '',
@@ -607,6 +634,34 @@ export function EntregaFormModal({
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="tipo_servico_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className={labelClasses}>Tipo de Serviço</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className={inputClasses}>
+                              <SelectValue placeholder="SELECIONE O TIPO" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+                            {tiposServico.map((tipo) => (
+                              <SelectItem key={tipo.id} value={tipo.id} className="focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg cursor-pointer">
+                                {tipo.nome} ({tipo.percentual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}%)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          O percentual define o cálculo de produtividade ao concluir a montagem.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               )}
             </div>
@@ -658,16 +713,37 @@ export function EntregaFormModal({
                   name="produtividade"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={labelClasses}>Produtividade (%)</FormLabel>
+                      <FormLabel className={labelClasses}>Produtividade Total (R$)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          className={inputClasses}
-                          min={0}
-                          max={100}
+                        <Input
+                          type="number"
+                          {...field}
+                          readOnly
+                          className={cn(inputClasses, "bg-slate-50 dark:bg-slate-800 cursor-not-allowed text-slate-500")}
+                          placeholder="Calculado automaticamente"
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground">Calculado ao concluir a montagem.</p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="produtividade_por_montador"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelClasses}>Produtividade por Montador (R$)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          readOnly
+                          className={cn(inputClasses, "bg-slate-50 dark:bg-slate-800 cursor-not-allowed text-slate-500")}
+                          placeholder="Calculado automaticamente"
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">Total ÷ nº de montadores.</p>
                       <FormMessage />
                     </FormItem>
                   )}

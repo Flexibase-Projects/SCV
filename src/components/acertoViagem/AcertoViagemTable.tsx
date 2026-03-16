@@ -3,8 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { solidCard } from '@/lib/cardStyles';
 import { VirtualDataTable, VIRTUAL_SCROLL_MAX_HEIGHT } from '@/components/shared/VirtualDataTable';
 import { getAcertoColumns } from './acertoViagemColumns';
-import { DeleteConfirmDialog } from '@/components/dashboard/DeleteConfirmDialog';
 import { useDeleteAcertoViagem } from '@/hooks/useAcertosViagem';
+import { DeleteAcertoOptionsDialog } from './DeleteAcertoOptionsDialog';
 import type { AcertoViagem } from '@/types/acertoViagem';
 
 const ACERTO_TABLE_MIN_WIDTH = 1180;
@@ -21,11 +21,14 @@ export function AcertoViagemTable({ acertos, isLoading, onEdit, onPrint, onRowCl
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteAcerto = useDeleteAcertoViagem();
 
-  const handleDelete = () => {
-    if (deleteId) {
-      deleteAcerto.mutate(deleteId);
-      setDeleteId(null);
-    }
+  const handleDelete = (cleanupMode: 'keep' | 'zero') => {
+    if (!deleteId) return;
+    deleteAcerto.mutate(
+      { id: deleteId, cleanupMode },
+      {
+        onSuccess: () => setDeleteId(null),
+      }
+    );
   };
 
   if (isLoading) {
@@ -61,7 +64,7 @@ export function AcertoViagemTable({ acertos, isLoading, onEdit, onPrint, onRowCl
           <VirtualDataTable<AcertoViagem>
             data={acertos}
             columns={columns}
-            getRowId={(a) => a.id}
+            getRowId={(acerto) => acerto.id}
             maxHeight={VIRTUAL_SCROLL_MAX_HEIGHT}
             minTableWidth={ACERTO_TABLE_MIN_WIDTH}
             onRowClick={onRowClick}
@@ -69,14 +72,16 @@ export function AcertoViagemTable({ acertos, isLoading, onEdit, onPrint, onRowCl
         </CardContent>
       </Card>
 
-      <DeleteConfirmDialog
+      <DeleteAcertoOptionsDialog
         open={!!deleteId}
-        onOpenChange={(open) => !open && setDeleteId(null)}
-        onConfirm={handleDelete}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null);
+        }}
+        onDeleteKeep={() => handleDelete('keep')}
+        onDeleteZero={() => handleDelete('zero')}
         isLoading={deleteAcerto.isPending}
-        title="Excluir Acerto de Viagem"
-        description="Tem certeza que deseja excluir este acerto de viagem? Esta ação não pode ser desfeita."
       />
     </>
   );
 }
+
