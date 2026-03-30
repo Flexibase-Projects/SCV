@@ -2,8 +2,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isTestEnv = import.meta.env.MODE === 'test';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || (isTestEnv ? 'http://127.0.0.1:54321' : undefined);
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || (isTestEnv ? 'test-anon-key' : undefined);
 
 // Validação de variáveis de ambiente
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {

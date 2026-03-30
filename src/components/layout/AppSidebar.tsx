@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { startTransition, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LocalShippingOutlined as Truck,
   LocalGasStationOutlined as Fuel,
@@ -25,6 +25,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useTheme } from '@/components/theme-provider';
+import { toast } from '@/components/ui/sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import { isImportEnabled } from '@/utils/featureFlags';
 
 interface NavItem {
@@ -61,11 +63,31 @@ const getManagementItems = (): NavItem[] => {
 export function AppSidebar() {
   // CRITICAL: Always reset to expanded state on page load (no localStorage)
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const location = useLocation();
-  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+  const { resolvedTheme, setTheme } = useTheme();
+  const { signOut } = useAuth();
 
   const toggleSidebar = () => setIsCollapsed(prev => !prev);
-  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  const handleSignOut = async () => {
+    if (isSigningOut) {
+      return;
+    }
+
+    setIsSigningOut(true);
+
+    try {
+      await signOut();
+      startTransition(() => {
+        navigate('/login', { replace: true });
+      });
+    } catch (error) {
+      setIsSigningOut(false);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível encerrar a sessão agora.');
+    }
+  };
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = location.pathname === item.to;
@@ -233,11 +255,11 @@ export function AppSidebar() {
                   onClick={toggleTheme}
                   className="w-full h-10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700 font-medium">
-                {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                {resolvedTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -246,8 +268,8 @@ export function AppSidebar() {
               onClick={toggleTheme}
               className="w-full justify-start gap-3 h-10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              <span className="font-medium text-sm">{theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+              {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <span className="font-medium text-sm">{resolvedTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
             </Button>
           )}
 
@@ -258,6 +280,8 @@ export function AppSidebar() {
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
                   className="w-full h-10 text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10"
                 >
                   <LogOut className="h-5 w-5" />
@@ -270,10 +294,12 @@ export function AppSidebar() {
           ) : (
             <Button
               variant="ghost"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
               className="w-full justify-start gap-3 h-10 px-3 text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10"
             >
               <LogOut className="h-5 w-5" />
-              <span className="font-medium text-sm">Sair</span>
+              <span className="font-medium text-sm">{isSigningOut ? 'Saindo...' : 'Sair'}</span>
             </Button>
           )}
         </div>

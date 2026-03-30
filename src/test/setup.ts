@@ -1,8 +1,17 @@
 import '@testing-library/jest-dom';
-import { expect, afterEach } from 'vitest';
+import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
-// Limpar após cada teste
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = ResizeObserverMock as typeof ResizeObserver;
+}
+
 afterEach(() => {
   cleanup();
 });
