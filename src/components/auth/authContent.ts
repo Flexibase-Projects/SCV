@@ -1,12 +1,12 @@
 export const authModuleBadges = [
-  "Projetos",
-  "Atividades",
-  "Kanban",
-  "Indicadores",
-  "Conquistas",
-  "Colaboracao",
-  "Organograma",
-  "Custos",
+  "Dashboard operacional",
+  "Entregas",
+  "Abastecimento",
+  "Manutencao",
+  "Acerto de viagem",
+  "Produtividade",
+  "Cadastros",
+  "Relatorios",
 ];
 
 export const authSystemModules = [

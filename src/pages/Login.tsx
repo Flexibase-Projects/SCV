@@ -31,6 +31,12 @@ const LOGIN_INPUT_CLASS =
   "h-14 rounded-2xl border border-[#d6ddea] bg-white px-5 text-base text-[#14213d] placeholder:text-[#70809d] focus-visible:ring-[#7b8fb5] focus-visible:ring-offset-0 dark:border-white/14 dark:bg-[#101c35] dark:text-white dark:placeholder:text-[#8798bd]";
 const MODULE_ICON_CLASS =
   "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#e9edf5] text-[#17223b] dark:bg-white/8 dark:text-white";
+const ERROR_ALERT_CLASS =
+  "rounded-2xl border-red-300 bg-red-50 text-red-950 dark:border-red-500/35 dark:bg-red-500/10 dark:text-red-50";
+const ERROR_ALERT_DESCRIPTION_CLASS = "text-red-800 dark:text-red-100/90";
+const SUCCESS_ALERT_CLASS =
+  "rounded-2xl border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-500/35 dark:bg-emerald-500/10 dark:text-white";
+const SUCCESS_ALERT_DESCRIPTION_CLASS = "text-emerald-800 dark:text-emerald-100/90";
 
 const getRedirectTarget = (state: unknown) => {
   const routeState = state as AuthLocationState | undefined;
@@ -216,9 +222,9 @@ export default function Login() {
                 </div>
 
                 {errorMessage ? (
-                  <Alert variant="destructive" className="rounded-2xl border-red-500/35 bg-red-500/10 text-white">
-                    <AlertTitle className="text-white">Falha no acesso</AlertTitle>
-                    <AlertDescription className="text-red-100/90">{errorMessage}</AlertDescription>
+                  <Alert variant="destructive" className={ERROR_ALERT_CLASS}>
+                    <AlertTitle>Falha no acesso</AlertTitle>
+                    <AlertDescription className={ERROR_ALERT_DESCRIPTION_CLASS}>{errorMessage}</AlertDescription>
                   </Alert>
                 ) : null}
 
@@ -252,7 +258,7 @@ export default function Login() {
                     onClick={() => handleModeChange("about")}
                   >
                     <Info className="h-4 w-4" />
-                    O que e este sistema?
+                    O Que e Este Sistema?
                   </Button>
                 </div>
               </form>
@@ -275,7 +281,7 @@ export default function Login() {
               <div className="mt-10 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#7d90b7] dark:text-[#7d90b7]">Recuperacao</p>
                 <h1 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-[#0f172a] dark:text-white md:text-4xl">
-                  Redefinir senha
+                  Redefinir Senha
                 </h1>
                 <p className="mt-4 text-sm leading-7 text-[#5c6d8a] dark:text-[#9caed1] md:text-base">
                   Informe seu e-mail para receber o link de redefinicao na rota publica do SCV.
@@ -300,16 +306,16 @@ export default function Login() {
                 </div>
 
                 {errorMessage ? (
-                  <Alert variant="destructive" className="rounded-2xl border-red-500/35 bg-red-500/10 text-white">
-                    <AlertTitle className="text-white">Falha no envio</AlertTitle>
-                    <AlertDescription className="text-red-100/90">{errorMessage}</AlertDescription>
+                  <Alert variant="destructive" className={ERROR_ALERT_CLASS}>
+                    <AlertTitle>Falha no envio</AlertTitle>
+                    <AlertDescription className={ERROR_ALERT_DESCRIPTION_CLASS}>{errorMessage}</AlertDescription>
                   </Alert>
                 ) : null}
 
                 {recoverySuccessMessage ? (
-                  <Alert className="rounded-2xl border-emerald-500/35 bg-emerald-500/10 text-white">
-                    <AlertTitle className="text-emerald-200">E-mail enviado</AlertTitle>
-                    <AlertDescription className="text-emerald-100/90">{recoverySuccessMessage}</AlertDescription>
+                  <Alert className={SUCCESS_ALERT_CLASS}>
+                    <AlertTitle>E-mail enviado</AlertTitle>
+                    <AlertDescription className={SUCCESS_ALERT_DESCRIPTION_CLASS}>{recoverySuccessMessage}</AlertDescription>
                   </Alert>
                 ) : null}
 
@@ -332,7 +338,7 @@ export default function Login() {
               <div className="max-w-2xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#7d90b7]">Panorama do sistema</p>
                 <h1 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-[#0f172a] dark:text-white md:text-4xl">
-                  O que e este sistema?
+                  O Que e Este Sistema?
                 </h1>
                 <p className="mt-4 text-sm leading-7 text-[#5c6d8a] dark:text-[#9caed1] md:text-base">
                   O SCV organiza a rotina da frota com uma visao integrada de operacao e custo, conectando veiculos,

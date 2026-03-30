@@ -36,12 +36,12 @@ export function AuthPageShell({ children, contentClassName }: AuthPageShellProps
           <div className="relative z-10 flex h-full w-full items-center justify-center px-14 py-16 text-white">
             <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
               <h1 className="mt-7 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-[-0.045em] text-white xl:text-6xl">
-                Central de Tarefas
+                Gestao Operacional da Frota
               </h1>
 
               <p className="mt-7 max-w-xl text-lg leading-9 text-white/74 xl:text-[1.35rem]">
-                Plataforma completa para planejar projetos, acompanhar atividades e executar entregas com
-                previsibilidade, colaboracao em equipe e gamificacao orientada a resultados.
+                Acompanhe entregas, abastecimentos, manutencoes, acertos e produtividade com leitura clara da
+                operacao em um unico lugar.
               </p>
 
               <div className="mt-10 flex max-w-2xl flex-wrap justify-center gap-2.5">
@@ -66,8 +66,7 @@ export function AuthPageShell({ children, contentClassName }: AuthPageShellProps
                 <img src="/logo-flexibase.svg" alt="Flexibase" className="h-6 w-6 object-contain" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#5a6a87] dark:text-white/55">Flexibase</p>
-                <p className="text-sm font-semibold text-[#0f172a] dark:text-white">Central de Tarefas</p>
+                <p className="text-sm font-semibold text-[#0f172a] dark:text-white">Gestao Operacional da Frota</p>
               </div>
             </div>
 
