@@ -93,6 +93,7 @@ SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key
 Importante:
 
 - `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` sao obrigatorias para o frontend.
+- o frontend rejeita `service role key` acidental em `VITE_SUPABASE_ANON_KEY`.
 - `SUPABASE_SERVICE_ROLE_KEY` nunca deve ser exposta no cliente.
 - nunca commite `.env` com valores reais.
 
@@ -111,10 +112,20 @@ npm run dev
 npm run build
 npm run preview
 npm run lint
+npm run typecheck
 npm run test
 npm run test:ui
 npm run test:coverage
+npm run audit:prod
 ```
+
+## Qualidade continua
+
+O projeto agora possui uma workflow dedicada em `.github/workflows/ci.yml` para validar `test` e `build` em PRs e pushes para `main`, usando variaveis publicas placeholder para nao depender de segredos.
+
+Para acompanhar a rodada atual de hardening e os riscos remanescentes, consulte:
+
+- [docs/hardening-baseline.md](docs/hardening-baseline.md)
 
 ## Validacao
 
@@ -123,6 +134,13 @@ Antes de abrir PR ou enviar para `main`, valide pelo menos:
 ```bash
 npm run test
 npm run build
+```
+
+Se voce estiver atacando backlog tecnico ou endurecendo o app, rode tambem:
+
+```bash
+npm run typecheck
+npm run audit:prod
 ```
 
 Fluxos criticos para validar manualmente:
@@ -154,6 +172,16 @@ supabase/
   migrations/
 docs/
 ```
+
+## Skill versionada no repo
+
+A copia rastreavel da skill interna de login agora vive em:
+
+```text
+.codex/skills/login-screen/
+```
+
+Esse caminho passa a ser a referencia versionada do projeto para a skill. A copia em `C:\Users\Flexibase\.codex\skills\login-screen` pode continuar existindo localmente, mas o historico confiavel de mudancas fica no repositorio.
 
 ## Seguranca de arquivos
 

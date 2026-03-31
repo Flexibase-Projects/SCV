@@ -3,6 +3,50 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+function getManualChunk(id: string) {
+  const normalizedId = id.replace(/\\/g, "/");
+
+  if (!normalizedId.includes("node_modules")) {
+    return undefined;
+  }
+
+  if (
+    normalizedId.includes("/node_modules/react/") ||
+    normalizedId.includes("/node_modules/react-dom/") ||
+    normalizedId.includes("/node_modules/scheduler/") ||
+    normalizedId.includes("/node_modules/react-router/") ||
+    normalizedId.includes("/node_modules/react-router-dom/")
+  ) {
+    return "react-vendor";
+  }
+
+  if (normalizedId.includes("@supabase/")) {
+    return "supabase-vendor";
+  }
+
+  if (normalizedId.includes("@tanstack/")) {
+    return "tanstack-vendor";
+  }
+
+  if (normalizedId.includes("@mui/") || normalizedId.includes("@emotion/")) {
+    return "mui-vendor";
+  }
+
+  if (normalizedId.includes("@radix-ui/") || normalizedId.includes("cmdk") || normalizedId.includes("vaul")) {
+    return "radix-vendor";
+  }
+
+  if (normalizedId.includes("recharts") || normalizedId.includes("d3-")) {
+    return "charts-vendor";
+  }
+
+  if (normalizedId.includes("xlsx") || normalizedId.includes("papaparse")) {
+    return "import-vendor";
+  }
+
+  return undefined;
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Carregar .env para o config
@@ -31,6 +75,13 @@ export default defineConfig(({ mode }) => {
 
   return {
   base: mode === 'production' ? '/Controle-Frotas/' : '/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: getManualChunk,
+      },
+    },
+  },
   server: {
     host: "::",
     port: devPort,
